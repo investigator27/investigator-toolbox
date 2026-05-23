@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#01696f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Travel Calc" />
+  <title>Surveillance Travel Calculator</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <script>window.__BASE_PATH__ = '/travel-calc/';</script>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs:clamp(0.75rem,0.7rem + 0.25vw,0.875rem);
+      --text-sm:clamp(0.875rem,0.8rem + 0.35vw,1rem);
+      --text-base:clamp(1rem,0.95rem + 0.25vw,1.125rem);
+      --text-lg:clamp(1.125rem,1rem + 0.75vw,1.5rem);
+      --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+      --space-1:0.25rem;--space-2:0.5rem;--space-3:0.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;
+      --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;--color-surface-offset:#f3f0ec;--color-divider:#dcd9d5;--color-border:#d4d1ca;
+      --color-text:#28251d;--color-text-muted:#64635e;--color-text-faint:#94928c;--color-text-inverse:#f9f8f4;
+      --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#d9ecea;
+      --color-success:#437a22;--color-error:#a12c7b;
+      --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.875rem;--radius-xl:1rem;--radius-full:9999px;
+      --shadow-sm:0 1px 2px rgb(25 23 18/.06);--shadow-md:0 8px 22px rgb(25 23 18/.08);
+      --font-body:'Satoshi',Inter,sans-serif;--transition:180ms cubic-bezier(0.16,1,0.3,1);
+    }
+    [data-theme="dark"] {
+      --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#22211f;--color-divider:#262523;--color-border:#393836;
+      --color-text:#e2e0db;--color-text-muted:#aaa8a2;--color-text-faint:#7b7973;--color-text-inverse:#1c1b19;
+      --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#2a3435;
+      --color-success:#6daa45;--color-error:#d163a7;
+      --shadow-sm:0 1px 2px rgb(0 0 0/.2);--shadow-md:0 8px 22px rgb(0 0 0/.35);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth}
+    body{min-height:100dvh;background:var(--color-bg);color:var(--color-text);font:400 var(--text-base)/1.5 var(--font-body)}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{border:none;background:none;cursor:pointer}
+    a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
+    :focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
+    .app{max-width:680px;margin:0 auto;padding:max(env(safe-area-inset-top),var(--space-4)) var(--space-4) max(env(safe-area-inset-bottom),var(--space-8));display:grid;gap:var(--space-4)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
+    .brand{display:flex;align-items:center;gap:var(--space-3)}
+    .logo{width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0}
+    .brand h1{font-size:var(--text-lg);line-height:1.1}
+    .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
+    .icon-btn{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);box-shadow:var(--shadow-sm);flex-shrink:0}
+    .card{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:var(--space-5);display:grid;gap:var(--space-4)}
+    .card-title{font-size:var(--text-lg);line-height:1.15}
+    .card-sub{color:var(--color-text-muted);font-size:var(--text-sm)}
+    .field{display:grid;gap:var(--space-2)}
+    .field label{font-size:var(--text-sm);font-weight:700}
+    .field input,.field select{width:100%;min-height:52px;padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-border);font-size:var(--text-base);-webkit-appearance:none;appearance:none}
+    .field input:focus,.field select:focus{border-color:var(--color-primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent)}
+    .hint{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .seg-label{font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-2)}
+    .segmented{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);background:var(--color-surface-offset);padding:var(--space-2);border-radius:var(--radius-lg)}
+    .segment{min-height:52px;border-radius:var(--radius-md);background:transparent;color:var(--color-text-muted);font-weight:700;font-size:var(--text-sm)}
+    .segment.active{background:var(--color-primary);color:var(--color-text-inverse);box-shadow:var(--shadow-sm)}
+    .btn{min-height:54px;padding:0.95rem 1rem;border-radius:var(--radius-lg);font-weight:700;font-size:var(--text-base);width:100%;text-align:center}
+    .btn-primary{background:var(--color-primary);color:var(--color-text-inverse);box-shadow:var(--shadow-md)}
+    .btn-primary:hover{background:var(--color-primary-hover)}
+    .btn-primary:active{transform:scale(0.98)}
+    .btn-secondary{background:var(--color-surface-offset);border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent)}
+    .btn-secondary:hover{background:var(--color-divider)}
+    .status{font-size:var(--text-sm);padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-offset);color:var(--color-text-muted);display:none}
+    .status.show{display:block}
+    .status.error{background:color-mix(in srgb,var(--color-error) 10%,var(--color-surface));color:var(--color-error)}
+    .status.success{background:color-mix(in srgb,var(--color-success) 12%,var(--color-surface));color:var(--color-success)}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+    .metric{padding:var(--space-4);background:var(--color-surface-2);border-radius:var(--radius-lg);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)}
+    .metric small{display:block;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:0.3rem}
+    .metric strong{display:block;font-size:var(--text-lg);font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+    .summary-block{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-primary-highlight)}
+    .summary-block b{display:block;margin-bottom:0.3rem}
+    .steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
+    .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}
+    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}
+    .footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-4)}
+    .hidden{display:none!important}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17h16"/><path d="M7 17V7l5-3 5 3v10"/><path d="M9.5 11.5h5"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Travel Billing</h1>
+        <p>Surveillance travel calculator</p>
+      </div>
+    </div>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+
+  <section class="card" aria-labelledby="form-title">
+    <div>
+      <h2 id="form-title" class="card-title">Trip details</h2>
+      <p class="card-sub">Select the city, enter the event address, then copy the full one-way distance and time from Google Maps.</p>
+    </div>
+    <div>
+      <div class="seg-label">Billing type</div>
+      <div class="segmented" role="group" aria-label="Billing type">
+        <button type="button" class="segment active" data-trip="oneway" aria-pressed="true">One way</button>
+        <button type="button" class="segment" data-trip="roundtrip" aria-pressed="false">Round trip</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="city">City &amp; downtown core address</label>
+      <select id="city">
+        <option value="">Select a city</option>
+        <optgroup label="Alberta">
+          <option value="Calgary City Hall, 800 Macleod Trail SE, Calgary, AB T2P 2M5">Calgary – Calgary City Hall, 800 Macleod Trail SE</option>
+          <option value="Edmonton City Hall, 1 Sir Winston Churchill Square, Edmonton, AB T5J 2R7">Edmonton – Edmonton City Hall, 1 Sir Winston Churchill Square</option>
+        </optgroup>
+        <optgroup label="British Columbia">
+          <option value="Robson Square, 800 Robson Street, Vancouver, BC V6Z 3B7">Vancouver – Robson Square, 800 Robson Street</option>
+          <option value="Victoria City Hall, 1 Centennial Square, Victoria, BC V8W 1P6">Victoria – Victoria City Hall, 1 Centennial Square</option>
+          <option value="Kelowna City Hall, 1435 Water Street, Kelowna, BC V1Y 1J4">Kelowna – Kelowna City Hall, 1435 Water Street</option>
+        </optgroup>
+        <optgroup label="Ontario">
+          <option value="Toronto City Hall, 100 Queen Street West, Toronto, ON M5H 2N2">GTA – Toronto City Hall, 100 Queen Street West</option>
+          <option value="Ottawa City Hall, 110 Laurier Avenue West, Ottawa, ON K1P 1J1">Ottawa – Ottawa City Hall, 110 Laurier Avenue West</option>
+          <option value="London City Hall, 300 Dufferin Avenue, London, ON N6A 6G9">London – London City Hall, 300 Dufferin Avenue</option>
+          <option value="Windsor City Hall, 350 City Hall Square West, Windsor, ON N9A 6S1">Windsor – Windsor City Hall, 350 City Hall Square West</option>
+          <option value="Tom Davies Square, 200 Brady Street, Greater Sudbury, ON P3A 5P3">Sudbury – Tom Davies Square, 200 Brady Street</option>
+          <option value="Thunder Bay City Hall, 500 Donald Street East, Thunder Bay, ON P7C 5K4">Thunder Bay – Thunder Bay City Hall, 500 Donald Street East</option>
+        </optgroup>
+        <optgroup label="Manitoba">
+          <option value="Winnipeg City Hall, 510 Main Street, Winnipeg, MB R3B 1B9">Winnipeg – Winnipeg City Hall, 510 Main Street</option>
+        </optgroup>
+        <optgroup label="Saskatchewan">
+          <option value="Regina City Hall, 2476 Victoria Avenue, Regina, SK S4P 3C8">Regina – Regina City Hall, 2476 Victoria Avenue</option>
+          <option value="Saskatoon City Hall, 222 3rd Avenue North, Saskatoon, SK S7K 1M8">Saskatoon – Saskatoon City Hall, 222 3rd Avenue North</option>
+        </optgroup>
+        <optgroup label="Quebec">
+          <option value="Montreal City Hall, 275 Rue Notre-Dame Est, Montreal, QC H2Y 1C6">Montreal – Montreal City Hall, 275 Rue Notre-Dame Est</option>
+          <option value="Maison du Citoyen, 25 Rue Laurier, Gatineau, QC J8X 4C8">Gatineau – Maison du Citoyen, 25 Rue Laurier</option>
+        </optgroup>
+        <optgroup label="Atlantic Canada">
+          <option value="Halifax City Hall, 5015 Duke Street, Halifax, NS B3J 2T5">Halifax – Halifax City Hall, 5015 Duke Street</option>
+          <option value="Moncton City Hall, 655 Main Street, Moncton, NB E1C 1E8">Moncton – Moncton City Hall, 655 Main Street</option>
+          <option value="St. John's City Hall, 10 New Gower Street, St. John's, NL A1C 5M2">St. John's – St. John's City Hall, 10 New Gower Street</option>
+          <option value="Charlottetown City Hall, 199 Queen Street, Charlottetown, PE C1A 4B1">Charlottetown – Charlottetown City Hall, 199 Queen Street</option>
+        </optgroup>
+        <optgroup label="Territories">
+          <option value="Whitehorse City Hall, 2121 2nd Avenue, Whitehorse, YT Y1A 1C2">Whitehorse – Whitehorse City Hall, 2121 2nd Avenue</option>
+          <option value="Iqaluit City Hall, 1085 Mivvik Street, Iqaluit, NU X0A 0H0">Iqaluit – Iqaluit City Hall, 1085 Mivvik Street</option>
+        </optgroup>
+      </select>
+      <div class="hint" id="cityAddressHint"></div>
+    </div>
+    <div class="field">
+      <label for="event">Surveillance event address</label>
+      <input id="event" type="text" placeholder="Enter the full event address" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="distance">Full one-way route distance (km)</label>
+      <input id="distance" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 148.6" />
+      <div class="hint">Get this from Google Maps — route from the city address to the event address, one way, driving.</div>
+    </div>
+    <div class="field">
+      <label for="hours">Full one-way route time — hours</label>
+      <input id="hours" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 1" />
+    </div>
+    <div class="field">
+      <label for="minutes">Full one-way route time — minutes</label>
+      <input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="e.g. 45" />
+      <div class="hint">Example: 1 hour 45 minutes → enter 1 in hours and 45 in minutes.</div>
+    </div>
+    <button class="btn btn-secondary" id="clearBtn" type="button">Clear form</button>
+    <button class="btn btn-primary" id="calculateBtn" type="button">Calculate billing</button>
+    <div class="status hidden" id="statusBox" aria-live="polite" role="status"></div>
+  </section>
+
+  <section class="card hidden" id="resultsSection" aria-labelledby="results-title">
+    <div>
+      <h2 id="results-title" class="card-title">Billable result</h2>
+      <p class="card-sub" id="resultTripLine"></p>
+    </div>
+    <div class="metric-grid">
+      <div class="metric"><small>Billable Surveillance Travel Mileage</small><strong id="billableKm">—</strong></div>
+      <div class="metric"><small>Billable Surveillance Travel Hours</small><strong id="billableTime">—</strong></div>
+      <div class="metric"><small>Non-billable km removed</small><strong id="removedKm">—</strong></div>
+      <div class="metric"><small>Non-billable time removed</small><strong id="removedTime">—</strong></div>
+    </div>
+    <div class="summary-block">
+      <b id="summaryLine"></b>
+      <span id="summaryNote"></span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="howto-title">
+    <h2 id="howto-title" class="card-title">How to use</h2>
+    <ol class="steps-list">
+      <li>Select your city from the dropdown.</li>
+      <li>Enter the surveillance event address.</li>
+      <li>Open Google Maps, get driving directions from the city address to the event — one way.</li>
+      <li>Copy the total distance (km) and total time into this page.</li>
+      <li>Choose One way or Round trip at the top.</li>
+      <li>Tap <strong>Calculate billing</strong>.</li>
+      <li>Enter the returned mileage and hours in TrackOps Mobile as Surveillance Travel Mileage and Surveillance Travel Hours.</li>
+    </ol>
+  </section>
+
+  <div class="install-hint">
+    <strong>Install on Android (Chrome)</strong>
+    Open this page in Chrome, tap the three-dot menu, then tap <strong>Add to Home screen</strong> or <strong>Install app</strong>. No admin permissions required.
+    <button class="btn btn-secondary hidden" id="installBtn" type="button" style="margin-top:var(--space-3)">Install app</button>
+  </div>
+
+  <p class="footer">Prototype · Enter Google Maps route values manually · v1.0</p>
+</main>
+
+<script>
+  const themeBtn = document.querySelector('[data-theme-toggle]');
+  let theme = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  function renderThemeIcon() {
+    themeBtn.innerHTML = theme === 'dark'
+      ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+  renderThemeIcon();
+  themeBtn.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', theme); renderThemeIcon(); });
+
+  const citySelect = document.getElementById('city');
+  const cityHint = document.getElementById('cityAddressHint');
+  citySelect.addEventListener('change', () => { cityHint.textContent = citySelect.value ? 'Start address: ' + citySelect.value : ''; });
+
+  let tripType = 'oneway';
+  document.querySelectorAll('.segment').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tripType = btn.dataset.trip;
+      document.querySelectorAll('.segment').forEach(x => { x.classList.toggle('active', x === btn); x.setAttribute('aria-pressed', x === btn ? 'true' : 'false'); });
+    });
+  });
+
+  const statusBox = document.getElementById('statusBox');
+  const resultsSection = document.getElementById('resultsSection');
+  function setStatus(msg, mode) { statusBox.className = 'status show' + (mode ? ' ' + mode : ''); statusBox.textContent = msg; }
+  function hideStatus() { statusBox.className = 'status hidden'; statusBox.textContent = ''; }
+  function fmtKm(v) { return v.toFixed(1) + ' km'; }
+  function fmtDuration(totalMins) { const r = Math.max(0, Math.round(totalMins)); return Math.floor(r/60) + 'h ' + String(r%60).padStart(2,'0') + 'm'; }
+
+  document.getElementById('calculateBtn').addEventListener('click', () => {
+    hideStatus();
+    const city = citySelect.value.trim();
+    const event = document.getElementById('event').value.trim();
+    const distance = parseFloat(document.getElementById('distance').value);
+    const hrs = parseFloat(document.getElementById('hours').value || '0');
+    const mins = parseFloat(document.getElementById('minutes').value || '0');
+    if (!city) { setStatus('Select a city to set the downtown core start address.', 'error'); resultsSection.classList.add('hidden'); return; }
+    if (!event) { setStatus('Enter the surveillance event address.', 'error'); resultsSection.classList.add('hidden'); return; }
+    if (!Number.isFinite(distance) || distance < 0) { setStatus('Enter a valid one-way route distance in km from Google Maps.', 'error'); resultsSection.classList.add('hidden'); return; }
+    const fullMins = hrs * 60 + mins;
+    if (fullMins <= 0) { setStatus('Enter the full one-way route time from Google Maps.', 'error'); resultsSection.classList.add('hidden'); return; }
+    const removedKm1 = Math.min(60, distance);
+    const removedMins1 = distance > 0 ? fullMins * (removedKm1 / distance) : 0;
+    const billableKm1 = Math.max(0, distance - 60);
+    const billableMins1 = Math.max(0, fullMins - removedMins1);
+    const mult = tripType === 'roundtrip' ? 2 : 1;
+    document.getElementById('billableKm').textContent = fmtKm(billableKm1 * mult);
+    document.getElementById('billableTime').textContent = fmtDuration(billableMins1 * mult);
+    document.getElementById('removedKm').textContent = fmtKm(removedKm1 * mult);
+    document.getElementById('removedTime').textContent = fmtDuration(removedMins1 * mult);
+    document.getElementById('resultTripLine').textContent = (tripType === 'roundtrip' ? 'Round trip' : 'One way') + ' · ' + city.split(',')[0];
+    document.getElementById('summaryLine').textContent = 'Enter these values in TrackOps Mobile.';
+    document.getElementById('summaryNote').textContent = distance <= 60
+      ? 'The full route is within 60 km one way. No billable travel applies under the current rule.'
+      : 'The first 60 km one way and the estimated matching travel time have been removed. The remaining values are billable.';
+    resultsSection.classList.remove('hidden');
+    setStatus('Calculation complete.', 'success');
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    citySelect.value = ''; cityHint.textContent = '';
+    document.getElementById('event').value = '';
+    document.getElementById('distance').value = '';
+    document.getElementById('hours').value = '';
+    document.getElementById('minutes').value = '';
+    resultsSection.classList.add('hidden'); hideStatus();
+  });
+
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.classList.remove('hidden'); });
+  installBtn.addEventListener('click', async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; installBtn.classList.add('hidden'); });
+  if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register((window.__BASE_PATH__ || './') + 'service-worker.js').catch(() => {}); }); }
+</script>
+</body>
+</html>

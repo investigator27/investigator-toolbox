@@ -109,7 +109,7 @@
   </section>
   <section class="card hidden" id="resultsSection" aria-labelledby="results-title"><div><h2 id="results-title" class="card-title">Billable Result</h2><p class="card-sub" id="resultTripLine"></p></div><div class="metric-grid"><div class="metric"><small>Billable Surveillance Travel Mileage</small><strong id="billableKm">—</strong></div><div class="metric"><small>Billable Surveillance Travel Hours</small><strong id="billableTime">—</strong></div><div class="metric"><small>Non-Billable Km Removed</small><strong id="removedKm">—</strong></div><div class="metric"><small>Non-Billable Time Removed</small><strong id="removedTime">—</strong></div></div><div class="summary-block"><b id="summaryLine"></b><span id="summaryNote"></span></div></section>
 
-  <div class='modal hidden' id='howModal' aria-hidden='true'><div class='modal-card'><div class='modal-head'><h2>How To Use</h2><button class='icon-btn' id='closeHow' type='button' aria-label='Close how-to page'><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 6 6 18M6 6l12 12'/></svg></button></div><ol class='steps-list'><li>Select your starting location from the dropdown.</li><li>Enter the surveillance event address.</li><li>Tap <strong>Open In Google Maps</strong> to launch directions, or open Google Maps manually.</li><li>Copy the one-way driving distance and time into this page.</li><li>Choose One Way or Round Trip.</li><li>Tap <strong>Calculate Billing</strong>.</li><li>Enter the returned values in TrackOps Mobile.</li></ol><div class='install-hint'><strong>Install App Icon How-To</strong> Open this page in Chrome, tap the three-dot menu, then tap <strong>Add To Home Screen</strong> or <strong>Install App</strong>. If the icon changes, remove the old home-screen shortcut and add it again after the update finishes.</div></div></div><p class='footer'>Prototype · Enter Google Maps route values manually · v1.3</p>
+  <div class='modal hidden' id='howModal' aria-hidden='true'><div class='modal-card'><div class='modal-head'><h2>How To Use</h2><button class='icon-btn' id='closeHow' type='button' aria-label='Close how-to page'><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 6 6 18M6 6l12 12'/></svg></button></div><ol class='steps-list'><li>Select your starting location from the dropdown.</li><li>Enter the surveillance event address.</li><li>Tap <strong>Open In Google Maps</strong> to launch directions, or open Google Maps manually.</li><li>Copy the one-way driving distance and time into this page.</li><li>Choose One Way or Round Trip.</li><li>Tap <strong>Calculate Billing</strong>.</li><li>Enter the returned values in TrackOps Mobile.</li></ol><div class='install-hint'><strong>Install App Icon How-To</strong> Open this page in Chrome, tap the three-dot menu, then tap <strong>Add To Home Screen</strong> or <strong>Install App</strong>. If the icon changes, remove the old home-screen shortcut and add it again after the update finishes.</div></div></div><p class='footer'>Prototype · Enter Google Maps route values manually · v1.4</p>
 </main>
 <script>
 (() => {
@@ -205,33 +205,30 @@
     const origin = (citySelect?.value || '').trim();
     const destination = (eventInput?.value || '').trim();
 
-    if (!origin) return setStatus('Select a Starting Location first.', 'error');
-    if (!destination) return setStatus('Enter a Surveillance Event Address first.', 'error');
+    if (!origin) {
+      return setStatus('Select a Starting Location first.', 'error');
+    }
+
+    if (!destination) {
+      return setStatus('Enter a Surveillance Event Address first.', 'error');
+    }
 
     hideStatus();
 
-    // Android Google Maps deep link (most reliable)
-    const encodedOrigin = encodeURIComponent(origin);
-    const encodedDestination = encodeURIComponent(destination);
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    if (isAndroid) {
-      const intentUrl =
-        `google.navigation:q=${encodedDestination}&mode=d`;
-
-      // Must happen directly from user click context
-      window.location.href = intentUrl;
-      return;
-    }
-
     const mapsUrl =
       `https://www.google.com/maps/dir/?api=1` +
-      `&origin=${encodedOrigin}` +
-      `&destination=${encodedDestination}` +
+      `&origin=${encodeURIComponent(origin)}` +
+      `&destination=${encodeURIComponent(destination)}` +
       `&travelmode=driving`;
 
-    window.location.href = mapsUrl;
+    // GitHub Pages + Android Chrome/PWA reliable launch
+    const a = document.createElement('a');
+    a.href = mapsUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   function calculate() {
@@ -371,7 +368,7 @@
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register(window.BASEPATH + '/service-worker.js').catch(() => {});
+      navigator.serviceWorker.register((window.__BASE_PATH__ || './') + 'service-worker.js').catch(() => {});
     });
   }
 })();

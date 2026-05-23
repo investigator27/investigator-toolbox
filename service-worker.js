@@ -1,6 +1,57 @@
 const BASE = '/travel-calc/';
-const CACHE = 'surveillance-travel-pwa-v5';
-const ASSETS = [BASE, BASE + 'surveillance-travel-calculator.html', BASE + 'manifest.webmanifest', BASE + 'service-worker.js', BASE + 'assets/icon-192.png', BASE + 'assets/icon-512.png'];
-self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))); self.skipWaiting(); });
-self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
-self.addEventListener('fetch', e => { if (e.request.method !== 'GET') return; e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });
+const CACHE = 'surveillance-travel-pwa-v6';
+
+const ASSETS = [
+  BASE,
+  BASE + 'surveillance-travel-calculator.html',
+  BASE + 'manifest.webmanifest',
+  BASE + 'service-worker.js',
+  BASE + 'assets/icon-192.png',
+  BASE + 'assets/icon-512.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE)
+          .map(key => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  // Network-first for HTML/pages
+  if (event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => {
+            cache.put(event.request, copy);
+          });
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets
+  event.respondWith(
+    caches.match(event.request)
+      .then(cached => cached || fetch(event.request))
+  );
+});

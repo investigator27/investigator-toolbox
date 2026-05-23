@@ -99,7 +99,7 @@
     <div><h2 id="form-title" class="card-title">Trip Details</h2><p class="card-sub">Select the starting location, enter the event address, then copy the full one-way distance and time from Google Maps.</p></div>
     <div><div class="seg-label">Billing Type</div><div class="segmented" role="group" aria-label="Billing type"><button type="button" class="segment active" data-trip="oneway" aria-pressed="true">One Way</button><button type="button" class="segment" data-trip="roundtrip" aria-pressed="false">Round Trip</button></div></div>
     <div class="field"><label for="city">Starting Location</label><select id="city"><option value="">Select a City</option><optgroup label="Alberta"><option value="Calgary City Hall, 800 Macleod Trail SE, Calgary, AB T2P 2M5">Calgary – Calgary City Hall, 800 Macleod Trail SE</option><option value="Edmonton City Hall, 1 Sir Winston Churchill Square, Edmonton, AB T5J 2R7">Edmonton – Edmonton City Hall, 1 Sir Winston Churchill Square</option></optgroup><optgroup label="British Columbia"><option value="Robson Square, 800 Robson Street, Vancouver, BC V6Z 3B7">Vancouver – Robson Square, 800 Robson Street</option><option value="Victoria City Hall, 1 Centennial Square, Victoria, BC V8W 1P6">Victoria – Victoria City Hall, 1 Centennial Square</option><option value="Kelowna City Hall, 1435 Water Street, Kelowna, BC V1Y 1J4">Kelowna – Kelowna City Hall, 1435 Water Street</option></optgroup><optgroup label="Ontario"><option value="Toronto City Hall, 100 Queen Street West, Toronto, ON M5H 2N2">GTA – Toronto City Hall, 100 Queen Street West</option><option value="Ottawa City Hall, 110 Laurier Avenue West, Ottawa, ON K1P 1J1">Ottawa – Ottawa City Hall, 110 Laurier Avenue West</option><option value="London City Hall, 300 Dufferin Avenue, London, ON N6A 6G9">London – London City Hall, 300 Dufferin Avenue</option><option value="Windsor City Hall, 350 City Hall Square West, Windsor, ON N9A 6S1">Windsor – Windsor City Hall, 350 City Hall Square West</option><option value="Tom Davies Square, 200 Brady Street, Greater Sudbury, ON P3A 5P3">Sudbury – Tom Davies Square, 200 Brady Street</option><option value="Thunder Bay City Hall, 500 Donald Street East, Thunder Bay, ON P7C 5K4">Thunder Bay – Thunder Bay City Hall, 500 Donald Street East</option></optgroup><optgroup label="Manitoba"><option value="Winnipeg City Hall, 510 Main Street, Winnipeg, MB R3B 1B9">Winnipeg – Winnipeg City Hall, 510 Main Street</option></optgroup><optgroup label="Saskatchewan"><option value="Regina City Hall, 2476 Victoria Avenue, Regina, SK S4P 3C8">Regina – Regina City Hall, 2476 Victoria Avenue</option><option value="Saskatoon City Hall, 222 3rd Avenue North, Saskatoon, SK S7K 1M8">Saskatoon – Saskatoon City Hall, 222 3rd Avenue North</option></optgroup><optgroup label="Quebec"><option value="Montreal City Hall, 275 Rue Notre-Dame Est, Montreal, QC H2Y 1C6">Montreal – Montreal City Hall, 275 Rue Notre-Dame Est</option><option value="Maison du Citoyen, 25 Rue Laurier, Gatineau, QC J8X 4C8">Gatineau – Maison du Citoyen, 25 Rue Laurier</option></optgroup><optgroup label="Atlantic Canada"><option value="Halifax City Hall, 5015 Duke Street, Halifax, NS B3J 2T5">Halifax – Halifax City Hall, 5015 Duke Street</option><option value="Moncton City Hall, 655 Main Street, Moncton, NB E1C 1E8">Moncton – Moncton City Hall, 655 Main Street</option><option value="St. John's City Hall, 10 New Gower Street, St. John's, NL A1C 5M2">St. John's – St. John's City Hall, 10 New Gower Street</option><option value="Charlottetown City Hall, 199 Queen Street, Charlottetown, PE C1A 4B1">Charlottetown – Charlottetown City Hall, 199 Queen Street</option></optgroup><optgroup label="Territories"><option value="Whitehorse City Hall, 2121 2nd Avenue, Whitehorse, YT Y1A 1C2">Whitehorse – Whitehorse City Hall, 2121 2nd Avenue</option><option value="Iqaluit City Hall, 1085 Mivvik Street, Iqaluit, NU X0A 0H0">Iqaluit – Iqaluit City Hall, 1085 Mivvik Street</option></optgroup></select><div class="hint" id="cityAddressHint"></div></div>
-    <div class="field"><label for="event">Surveillance Event Address</label><input id="event" type="text" placeholder="Enter the Full Event Address" autocomplete="off" /><button class="btn btn-secondary" id="mapsBtn" type="button" onclick="window.launchMaps()">Open In Google Maps</button><div class="hint">On Android, this opens a Google Maps directions link using the selected Starting Location and the Surveillance Event Address.</div></div>
+    <div class="field"><label for="event">Surveillance Event Address</label><input id="event" type="text" placeholder="Enter the Full Event Address" autocomplete="off" /><button class="btn btn-secondary" id="mapsBtn" type="button">Open In Google Maps</button><div class="hint">On Android, this opens a Google Maps directions link using the selected Starting Location and the Surveillance Event Address.</div></div>
     <div class="field"><label for="distance">Full One-Way Route Distance (Km)</label><input id="distance" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 148.6" /><div class="hint">Get this from Google Maps — route from the starting location to the event address, one way, driving.</div></div>
     <div class="field"><label for="hours">Full One-Way Route Time — Hours</label><input id="hours" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 1" /></div>
     <div class="field"><label for="minutes">Full One-Way Route Time — Minutes</label><input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="e.g. 45" /><div class="hint">Example: 1 hour 45 minutes → enter 1 in hours and 45 in minutes.</div></div>
@@ -201,12 +201,9 @@
     });
   }
 
-  window.launchMaps = function () {
-    const city = document.getElementById('city');
-    const event = document.getElementById('event');
-
-    const origin = city ? city.value.trim() : '';
-    const destination = event ? event.value.trim() : '';
+  function launchMaps() {
+    const origin = (citySelect?.value || '').trim();
+    const destination = (eventInput?.value || '').trim();
 
     if (!origin) {
       setStatus('Select a Starting Location first.', 'error');
@@ -226,8 +223,14 @@
       '&destination=' + encodeURIComponent(destination) +
       '&travelmode=driving';
 
-    // Hard navigation so Android/GitHub can hand off to Maps
-    window.location.href = url;
+    // Open externally without replacing the current app page
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   function calculate() {

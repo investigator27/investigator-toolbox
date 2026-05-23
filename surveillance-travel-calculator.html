@@ -210,44 +210,26 @@
 
     hideStatus();
 
-    const encodedOrigin = encodeURIComponent(origin);
-    const encodedDestination = encodeURIComponent(destination);
+    const mapsUrl =
+      `https://www.google.com/maps/dir/?api=1` +
+      `&origin=${encodeURIComponent(origin)}` +
+      `&destination=${encodeURIComponent(destination)}` +
+      `&travelmode=driving`;
 
-    const webUrl =
-      `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodedOrigin}&destination=${encodedDestination}`;
+    // Use a real anchor click because Android PWAs often block
+    // window.open/location changes to external apps.
+    const link = document.createElement('a');
+    link.href = mapsUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.style.display = 'none';
 
-    const androidIntent =
-      `intent://maps.google.com/maps?` +
-      `saddr=${encodedOrigin}&daddr=${encodedDestination}` +
-      `#Intent;scheme=https;package=com.google.android.apps.maps;end`;
+    document.body.appendChild(link);
+    link.click();
 
-    const geoUrl =
-      `geo:0,0?q=${encodedDestination}`;
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    try {
-      if (isAndroid) {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = androidIntent;
-        document.body.appendChild(iframe);
-
-        setTimeout(() => {
-          try { window.location.href = geoUrl; } catch(e) {}
-        }, 700);
-
-        setTimeout(() => {
-          try { window.open(webUrl, '_blank'); } catch(e) {}
-        }, 1400);
-
-        return;
-      }
-
-      window.open(webUrl, '_blank');
-    } catch (err) {
-      window.open(webUrl, '_blank');
-    }
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
   }
 
   function calculate() {

@@ -4,8 +4,8 @@
   "start_url": "/travel-calc/surveillance-travel-calculator.html",
   "scope": "/travel-calc/",
   "display": "standalone",
-  "background_color": "#f7f6f2",
-  "theme_color": "#01696f",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "description": "Mobile calculator for surveillance travel billing outside the first 60 km.",
   "icons": [
     { "src": "/travel-calc/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

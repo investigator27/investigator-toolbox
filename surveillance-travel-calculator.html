@@ -204,20 +204,26 @@
   function launchMaps() {
     const origin = (citySelect?.value || '').trim();
     const destination = (eventInput?.value || '').trim();
+
     if (!origin) return setStatus('Select a Starting Location first.', 'error');
     if (!destination) return setStatus('Enter a Surveillance Event Address first.', 'error');
-    hideStatus();
-    const webUrl = `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
-    const androidIntent = `google.navigation:q=${encodeURIComponent(destination)}&mode=d`;
 
-    // Prefer native Google Maps app on Android
-    if (/Android/i.test(navigator.userAgent)) {
-      window.location.href = androidIntent;
-      setTimeout(() => {
-        window.open(webUrl, '_blank');
-      }, 800);
+    hideStatus();
+
+    const encodedOrigin = encodeURIComponent(origin);
+    const encodedDestination = encodeURIComponent(destination);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (isAndroid) {
+      const intentUrl =
+        `intent://maps.google.com/maps?saddr=${encodedOrigin}&daddr=${encodedDestination}&directionsmode=driving#Intent;scheme=https;package=com.google.android.apps.maps;end`;
+
+      window.location.assign(intentUrl);
       return;
     }
+
+    const webUrl =
+      `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodedOrigin}&destination=${encodedDestination}`;
 
     window.open(webUrl, '_blank');
   }

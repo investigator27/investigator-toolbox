@@ -205,32 +205,41 @@
     const origin = (citySelect?.value || '').trim();
     const destination = (eventInput?.value || '').trim();
 
+    if (!origin && !destination) {
+      alert('Please select a Starting Location and enter the Surveillance Event Address before opening Google Maps.');
+      setStatus('Starting Location and Surveillance Event Address are required.', 'error');
+      return;
+    }
+
     if (!origin) {
+      alert('Please select a Starting Location before opening Google Maps.');
       setStatus('Select a Starting Location first.', 'error');
       return;
     }
 
     if (!destination) {
+      alert('Please enter the Surveillance Event Address before opening Google Maps.');
       setStatus('Enter a Surveillance Event Address first.', 'error');
       return;
     }
 
     hideStatus();
 
+    // Launch Android Maps app without replacing app tab
     const url =
-      'https://www.google.com/maps/dir/?api=1' +
-      '&origin=' + encodeURIComponent(origin) +
-      '&destination=' + encodeURIComponent(destination) +
-      '&travelmode=driving';
+      'google.navigation:q=' +
+      encodeURIComponent(destination) +
+      '&mode=d';
 
-    // Open externally without replacing the current app page
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    // Open via iframe so browser tab stays on app
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+
+    setTimeout(() => {
+      iframe.remove();
+    }, 1000);
   }
 
   function calculate() {

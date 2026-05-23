@@ -75,7 +75,7 @@
     .metric strong{display:block;font-size:var(--text-lg);font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
     .summary-block{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-primary-highlight)}
     .summary-block b{display:block;margin-bottom:0.3rem}.steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
-    .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{padding:0 var(--space-2);text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
+    .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
     .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-4)}.hidden{display:none!important}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
   </style>
@@ -92,7 +92,7 @@
     <button class="icon-btn" type="button" data-menu-toggle aria-label="Open settings menu"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg></button>
   </div>
   <div class='menu-panel hidden' id='menuPanel' role='dialog' aria-label='Settings menu'>
-    <div class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
+    <div id='menuThemeRow' class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
     <button class='menu-item' id='menuHowBtn' type='button'>How To</button>
   </div>
   <section class="card" aria-labelledby="form-title">
@@ -112,60 +112,246 @@
   <div class='modal hidden' id='howModal' aria-hidden='true'><div class='modal-card'><div class='modal-head'><h2>How To Use</h2><button class='icon-btn' id='closeHow' type='button' aria-label='Close how-to page'><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 6 6 18M6 6l12 12'/></svg></button></div><ol class='steps-list'><li>Select your starting location from the dropdown.</li><li>Enter the surveillance event address.</li><li>Tap <strong>Open In Google Maps</strong> to launch directions, or open Google Maps manually.</li><li>Copy the one-way driving distance and time into this page.</li><li>Choose One Way or Round Trip.</li><li>Tap <strong>Calculate Billing</strong>.</li><li>Enter the returned values in TrackOps Mobile.</li></ol><div class='install-hint'><strong>Install App Icon How-To</strong> Open this page in Chrome, tap the three-dot menu, then tap <strong>Add To Home Screen</strong> or <strong>Install App</strong>. If the icon changes, remove the old home-screen shortcut and add it again after the update finishes.</div></div></div><p class='footer'>Prototype · Enter Google Maps route values manually · v1.3</p>
 </main>
 <script>
-  const themeBtn = document.querySelector('[data-theme-toggle]');
-  let theme = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  function renderThemeIcon(){themeBtn.innerHTML=theme==='dark'?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'}
-  renderThemeIcon();
-  themeBtn.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',theme);renderThemeIcon();});
-  const citySelect=document.getElementById('city'); const cityHint=document.getElementById('cityAddressHint');
-  citySelect.addEventListener('change',()=>{cityHint.textContent=citySelect.value?'Starting Location: '+citySelect.value:'';});
-  let tripType='oneway';
-  document.querySelectorAll('.segment').forEach(btn=>{btn.addEventListener('click',()=>{tripType=btn.dataset.trip;document.querySelectorAll('.segment').forEach(x=>{x.classList.toggle('active',x===btn);x.setAttribute('aria-pressed',x===btn?'true':'false');});});});
-  const statusBox=document.getElementById('statusBox'); const resultsSection=document.getElementById('resultsSection');
-  function setStatus(msg,mode){statusBox.className='status show'+(mode?' '+mode:'');statusBox.textContent=msg;}
-  function hideStatus(){statusBox.className='status hidden';statusBox.textContent='';}
-  function fmtKm(v){return v.toFixed(1)+' km';}
-  function fmtDuration(totalMins){const r=Math.max(0,Math.round(totalMins));return Math.floor(r/60)+'h '+String(r%60).padStart(2,'0')+'m';}
-  document.getElementById('mapsBtn').addEventListener('click',()=>{const origin=citySelect.value.trim(); const destination=document.getElementById('event').value.trim(); if(!origin){setStatus('Select a Starting Location first.','error');return;} if(!destination){setStatus('Enter a Surveillance Event Address first.','error');return;} hideStatus(); const url='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(destination); location.href=url;});
-  document.getElementById('calculateBtn').addEventListener('click',()=>{hideStatus(); const city=citySelect.value.trim(); const event=document.getElementById('event').value.trim(); const distance=parseFloat(document.getElementById('distance').value); const hrs=parseFloat(document.getElementById('hours').value||'0'); const mins=parseFloat(document.getElementById('minutes').value||'0'); if(!city){setStatus('Select a Starting Location to set the downtown core address.','error');resultsSection.classList.add('hidden');return;} if(!event){setStatus('Enter the Surveillance Event Address.','error');resultsSection.classList.add('hidden');return;} if(!Number.isFinite(distance)||distance<0){setStatus('Enter a valid one-way route distance in km from Google Maps.','error');resultsSection.classList.add('hidden');return;} const fullMins=hrs*60+mins; if(fullMins<=0){setStatus('Enter the full one-way route time from Google Maps.','error');resultsSection.classList.add('hidden');return;} const removedKm1=Math.min(60,distance); const removedMins1=distance>0?fullMins*(removedKm1/distance):0; const billableKm1=Math.max(0,distance-60); const billableMins1=Math.max(0,fullMins-removedMins1); const mult=tripType==='roundtrip'?2:1; document.getElementById('billableKm').textContent=fmtKm(billableKm1*mult); document.getElementById('billableTime').textContent=fmtDuration(billableMins1*mult); document.getElementById('removedKm').textContent=fmtKm(removedKm1*mult); document.getElementById('removedTime').textContent=fmtDuration(removedMins1*mult); document.getElementById('resultTripLine').textContent=(tripType==='roundtrip'?'Round Trip':'One Way')+' · '+city.split(',')[0]; document.getElementById('summaryLine').textContent='Enter These Values In TrackOps Mobile.'; document.getElementById('summaryNote').textContent=distance<=60?'The full route is within 60 km one way. No billable travel applies under the current rule.':'The first 60 km one way and the estimated matching travel time have been removed. The remaining values are billable.'; resultsSection.classList.remove('hidden'); setStatus('Calculation complete.','success'); resultsSection.scrollIntoView({behavior:'smooth',block:'start'});});
-  document.getElementById('clearBtn').addEventListener('click',()=>{citySelect.value='';cityHint.textContent='';document.getElementById('event').value='';document.getElementById('distance').value='';document.getElementById('hours').value='';document.getElementById('minutes').value='';resultsSection.classList.add('hidden');hideStatus();});
-  let deferredPrompt=null;
-  const installBtn=document.getElementById('installBtn');
-  const menuPanel=document.getElementById('menuPanel');
-  const menuToggle=document.querySelector('[data-menu-toggle]');
-  const menuLightBtn=document.getElementById('menuLightBtn');
-  const menuDarkBtn=document.getElementById('menuDarkBtn');
-  const menuHowBtn=document.getElementById('menuHowBtn');
-  const howModal=document.getElementById('howModal');
-  const closeHow=document.getElementById('closeHow');
-  function openMenu(){ menuPanel.classList.remove('hidden'); }
-  function closeMenu(){ menuPanel.classList.add('hidden'); }
-  function setTheme(themeValue){ document.documentElement.setAttribute('data-theme', themeValue); renderThemeIcon(); }
-  if (menuToggle) menuToggle.addEventListener('click', (e)=>{ e.stopPropagation(); menuPanel.classList.toggle('hidden'); });
-  document.addEventListener('click', (e)=>{ if (menuPanel && !menuPanel.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) closeMenu(); });
-  if (menuLightBtn) menuLightBtn.addEventListener('click', ()=>{ setTheme('light'); closeMenu(); });
-  if (menuDarkBtn) menuDarkBtn.addEventListener('click', ()=>{ setTheme('dark'); closeMenu(); });
-  if (menuHowBtn) menuHowBtn.addEventListener('click', ()=>{ if (howModal) { howModal.classList.remove('hidden'); howModal.setAttribute('aria-hidden','false'); } closeMenu(); });
-  if (closeHow) closeHow.addEventListener('click', ()=>{ if (howModal) { howModal.classList.add('hidden'); howModal.setAttribute('aria-hidden','true'); } });
-  if (howModal) howModal.addEventListener('click', e=>{ if (e.target === howModal) { howModal.classList.add('hidden'); howModal.setAttribute('aria-hidden','true'); } });
-  const citySelect=document.getElementById('city');
-  const cityHint=document.getElementById('cityAddressHint');
-  if (citySelect) citySelect.addEventListener('change', ()=>{ if (cityHint) cityHint.textContent = citySelect.value ? ('Starting Location: ' + citySelect.value) : ''; });
-  const tripButtons=[...document.querySelectorAll('.segment')];
-  tripButtons.forEach(btn=>btn.addEventListener('click',()=>{ tripButtons.forEach(x=>{x.classList.toggle('active',x===btn); x.setAttribute('aria-pressed',x===btn?'true':'false');}); }));
-  const statusBox=document.getElementById('statusBox');
-  const resultsSection=document.getElementById('resultsSection');
-  function setStatus(msg,mode){ if(!statusBox) return; statusBox.className='status show '+mode; statusBox.textContent=msg; }
-  function hideStatus(){ if(!statusBox) return; statusBox.className='status hidden'; statusBox.textContent=''; }
-  function fmtKm(v){ return v.toFixed(1) + ' km'; }
-  function fmtDuration(totalMins){ const r=Math.max(0,Math.round(totalMins)); return Math.floor(r/60)+'h '+String(r%60).padStart(2,'0')+'m'; }
-  const mapsBtn=document.getElementById('mapsBtn');
-  if (mapsBtn) mapsBtn.addEventListener('click',()=>{ const origin=(citySelect&&citySelect.value||'').trim(); const destination=(document.getElementById('event')&&document.getElementById('event').value||'').trim(); if(!origin){ setStatus('Select a Starting Location first.','error'); return; } if(!destination){ setStatus('Enter a Surveillance Event Address first.','error'); return; } hideStatus(); const url='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(destination); try{ window.open(url,'_blank','noopener,noreferrer'); } catch(e){} location.href=url; });
-  const calculateBtn=document.getElementById('calculateBtn');
-  if (calculateBtn) calculateBtn.addEventListener('click',()=>{ hideStatus(); const city=(citySelect&&citySelect.value||'').trim(); const event=(document.getElementById('event')&&document.getElementById('event').value||'').trim(); const distance=parseFloat((document.getElementById('distance')&&document.getElementById('distance').value)||''); const hrs=parseFloat((document.getElementById('hours')&&document.getElementById('hours').value)||'0'); const mins=parseFloat((document.getElementById('minutes')&&document.getElementById('minutes').value)||'0'); if(!city){ setStatus('Select a Starting Location to set the downtown core address.','error'); if(resultsSection) resultsSection.classList.add('hidden'); return; } if(!event){ setStatus('Enter the Surveillance Event Address.','error'); if(resultsSection) resultsSection.classList.add('hidden'); return; } if(!Number.isFinite(distance)||distance<0){ setStatus('Enter a valid one-way route distance in km from Google Maps.','error'); if(resultsSection) resultsSection.classList.add('hidden'); return; } const fullMins=(hrs*60)+mins; if(fullMins<=0){ setStatus('Enter the full one-way route time from Google Maps.','error'); if(resultsSection) resultsSection.classList.add('hidden'); return; } const removedKm=Math.min(60,distance); const removedMins=distance>0 ? (fullMins*(removedKm/distance)) : 0; const billableKm=Math.max(0,distance-60); const billableMins=Math.max(0,fullMins-removedMins); document.getElementById('billableKm').textContent=fmtKm(billableKm); document.getElementById('billableTime').textContent=fmtDuration(billableMins); document.getElementById('removedKm').textContent=fmtKm(removedKm); document.getElementById('removedTime').textContent=fmtDuration(removedMins); document.getElementById('resultTripLine').textContent='One Way'; document.getElementById('summaryLine').textContent='Enter These Values In TrackOps Mobile.'; document.getElementById('summaryNote').textContent=distance<=60 ? 'The full route is within 60 km one way. No billable travel applies under the current rule.' : 'The first 60 km one way and the estimated matching travel time have been removed. The remaining values are billable.'; if(resultsSection) resultsSection.classList.remove('hidden'); setStatus('Calculation complete.','success'); });
-  const clearBtn=document.getElementById('clearBtn');
-  if (clearBtn) clearBtn.addEventListener('click',()=>{ if(citySelect) citySelect.value=''; if(document.getElementById('event')) document.getElementById('event').value=''; if(document.getElementById('distance')) document.getElementById('distance').value=''; if(document.getElementById('hours')) document.getElementById('hours').value=''; if(document.getElementById('minutes')) document.getElementById('minutes').value=''; if(resultsSection) resultsSection.classList.add('hidden'); hideStatus(); });
-  if (installBtn) window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; installBtn.classList.remove('hidden'); });
-  if (installBtn) installBtn.addEventListener('click', async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; installBtn.classList.add('hidden'); });
->
+(() => {
+  const doc = document;
+  const root = doc.documentElement;
+  const $ = (id) => doc.getElementById(id);
+  const qs = (sel) => doc.querySelector(sel);
+  const qsa = (sel) => [...doc.querySelectorAll(sel)];
+
+  let tripType = 'oneway';
+  let deferredPrompt = null;
+
+  const citySelect = $('city');
+  const cityHint = $('cityAddressHint');
+  const eventInput = $('event');
+  const distanceInput = $('distance');
+  const hoursInput = $('hours');
+  const minutesInput = $('minutes');
+  const statusBox = $('statusBox');
+  const resultsSection = $('resultsSection');
+
+  const menuToggle = qs('[data-menu-toggle]');
+  const menuPanel = $('menuPanel');
+  const howModal = $('howModal');
+  const closeHow = $('closeHow');
+  const installBtn = $('installBtn');
+
+  const mapsBtn = $('mapsBtn');
+  const calculateBtn = $('calculateBtn');
+  const clearBtn = $('clearBtn');
+  const menuHowBtn = $('menuHowBtn');
+
+  function setStatus(message, mode = '') {
+    if (!statusBox) return;
+    statusBox.className = `status show${mode ? ' ' + mode : ''}`;
+    statusBox.textContent = message;
+  }
+
+  function hideStatus() {
+    if (!statusBox) return;
+    statusBox.className = 'status hidden';
+    statusBox.textContent = '';
+  }
+
+  function fmtKm(value) {
+    return `${Number(value).toFixed(1)} km`;
+  }
+
+  function fmtDuration(totalMinutes) {
+    const mins = Math.max(0, Math.round(Number(totalMinutes) || 0));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${String(m).padStart(2, '0')}m`;
+  }
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    try { localStorage.setItem('travelCalcTheme', theme); } catch {}
+  }
+
+  function closeMenu() {
+    if (menuPanel) menuPanel.classList.add('hidden');
+  }
+
+  function toggleMenu(event) {
+    if (event) event.stopPropagation();
+    if (menuPanel) menuPanel.classList.toggle('hidden');
+  }
+
+  function openHowTo() {
+    if (!howModal) return;
+    howModal.classList.remove('hidden');
+    howModal.setAttribute('aria-hidden', 'false');
+    closeMenu();
+  }
+
+  function closeHowTo() {
+    if (!howModal) return;
+    howModal.classList.add('hidden');
+    howModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function setTrip(nextTrip) {
+    tripType = nextTrip;
+    qsa('.segment').forEach((btn) => {
+      const active = btn.dataset.trip === nextTrip;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function launchMaps() {
+    const origin = (citySelect?.value || '').trim();
+    const destination = (eventInput?.value || '').trim();
+    if (!origin) return setStatus('Select a Starting Location first.', 'error');
+    if (!destination) return setStatus('Enter a Surveillance Event Address first.', 'error');
+    hideStatus();
+    const url = `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+    window.location.href = url;
+  }
+
+  function calculate() {
+    hideStatus();
+    const city = (citySelect?.value || '').trim();
+    const event = (eventInput?.value || '').trim();
+    const distance = parseFloat(distanceInput?.value || '');
+    const hrs = parseFloat(hoursInput?.value || '0');
+    const mins = parseFloat(minutesInput?.value || '0');
+
+    if (!city) {
+      setStatus('Select a Starting Location to set the downtown core address.', 'error');
+      resultsSection?.classList.add('hidden');
+      return;
+    }
+    if (!event) {
+      setStatus('Enter the Surveillance Event Address.', 'error');
+      resultsSection?.classList.add('hidden');
+      return;
+    }
+    if (!Number.isFinite(distance) || distance < 0) {
+      setStatus('Enter a valid one-way route distance in km from Google Maps.', 'error');
+      resultsSection?.classList.add('hidden');
+      return;
+    }
+
+    const fullMins = (hrs * 60) + mins;
+    if (fullMins <= 0) {
+      setStatus('Enter the full one-way route time from Google Maps.', 'error');
+      resultsSection?.classList.add('hidden');
+      return;
+    }
+
+    const removedKmOneWay = Math.min(60, distance);
+    const removedMinsOneWay = distance > 0 ? fullMins * (removedKmOneWay / distance) : 0;
+    const billableKmOneWay = Math.max(0, distance - 60);
+    const billableMinsOneWay = Math.max(0, fullMins - removedMinsOneWay);
+    const multiplier = tripType === 'roundtrip' ? 2 : 1;
+
+    $('billableKm').textContent = fmtKm(billableKmOneWay * multiplier);
+    $('billableTime').textContent = fmtDuration(billableMinsOneWay * multiplier);
+    $('removedKm').textContent = fmtKm(removedKmOneWay * multiplier);
+    $('removedTime').textContent = fmtDuration(removedMinsOneWay * multiplier);
+    $('resultTripLine').textContent = tripType === 'roundtrip' ? 'Round Trip' : 'One Way';
+    $('summaryLine').textContent = 'Enter These Values In TrackOps Mobile.';
+    $('summaryNote').textContent = distance <= 60
+      ? 'The full route is within 60 km one way. No billable travel applies under the current rule.'
+      : 'The first 60 km one way and the estimated matching travel time have been removed. The remaining values are billable.';
+
+    resultsSection?.classList.remove('hidden');
+    setStatus('Calculation complete.', 'success');
+  }
+
+  function clearForm() {
+    if (citySelect) citySelect.value = '';
+    if (cityHint) cityHint.textContent = '';
+    if (eventInput) eventInput.value = '';
+    if (distanceInput) distanceInput.value = '';
+    if (hoursInput) hoursInput.value = '';
+    if (minutesInput) minutesInput.value = '';
+    resultsSection?.classList.add('hidden');
+    hideStatus();
+    setTrip('oneway');
+  }
+
+  const savedTheme = (() => {
+    try { return localStorage.getItem('travelCalcTheme'); } catch { return null; }
+  })();
+  applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  setTrip('oneway');
+
+  citySelect?.addEventListener('change', () => {
+    cityHint.textContent = citySelect.value ? `Starting Location: ${citySelect.value}` : '';
+  });
+
+  qsa('.segment').forEach((btn) => {
+    btn.addEventListener('click', () => setTrip(btn.dataset.trip || 'oneway'));
+  });
+
+  menuToggle?.addEventListener('click', toggleMenu);
+  doc.addEventListener('click', (event) => {
+    if (!menuPanel || menuPanel.classList.contains('hidden')) return;
+    const insideMenu = menuPanel.contains(event.target);
+    const onToggle = menuToggle?.contains(event.target);
+    if (!insideMenu && !onToggle) closeMenu();
+  });
+
+  const themeContainer = $('menuThemeRow') || $('menuPanel');
+  if (!$('menuLightBtn') && themeContainer) {
+    const lightBtn = doc.createElement('button');
+    lightBtn.id = 'menuLightBtn';
+    lightBtn.type = 'button';
+    lightBtn.className = 'menu-item menu-half';
+    lightBtn.textContent = 'Light Mode';
+
+    const darkBtn = doc.createElement('button');
+    darkBtn.id = 'menuDarkBtn';
+    darkBtn.type = 'button';
+    darkBtn.className = 'menu-item menu-half';
+    darkBtn.textContent = 'Dark Mode';
+
+    const row = doc.createElement('div');
+    row.id = 'menuThemeRow';
+    row.className = 'menu-row';
+    row.append(lightBtn, darkBtn);
+
+    const oldToggle = $('menuThemeBtn');
+    if (oldToggle) oldToggle.replaceWith(row);
+    else themeContainer.prepend(row);
+  }
+
+  $('menuLightBtn')?.addEventListener('click', () => { applyTheme('light'); closeMenu(); });
+  $('menuDarkBtn')?.addEventListener('click', () => { applyTheme('dark'); closeMenu(); });
+  menuHowBtn?.addEventListener('click', openHowTo);
+  closeHow?.addEventListener('click', closeHowTo);
+  howModal?.addEventListener('click', (event) => {
+    if (event.target === howModal) closeHowTo();
+  });
+
+  mapsBtn?.addEventListener('click', launchMaps);
+  calculateBtn?.addEventListener('click', calculate);
+  clearBtn?.addEventListener('click', clearForm);
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    installBtn?.classList.remove('hidden');
+  });
+
+  installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.classList.add('hidden');
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(window.BASEPATH + '/service-worker.js').catch(() => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>

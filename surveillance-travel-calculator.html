@@ -99,18 +99,19 @@
     <div><h2 id="form-title" class="card-title">Trip Details</h2><p class="card-sub">Select the starting location, enter the event address, then copy the full one-way distance and time from Google Maps.</p></div>
     <div><div class="seg-label">Billing Type</div><div class="segmented" role="group" aria-label="Billing type"><button type="button" class="segment active" data-trip="oneway" aria-pressed="true">One Way</button><button type="button" class="segment" data-trip="roundtrip" aria-pressed="false">Round Trip</button></div></div>
     <div class="field"><label for="city">Starting Location</label>
-<div class="dropdown" id="cityDropdown">
-  <button type="button" class="dropdown-toggle" id="cityToggle">
-    Select Starting Location
+<div class="menu-wrap city-wrap">
+  <button type="button" id="cityButton" class="menu-btn city-btn">
+    <span id="cityLabel">Select Starting Location</span>
   </button>
-  <div class="dropdown-menu" id="cityMenu">
-    <button type="button" data-value="">Select Starting Location</button>
-    <button type="button" data-value="Toronto, ON">Toronto, ON</button>
-    <button type="button" data-value="Mississauga, ON">Mississauga, ON</button>
-    <button type="button" data-value="Markham, ON">Markham, ON</button>
-    <button type="button" data-value="Vaughan, ON">Vaughan, ON</button>
-    <button type="button" data-value="Hamilton, ON">Hamilton, ON</button>
+
+  <div id="cityDropdown" class="menu-panel city-panel" hidden>
+    <button type="button" class="menu-item city-item" data-city="Toronto, ON">Toronto, ON</button>
+    <button type="button" class="menu-item city-item" data-city="Mississauga, ON">Mississauga, ON</button>
+    <button type="button" class="menu-item city-item" data-city="Markham, ON">Markham, ON</button>
+    <button type="button" class="menu-item city-item" data-city="Vaughan, ON">Vaughan, ON</button>
+    <button type="button" class="menu-item city-item" data-city="Hamilton, ON">Hamilton, ON</button>
   </div>
+
   <select id="city" style="display:none;">
     <option value="">Select Starting Location</option>
     <option value="Toronto, ON">Toronto, ON</option>
@@ -413,30 +414,48 @@
 })();
 </script>
 
+<style>
+.city-panel{
+  max-height:220px;
+  overflow-y:auto;
+  margin-top:10px;
+}
+.city-btn{
+  width:100%;
+  text-align:left;
+}
+.city-item{
+  width:100%;
+  text-align:left;
+}
+</style>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const toggle = document.getElementById('cityToggle');
-  const menu = document.getElementById('cityMenu');
+document.addEventListener('DOMContentLoaded', () => {
+  const cityBtn = document.getElementById('cityButton');
+  const cityDrop = document.getElementById('cityDropdown');
   const citySelect = document.getElementById('city');
+  const cityLabel = document.getElementById('cityLabel');
 
-  if (!toggle || !menu || !citySelect) return;
+  if (!cityBtn || !cityDrop) return;
 
-  toggle.addEventListener('click', function() {
-    menu.classList.toggle('show');
+  cityBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    cityDrop.hidden = !cityDrop.hidden;
   });
 
-  menu.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const value = this.dataset.value || '';
-      citySelect.value = value;
-      toggle.textContent = value || 'Select Starting Location';
-      menu.classList.remove('show');
+  document.querySelectorAll('.city-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const city = item.dataset.city;
+      citySelect.value = city;
+      cityLabel.textContent = city;
+      cityDrop.hidden = true;
     });
   });
 
-  document.addEventListener('click', function(e) {
-    if (!document.getElementById('cityDropdown').contains(e.target)) {
-      menu.classList.remove('show');
+  document.addEventListener('click', (e) => {
+    if (!document.querySelector('.city-wrap')?.contains(e.target)) {
+      cityDrop.hidden = true;
     }
   });
 });

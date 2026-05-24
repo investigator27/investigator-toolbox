@@ -206,34 +206,39 @@
     const destination = (eventInput?.value || '').trim();
 
     if (!origin && !destination) {
+      alert('Missing Required Fields
+
+Please select a Starting Location and enter the Surveillance Event Address before opening Google Maps.');
       setStatus('Please select a Starting Location and enter the Surveillance Event Address first.', 'error');
       return;
     }
 
     if (!origin) {
+      alert('Starting Location Required
+
+Please select a Starting Location before opening Google Maps.');
       setStatus('Please select a Starting Location first.', 'error');
       return;
     }
 
     if (!destination) {
+      alert('Surveillance Event Address Required
+
+Please enter the Surveillance Event Address before opening Google Maps.');
       setStatus('Please enter the Surveillance Event Address first.', 'error');
       return;
     }
 
     hideStatus();
 
-    // Directions screen only (not active navigation)
-    // Preserves selected origin from app
     const mapsUrl =
       'https://www.google.com/maps/dir/?api=1' +
       '&origin=' + encodeURIComponent(origin) +
       '&destination=' + encodeURIComponent(destination) +
       '&travelmode=driving';
 
-    // Open without replacing current app page
     const win = window.open(mapsUrl, '_blank');
 
-    // Fallback if popup blocked
     if (!win) {
       const a = document.createElement('a');
       a.href = mapsUrl;

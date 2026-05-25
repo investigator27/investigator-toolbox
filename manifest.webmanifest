@@ -1,6 +1,6 @@
 {
   "name": "Investigator Toolbox",
-  "short_name": "Investigator Toolbox",
+  "short_name": "Toolbox",
   "start_url": "surveillance-travel-calculator.html",
   "scope": "./",
   "display": "standalone",

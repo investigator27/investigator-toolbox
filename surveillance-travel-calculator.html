@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#4f98a3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Toolbox" />
+  <meta name="apple-mobile-web-app-title" content="Travel Calc" />
   <title>Investigator Toolbox</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <script>window.__BASE_PATH__ = '/investigator-toolbox/';</script>
@@ -45,8 +45,7 @@
     .app{max-width:680px;margin:0 auto;padding:max(env(safe-area-inset-top),var(--space-4)) var(--space-4) max(env(safe-area-inset-bottom),var(--space-8));display:grid;gap:var(--space-4)}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
     .brand{display:flex;align-items:center;gap:var(--space-3)}
-    .logo{width:48px;height:48px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0;overflow:hidden}
-    .logo img{width:100%;height:100%;object-fit:contain}
+    .logo{width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0}
     .brand h1{font-size:var(--text-lg);line-height:1.1}
     .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
     .icon-btn{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);box-shadow:var(--shadow-sm);flex-shrink:0}
@@ -59,57 +58,19 @@
     .field input:focus,.field select:focus{border-color:var(--color-primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent)}
     .hint{font-size:var(--text-xs);color:var(--color-text-muted)}
     .seg-label{font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-2)}
-
-    /* ==================== SEGMENTED BUTTONS ==================== */
     .segmented{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);background:var(--color-surface-offset);padding:var(--space-2);border-radius:var(--radius-lg)}
-    .segment{min-height:52px;border-radius:var(--radius-md);font-weight:700;font-size:var(--text-sm)}
+    .segment{min-height:52px;border-radius:var(--radius-md);background:transparent;color:var(--color-text-muted);font-weight:700;font-size:var(--text-sm)}
     .segment.active{background:var(--color-primary);color:var(--color-text-inverse);box-shadow:var(--shadow-sm)}
-
-    /* ==================== ALL BUTTONS UPDATED ==================== */
-    .btn{
-      min-height:54px;
-      padding:0.95rem 1rem;
-      border-radius:var(--radius-lg);
-      font-weight:700;
-      font-size:var(--text-base);
-      width:100%;
-      text-align:center;
-    }
-
-    [data-theme="light"] .btn-primary,
-    [data-theme="light"] .btn-secondary,
-    [data-theme="light"] .segment {
-      background: #1c1c1c;
-      color: white;
-      box-shadow: var(--shadow-md);
-    }
-    [data-theme="light"] .btn-primary:active,
-    [data-theme="light"] .btn-secondary:active,
-    [data-theme="light"] .segment:active {
-      background: #333333;
-      transform: scale(0.98);
-    }
-
-    [data-theme="dark"] .btn-primary,
-    [data-theme="dark"] .btn-secondary,
-    [data-theme="dark"] .segment {
-      background: white;
-      color: #1c1c1c;
-      box-shadow: var(--shadow-md);
-    }
-    [data-theme="dark"] .btn-primary:active,
-    [data-theme="dark"] .btn-secondary:active,
-    [data-theme="dark"] .segment:active {
-      background: #e5e5e5;
-      transform: scale(0.98);
-    }
-
-    #mapsBtn {
-      background: inherit;
-      color: inherit;
-      box-shadow: var(--shadow-md);
-    }
-
+    .btn{min-height:54px;padding:0.95rem 1rem;border-radius:var(--radius-lg);font-weight:700;font-size:var(--text-base);width:100%;text-align:center}
+    .btn-primary{background:var(--color-primary);color:var(--color-text-inverse);box-shadow:var(--shadow-md)}
+    .btn-primary:hover{background:var(--color-primary-hover)}
+    .btn-primary:active{transform:scale(0.98)}
+    .btn-secondary{background:var(--color-surface-offset);border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent)}
+    .btn-secondary:hover{background:var(--color-divider)}
+    #mapsBtn{background:var(--color-primary);color:var(--color-text-inverse);box-shadow:var(--shadow-md)}
+    #mapsBtn:hover{background:var(--color-primary-hover)}
+    #mapsBtn:active{background:var(--color-primary-hover);transform:scale(0.98)}
+    #mapsBtn:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
     .status{font-size:var(--text-sm);padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-offset);color:var(--color-text-muted);display:none}
     .status.show{display:block}.status.error{background:color-mix(in srgb,var(--color-error) 10%,var(--color-surface));color:var(--color-error)}.status.success{background:color-mix(in srgb,var(--color-success) 12%,var(--color-surface));color:var(--color-success)}
     .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
@@ -117,19 +78,9 @@
     .metric small{display:block;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:0.3rem}
     .metric strong{display:block;font-size:var(--text-lg);font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
     .summary-block{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-primary-highlight)}
-    .summary-block b{display:block;margin-bottom:0.3rem}
-    .steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
-    .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}
-    .menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}
-    .menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}
-    .menu-item:hover{background:var(--color-surface-offset)} 
-    .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} 
-    .menu-half{text-align:center}
-    .modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}
-    .modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}
-    .modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
-    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}
-    .footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-4)}.hidden{display:none!important}
+    .summary-block b{display:block;margin-bottom:0.3rem}.steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
+    .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
+    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-4)}.hidden{display:none!important}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
   </style>
 </head>
@@ -137,8 +88,8 @@
 <main class="app">
   <div class="topbar">
     <div class="brand">
-      <div class="logo">
-        <img src="assets/icon-192.png" alt="Toolbox Icon">
+      <div class="logo" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17h16"/><path d="M7 17V7l5-3 5 3v10"/><path d="M9.5 11.5h5"/></svg>
       </div>
       <div><h1>Investigator Toolbox</h1><p>Extended Travel Time & Travel Distance Calculator</p></div>
     </div>
@@ -221,14 +172,17 @@
 
   <div class='modal hidden' id='howModal' aria-hidden='true'>
   <div class='modal-card'>
+
     <div class='modal-head'>
       <h2 style="font-size:1.25rem;">How To Use</h2>
+
       <button class='icon-btn' id='closeHow' type='button' aria-label='Close how-to page'>
         <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
           <path d='M18 6 6 18M6 6l12 12'/>
         </svg>
       </button>
     </div>
+
     <ol class='steps-list'>
       <li>Choose One-Way or Round Trip.</li>
       <li>Select your starting location from the dropdown.</li>
@@ -238,8 +192,13 @@
       <li>Tap <strong>Calculate Billing</strong>.</li>
       <li>Enter the returned values in TrackOps Mobile.</li>
     </ol>
+
     <br>
-    <h2 style="font-size:1.25rem; margin-bottom:12px;">How To Install App Icon</h2>
+
+    <h2 style="font-size:1.25rem; margin-bottom:12px;">
+      How To Install App Icon
+    </h2>
+
     <ol class='steps-list'>
       <li>Tap the three-dot menu at the top right corner.</li>
       <li>Tap <strong>Add To Home Screen</strong>.</li>
@@ -247,6 +206,7 @@
       <li>Go to your home screen and swipe up, search <strong>Toolbox</strong></li>
       <li>Press and hold the app, then select <strong>Add To Home</strong>.</li>
     </ol>
+
   </div>
 </div>
 
@@ -278,6 +238,7 @@
   const menuPanel = $('menuPanel');
   const howModal = $('howModal');
   const closeHow = $('closeHow');
+  const installBtn = $('installBtn');
 
   const mapsBtn = $('mapsBtn');
   const calculateBtn = $('calculateBtn');
@@ -358,11 +319,13 @@
       setStatus('Please select a Starting Location and enter the Surveillance Event Address first.', 'error');
       return;
     }
+
     if (!origin) {
       alert('Please select a Starting Location before opening Google Maps.');
       setStatus('Please select a Starting Location first.', 'error');
       return;
     }
+
     if (!destination) {
       alert('Please enter the Surveillance Event Address before opening Google Maps.');
       setStatus('Please enter the Surveillance Event Address first.', 'error');
@@ -371,12 +334,14 @@
 
     hideStatus();
 
-    const mapsUrl = 'https://www.google.com/maps/dir/?api=1' +
+    const mapsUrl =
+      'https://www.google.com/maps/dir/?api=1' +
       '&origin=' + encodeURIComponent(origin) +
       '&destination=' + encodeURIComponent(destination) +
       '&travelmode=driving';
 
     const win = window.open(mapsUrl, '_blank');
+
     if (!win) {
       const a = document.createElement('a');
       a.href = mapsUrl;
@@ -425,19 +390,23 @@
     const billableMinsOneWay = Math.max(0, fullMins - removedMinsOneWay);
     const multiplier = tripType === 'roundtrip' ? 2 : 1;
 
-    $('billableKm').textContent = fmtKm(billableKmOneWay * multiplier);
-    $('billableTime').textContent = fmtDuration(billableMinsOneWay * multiplier);
-    $('removedKm').textContent = fmtKm(removedKmOneWay * multiplier);
-    $('removedTime').textContent = fmtDuration(removedMinsOneWay * multiplier);
+// OUTPUT VALUES
+$('billableKm').textContent = fmtKm(billableKmOneWay * multiplier);
+$('billableTime').textContent = fmtDuration(billableMinsOneWay * multiplier);
+$('removedKm').textContent = fmtKm(removedKmOneWay * multiplier);
+$('removedTime').textContent = fmtDuration(removedMinsOneWay * multiplier);
 
-    $('resultTripLine').textContent = tripType === 'roundtrip' ? 'Round Trip' : 'One-Way';
-    $('summaryLine').textContent = 'Enter Values In Trackops Mobile App.';
+$('resultTripLine').textContent =
+  tripType === 'roundtrip' ? 'Round Trip' : 'One-Way';
 
-    $('summaryNote').textContent = distance <= 60
-      ? 'The full route is within 60 km one-way. No billable travel applies under the current rule.'
-      : tripType === 'roundtrip'
-        ? 'Round trip selected. The 60 km deduction is applied per direction before billing, and remaining travel is doubled.'
-        : 'The first 60 km one-way and the proportional travel time have been removed. The remaining values are billable.';
+$('summaryLine').textContent = 'Enter Values In Trackops Mobile App.';
+
+$('summaryNote').textContent =
+  distance <= 60
+    ? 'The full route is within 60 km one-way. No billable travel applies under the current rule.'
+    : tripType === 'roundtrip'
+      ? 'Round trip selected. The 60 km deduction is applied per direction before billing, and remaining travel is doubled.'
+      : 'The first 60 km one-way and the proportional travel time have been removed. The remaining values are billable.';
 
     resultsSection?.classList.remove('hidden');
     setStatus('Calculation complete.', 'success');
@@ -513,6 +482,20 @@
   calculateBtn?.addEventListener('click', calculate);
   clearBtn?.addEventListener('click', clearForm);
 
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    installBtn?.classList.remove('hidden');
+  });
+
+  installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.classList.add('hidden');
+  });
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register(window.BASEPATH + '/service-worker.js').catch(() => {});
@@ -522,14 +505,65 @@
 </script>
 
 <style>
-.menu-wrap{position:relative;width:100%;}
-.city-btn{width:100%;min-height:52px;padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;text-align:left;font-size:var(--text-base);}
-.city-btn::after{content:'☰';font-size:1rem;opacity:0.8;}
-.city-panel{position:absolute;top:calc(100% + 10px);left:0;width:100%;z-index:250;max-height:260px;overflow-y:auto;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2);}
-.city-panel[hidden]{display:none !important;}
-.city-item{width:100%;text-align:left;}
-.city-panel::-webkit-scrollbar{width:8px;}
-.city-panel::-webkit-scrollbar-thumb{background:var(--color-border);border-radius:999px;}
+.menu-wrap{
+  position:relative;
+  width:100%;
+}
+
+.city-btn{
+  width:100%;
+  min-height:52px;
+  padding:0.9rem 1rem;
+  border-radius:var(--radius-lg);
+  background:var(--color-surface-2);
+  border:1px solid var(--color-border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  text-align:left;
+  font-size:var(--text-base);
+}
+
+.city-btn::after{
+  content:'☰';
+  font-size:1rem;
+  opacity:0.8;
+}
+
+.city-panel{
+  position:absolute;
+  top:calc(100% + 10px);
+  left:0;
+  width:100%;
+  z-index:250;
+  max-height:260px;
+  overflow-y:auto;
+  background:var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-md);
+  padding:var(--space-2);
+  display:grid;
+  gap:var(--space-2);
+}
+
+.city-panel[hidden]{
+  display:none !important;
+}
+
+.city-item{
+  width:100%;
+  text-align:left;
+}
+
+.city-panel::-webkit-scrollbar{
+  width:8px;
+}
+
+.city-panel::-webkit-scrollbar-thumb{
+  background:var(--color-border);
+  border-radius:999px;
+}
 </style>
 
 <script>
@@ -554,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cityLabel.textContent = city;
       cityDrop.hidden = true;
       cityBtn.setAttribute('aria-expanded', 'false');
+
       citySelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
   });
@@ -565,5 +600,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+
 </body>
 </html>

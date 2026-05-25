@@ -615,6 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 button, .btn, .btn-primary, .btn-secondary, .segment, .icon-btn, .menu-item, .menu-half, .city-btn, .city-item, input, select, textarea {
   -webkit-tap-highlight-color: transparent !important;
+  transition: none !important;
 }
 button:focus, button:focus-visible,
 .btn:focus, .btn:focus-visible,
@@ -637,45 +638,18 @@ textarea:focus, textarea:focus-visible {
   border-color: var(--color-primary-highlight) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-highlight) 18%, transparent) !important;
 }
-.segment,
-.segment.active,
-.segment:hover,
-.segment:active,
-.segment:focus,
-.segment:focus-visible,
-#mapsBtn,
-#mapsBtn:hover,
-#mapsBtn:active,
-#calculateBtn,
-#calculateBtn:hover,
-#calculateBtn:active,
-.btn-primary,
-.btn-primary:hover,
-.btn-primary:active,
-.btn-secondary,
-.btn-secondary:hover,
-.btn-secondary:active,
-.icon-btn,
-.icon-btn:hover,
-.icon-btn:active,
-.menu-item,
-.menu-item:hover,
-.menu-item:active,
-.menu-half,
-.menu-half:hover,
-.menu-half:active,
-.city-btn,
-.city-btn:hover,
-.city-btn:active,
-.city-item,
-.city-item:hover,
-.city-item:active {
-  transition: none !important;
-}
 [data-theme="light"] .segment.active,
 [data-theme="light"] #mapsBtn,
 [data-theme="light"] #calculateBtn,
-[data-theme="light"] .btn-primary {
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .menu-panel .menu-item.selected,
+[data-theme="light"] .menu-panel .menu-half.selected,
+[data-theme="light"] .menu-panel .menu-item:active,
+[data-theme="light"] .menu-panel .menu-half:active,
+[data-theme="light"] .menu-wrap .city-btn.selected,
+[data-theme="light"] .menu-wrap .city-item.selected,
+[data-theme="light"] .icon-btn:active,
+[data-theme="light"] .icon-btn:hover {
   background: var(--color-primary) !important;
   color: #f9f8f4 !important;
 }
@@ -686,13 +660,29 @@ textarea:focus, textarea:focus-visible {
 [data-theme="light"] #calculateBtn:hover,
 [data-theme="light"] #calculateBtn:active,
 [data-theme="light"] .btn-primary:hover,
-[data-theme="light"] .btn-primary:active {
+[data-theme="light"] .btn-primary:active,
+[data-theme="light"] .menu-panel .menu-item.selected:hover,
+[data-theme="light"] .menu-panel .menu-item.selected:active,
+[data-theme="light"] .menu-panel .menu-half.selected:hover,
+[data-theme="light"] .menu-panel .menu-half.selected:active,
+[data-theme="light"] .menu-wrap .city-btn.selected:hover,
+[data-theme="light"] .menu-wrap .city-btn.selected:active,
+[data-theme="light"] .menu-wrap .city-item.selected:hover,
+[data-theme="light"] .menu-wrap .city-item.selected:active {
   background: var(--color-primary-hover) !important;
 }
 [data-theme="dark"] .segment.active,
 [data-theme="dark"] #mapsBtn,
 [data-theme="dark"] #calculateBtn,
-[data-theme="dark"] .btn-primary {
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .menu-panel .menu-item.selected,
+[data-theme="dark"] .menu-panel .menu-half.selected,
+[data-theme="dark"] .menu-panel .menu-item:active,
+[data-theme="dark"] .menu-panel .menu-half:active,
+[data-theme="dark"] .menu-wrap .city-btn.selected,
+[data-theme="dark"] .menu-wrap .city-item.selected,
+[data-theme="dark"] .icon-btn:active,
+[data-theme="dark"] .icon-btn:hover {
   background: var(--color-primary) !important;
   color: #f9f8f4 !important;
 }
@@ -703,10 +693,34 @@ textarea:focus, textarea:focus-visible {
 [data-theme="dark"] #calculateBtn:hover,
 [data-theme="dark"] #calculateBtn:active,
 [data-theme="dark"] .btn-primary:hover,
-[data-theme="dark"] .btn-primary:active {
+[data-theme="dark"] .btn-primary:active,
+[data-theme="dark"] .menu-panel .menu-item.selected:hover,
+[data-theme="dark"] .menu-panel .menu-item.selected:active,
+[data-theme="dark"] .menu-panel .menu-half.selected:hover,
+[data-theme="dark"] .menu-panel .menu-half.selected:active,
+[data-theme="dark"] .menu-wrap .city-btn.selected:hover,
+[data-theme="dark"] .menu-wrap .city-btn.selected:active,
+[data-theme="dark"] .menu-wrap .city-item.selected:hover,
+[data-theme="dark"] .menu-wrap .city-item.selected:active {
   background: var(--color-primary-hover) !important;
 }
 </style>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const lightBtn = document.getElementById('menuLightBtn');
+  const darkBtn = document.getElementById('menuDarkBtn');
+  if (!lightBtn || !darkBtn) return;
+  const setSelected = (theme) => {
+    lightBtn.classList.toggle('selected', theme === 'light');
+    darkBtn.classList.toggle('selected', theme === 'dark');
+  };
+  lightBtn.addEventListener('click', () => setSelected('light'));
+  darkBtn.addEventListener('click', () => setSelected('dark'));
+  setSelected(document.documentElement.getAttribute('data-theme') || 'light');
+});
+</script>
 
 </body>
 </html>

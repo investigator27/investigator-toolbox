@@ -7,7 +7,9 @@ const ASSETS = [
   BASE + 'manifest.webmanifest',
   BASE + 'service-worker.js',
   BASE + 'assets/icon-192.png',
-  BASE + 'assets/icon-512.png'
+  BASE + 'assets/icon-512.png',
+  BASE + 'assets/maskable_icon_x192.png',
+  BASE + 'assets/maskable_icon.png'
 ];
 
 self.addEventListener('install', (event) => {

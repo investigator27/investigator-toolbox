@@ -601,5 +601,41 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+<style>
+[data-theme="light"] .segment.active,
+[data-theme="light"] #mapsBtn,
+[data-theme="light"] #calculateBtn {
+  background: #000000 !important;
+  color: #f9f8f4 !important;
+}
+[data-theme="light"] .segment.active:hover,
+[data-theme="light"] #mapsBtn:hover,
+[data-theme="light"] #calculateBtn:hover {
+  background: #1a1a1a !important;
+}
+[data-theme="light"] .segment.active:active,
+[data-theme="light"] #mapsBtn:active,
+[data-theme="light"] #calculateBtn:active {
+  background: #2b2b2b !important;
+}
+[data-theme="dark"] .segment.active,
+[data-theme="dark"] #mapsBtn,
+[data-theme="dark"] #calculateBtn {
+  background: #7a7a7a !important;
+  color: #f9f8f4 !important;
+}
+[data-theme="dark"] .segment.active:hover,
+[data-theme="dark"] #mapsBtn:hover,
+[data-theme="dark"] #calculateBtn:hover {
+  background: #9a9a9a !important;
+}
+[data-theme="dark"] .segment.active:active,
+[data-theme="dark"] #mapsBtn:active,
+[data-theme="dark"] #calculateBtn:active {
+  background: #666666 !important;
+}
+</style>
+
 </body>
 </html>

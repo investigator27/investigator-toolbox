@@ -210,7 +210,7 @@
   </div>
 </div>
 
-<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.1.0 · © 2026 Mitchell (CIM)</p>
+<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.0.3 · © 2026 Mitchell (CIM)</p>
 </main>
 
 <script>
@@ -258,6 +258,13 @@
     document.getElementById('updateNowBtn')?.addEventListener('click', () => {
       if (waitingSW) waitingSW.postMessage({ type: 'SKIP_WAITING' });
     });
+  }
+
+  function bindWaitingWorker(registration) {
+    if (registration.waiting) {
+      waitingSW = registration.waiting;
+      showUpdateToast();
+    }
   }
 
   function syncThemeMeta(theme) {
@@ -532,19 +539,17 @@ $('summaryNote').textContent =
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register(window.BASEPATH + '/service-worker.js');
-        const trackWaiting = () => {
-          waitingSW = registration.waiting;
-          if (waitingSW) showUpdateToast();
-        };
+        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+        bindWaitingWorker(registration);
         registration.addEventListener('updatefound', () => {
           const sw = registration.installing;
           if (!sw) return;
           sw.addEventListener('statechange', () => {
-            if (sw.state === 'installed' && navigator.serviceWorker.controller) trackWaiting();
+            if (sw.state === 'installed') bindWaitingWorker(registration);
           });
         });
-        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-        trackWaiting();
+        await registration.update();
+        bindWaitingWorker(registration);
       } catch {}
     });
   }

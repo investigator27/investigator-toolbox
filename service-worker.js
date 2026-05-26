@@ -1,5 +1,5 @@
 const BASE = '/investigator-toolbox/';
-const CACHE = 'surveillance-travel-pwa-v8';
+const CACHE = 'surveillance-travel-pwa-v9';
 
 const ASSETS = [
   BASE,

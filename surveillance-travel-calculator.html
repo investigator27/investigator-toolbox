@@ -38,7 +38,7 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth}
-    body{min-height:100dvh;background:var(--color-bg);color:var(--color-text);font:400 var(--text-base)/1.5 var(--font-body)}
+    html, body{min-height:100dvh;background:var(--color-bg);color:var(--color-text);font:400 var(--text-base)/1.5 var(--font-body)}
     button,input,select,textarea{font:inherit;color:inherit}
     button{border:none;background:none;cursor:pointer}
     a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
@@ -212,7 +212,7 @@
   </div>
 </div>
 
-<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.1.8 · © 2026 Mitchell (CIM)</p>
+<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v3.0.0 · © 2026 Mitchell (CIM)</p>
 </main>
 
 <script>
@@ -235,7 +235,7 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const APP_VERSION = 'v2.1.8';
+  const APP_VERSION = 'v3.0.0';
 
   const menuToggle = qs('[data-menu-toggle]');
   const menuPanel = $('menuPanel');
@@ -297,10 +297,12 @@
   }
 
   function applyTheme(theme) {
-    root.setAttribute('data-theme', theme);
-    syncThemeMeta(theme);
-    try { localStorage.setItem('travelCalcTheme', theme); } catch {}
-  }
+  root.setAttribute('data-theme', theme);
+  syncThemeMeta(theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#171614' : '#f7f6f2');
+  try { localStorage.setItem('travelCalcTheme', theme); } catch {}
+}
 
   function closeMenu() {
     if (menuPanel) menuPanel.classList.add('hidden');

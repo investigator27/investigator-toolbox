@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Investigator Toolbox" />
@@ -38,12 +38,27 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth}
-    html, body{min-height:100dvh;background:var(--color-bg);color:var(--color-text);font:400 var(--text-base)/1.5 var(--font-body)}
+    html, html, body{
+  min-height:100dvh;
+  background:var(--color-bg);
+  color:var(--color-text);
+  font:400 var(--text-base)/1.5 var(--font-body);
+}
+
+html{
+  background:var(--color-bg);
+}
     button,input,select,textarea{font:inherit;color:inherit}
     button{border:none;background:none;cursor:pointer}
     a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
     :focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
-    .app{max-width:680px;margin:0 auto;padding:max(env(safe-area-inset-top),var(--space-4)) var(--space-4) max(env(safe-area-inset-bottom),var(--space-8));display:grid;gap:var(--space-4)}
+    .app{
+  max-width:680px;
+  margin:0 auto;
+  padding:max(env(safe-area-inset-top),var(--space-4)) var(--space-4) max(env(safe-area-inset-bottom),var(--space-8));
+  display:grid;
+  gap:var(--space-4);
+}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
     .brand{display:flex;align-items:center;gap:var(--space-3)}
     .logo{width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0}

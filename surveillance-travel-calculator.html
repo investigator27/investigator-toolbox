@@ -417,6 +417,12 @@ $('summaryNote').textContent =
   function clearForm() {
     if (citySelect) citySelect.value = '';
     if (cityHint) cityHint.textContent = '';
+    const cityLabel = document.getElementById('cityLabel');
+    if (cityLabel) cityLabel.textContent = 'Select';
+    const cityButton = document.getElementById('cityButton');
+    if (cityButton) cityButton.setAttribute('aria-expanded', 'false');
+    const cityDropdown = document.getElementById('cityDropdown');
+    if (cityDropdown) cityDropdown.hidden = true;
     if (eventInput) eventInput.value = '';
     if (distanceInput) distanceInput.value = '';
     if (hoursInput) hoursInput.value = '';

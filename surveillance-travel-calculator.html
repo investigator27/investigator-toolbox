@@ -95,7 +95,6 @@
     </div>
     <button class="icon-btn" type="button" data-menu-toggle aria-label="Open settings menu"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg></button>
   </div>
-  <div id='updateBannerHost' style='padding:0 16px 8px'></div>
   <div class='menu-panel hidden' id='menuPanel' role='dialog' aria-label='Settings menu'>
     <div id='menuThemeRow' class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
     <button class='menu-item' id='menuHowBtn' type='button'>How To Use</button>
@@ -211,7 +210,7 @@
   </div>
 </div>
 
-<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.1.6 · © 2026 Mitchell (CIM)</p>
+<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.0.3 · © 2026 Mitchell (CIM)</p>
 </main>
 
 <script>
@@ -234,7 +233,7 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const APP_VERSION = 'v2.1.6';
+  const APP_VERSION = 'v2.1.7';
 
   const menuToggle = qs('[data-menu-toggle]');
   const menuPanel = $('menuPanel');
@@ -257,6 +256,7 @@
     document.getElementById('updateNowBtn')?.addEventListener('click', () => {
       if (waitingSW) waitingSW.postMessage({ type: 'SKIP_WAITING' });
       else navigator.serviceWorker.getRegistration().then((reg) => reg?.waiting?.postMessage({ type: 'SKIP_WAITING' }));
+      setTimeout(() => { if (updateToast) updateToast.remove(); updateToast = null; }, 5000);
     });
   }
 
@@ -567,7 +567,6 @@ $('summaryNote').textContent =
         await registration.update();
         if (registration.installing) showUpdateToast();
         bindWaitingWorker(registration);
-        showVersionBanner();
         if (navigator.serviceWorker.controller && !document.getElementById('updateToast')) showUpdateToast();
       } catch {}
     });

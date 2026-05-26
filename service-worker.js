@@ -1,10 +1,9 @@
 const BASE = '/investigator-toolbox/';
-const CACHE = 'surveillance-travel-pwa-v7';
+const CACHE = 'surveillance-travel-pwa-v8';
 
 const ASSETS = [
   BASE,
   BASE + 'surveillance-travel-calculator.html',
-  BASE + 'surveillance-travel-calculator-2.html',
   BASE + 'manifest.webmanifest',
   BASE + 'service-worker.js',
   BASE + 'assets/icon-192.png',

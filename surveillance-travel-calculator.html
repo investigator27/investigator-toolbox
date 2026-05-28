@@ -28,6 +28,7 @@
       --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.875rem;--radius-xl:1rem;--radius-full:9999px;
       --shadow-sm:0 1px 2px rgb(25 23 18/.06);--shadow-md:0 8px 22px rgb(25 23 18/.08);
       --font-body:'Satoshi',Inter,sans-serif;--transition:180ms cubic-bezier(0.16,1,0.3,1);
+      --tab-bar-height:4.5rem;
     }
     [data-theme="dark"] {
       --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#22211f;--color-divider:#262523;--color-border:#393836;
@@ -38,33 +39,95 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth}
-    html, html, body{
-  min-height:100dvh;
-  background:var(--color-bg);
-  color:var(--color-text);
-  font:400 var(--text-base)/1.5 var(--font-body);
-}
-
-html{
-  background:var(--color-bg);
-}
+    html, body{
+      height:100dvh;
+      min-height:100dvh;
+      overflow:hidden;
+      background:var(--color-bg);
+      color:var(--color-text);
+      font:400 var(--text-base)/1.5 var(--font-body);
+    }
+    html{background:var(--color-bg)}
     button,input,select,textarea{font:inherit;color:inherit}
     button{border:none;background:none;cursor:pointer}
     a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
     :focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
-    .app{
-  max-width:680px;
-  margin:0 auto;
-  padding:max(env(safe-area-inset-top),var(--space-4)) var(--space-4) max(env(safe-area-inset-bottom),var(--space-8));
-  display:grid;
-  gap:var(--space-4);
-}
+    .app-shell{
+      display:flex;
+      flex-direction:column;
+      height:100dvh;
+      max-width:680px;
+      margin:0 auto;
+      width:100%;
+      background:var(--color-bg);
+    }
+    .app-header{
+      flex-shrink:0;
+      z-index:150;
+      background:var(--color-bg);
+      padding:max(env(safe-area-inset-top),var(--space-4)) var(--space-4) var(--space-3);
+      border-bottom:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);
+    }
+    .app-content{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+      padding:var(--space-4);
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .app-content::-webkit-scrollbar{display:none}
+    .tab-panel{display:grid;gap:var(--space-4)}
+    .tab-panel.hidden{display:none!important}
+    .coming-soon{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:50vh;
+      color:var(--color-text-muted);
+      font-size:var(--text-lg);
+      font-weight:700;
+      text-align:center;
+    }
+    .tab-bar{
+      flex-shrink:0;
+      z-index:150;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:var(--space-1);
+      background:var(--color-surface);
+      border-top:1px solid var(--color-border);
+      padding:var(--space-2) var(--space-2) max(env(safe-area-inset-bottom),var(--space-2));
+      box-shadow:0 -2px 12px rgb(25 23 18/.06);
+    }
+    [data-theme="dark"] .tab-bar{box-shadow:0 -2px 12px rgb(0 0 0/.25)}
+    .tab-bar-item{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:var(--space-1);
+      padding:var(--space-2) var(--space-1);
+      border-radius:var(--radius-lg);
+      color:var(--color-text-muted);
+      font-size:var(--text-xs);
+      font-weight:700;
+      min-height:52px;
+    }
+    .tab-bar-item svg{width:22px;height:22px;flex-shrink:0}
+    .tab-bar-item.active{
+      color:var(--color-text);
+      background:var(--color-surface-offset);
+    }
+    [data-theme="light"] .tab-bar-item.active{color:var(--color-text)}
+    [data-theme="dark"] .tab-bar-item.active{color:var(--color-text)}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}
     .brand{display:flex;align-items:center;gap:var(--space-3)}
     .logo{width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0}
-.logo-icon{
-  background: var(--color-surface) url('./assets/icon-192.png') center/130% no-repeat;
-}
+    .logo-icon{background:var(--color-surface) url('./assets/icon-192.png') center/130% no-repeat}
     .brand h1{font-size:var(--text-lg);line-height:1.1}
     .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
     .icon-btn{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);box-shadow:var(--shadow-sm);flex-shrink:0}
@@ -99,96 +162,137 @@ html{
     .summary-block{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-primary-highlight)}
     .summary-block b{display:block;margin-bottom:0.3rem}.steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
     .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
-    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-4)}.hidden{display:none!important}
+    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-2)}.hidden{display:none!important}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
   </style>
 </head>
 <body>
-<main class="app">
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo logo-icon" aria-hidden="true"></div>
-      <div><h1>Investigator Toolbox</h1><p>Tools for Intrepid Investigators</p></div>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo logo-icon" aria-hidden="true"></div>
+        <div><h1>Investigator Toolbox</h1><p>Tools for Intrepid Investigators</p></div>
+      </div>
+      <button class="icon-btn" type="button" data-menu-toggle aria-label="Open settings menu"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg></button>
     </div>
-    <button class="icon-btn" type="button" data-menu-toggle aria-label="Open settings menu"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg></button>
-  </div>
-  <div id='updatePromptHost'></div>
-  <div class='menu-panel hidden' id='menuPanel' role='dialog' aria-label='Settings menu'>
-    <div id='menuThemeRow' class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
-    <button class='menu-item' id='menuHowBtn' type='button'>How To Use</button>
-  </div>
-  <section class="card" aria-labelledby="form-title">
-    <div><h2 id="form-title" class="card-title">Extended Travel Calculator</h2><p class="card-sub">Make your selections.</p></div>
-    <div><div class="seg-label">Billing Type</div><div class="segmented" role="group" aria-label="Billing type"><button type="button" class="segment active" data-trip="oneway" aria-pressed="true">One-Way</button><button type="button" class="segment" data-trip="roundtrip" aria-pressed="false">Round Trip</button></div></div>
-    <div class="field"><label for="city">Starting Location</label>
-<div class="menu-wrap city-wrap">
-  <button type="button" id="cityButton" class="menu-btn city-btn">
-    <span id="cityLabel">Select</span>
-  </button>
+    <div id='updatePromptHost'></div>
+    <div class='menu-panel hidden' id='menuPanel' role='dialog' aria-label='Settings menu'>
+      <div id='menuThemeRow' class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
+      <button class='menu-item' id='menuHowBtn' type='button'>How To Use</button>
+      <button class='menu-item' id='menuAboutBtn' type='button'>About Toolbox</button>
+    </div>
+  </header>
 
-  <div id="cityDropdown" class="menu-panel city-panel" hidden>
-    <button type="button" class="menu-item city-item" data-city="800 Macleod Trail SE, Calgary, AB T2P 2M5">Calgary, AB</button>
-    <button type="button" class="menu-item city-item" data-city="1 Sir Winston Churchill Square, Edmonton, AB T5J 2R7">Edmonton, AB</button>
-    <button type="button" class="menu-item city-item" data-city="800 Robson Street, Vancouver, BC V6Z 3B7">Vancouver, BC</button>
-    <button type="button" class="menu-item city-item" data-city="1 Centennial Square, Victoria, BC V8W 1P6">Victoria, BC</button>
-    <button type="button" class="menu-item city-item" data-city="1435 Water Street, Kelowna, BC V1Y 1J4">Kelowna, BC</button>
-    <button type="button" class="menu-item city-item" data-city="100 Queen Street West, Toronto, ON M5H 2N2">GTA, ON</button>
-    <button type="button" class="menu-item city-item" data-city="110 Laurier Avenue West, Ottawa, ON K1P 1J1">Ottawa, ON</button>
-    <button type="button" class="menu-item city-item" data-city="300 Dufferin Avenue, London, ON N6A 6G9">London, ON</button>
-    <button type="button" class="menu-item city-item" data-city="350 City Hall Square West, Windsor, ON N9A 6S1">Windsor, ON</button>
-    <button type="button" class="menu-item city-item" data-city="200 Brady Street, Greater Sudbury, ON P3A 5P3">Sudbury, ON</button>
-    <button type="button" class="menu-item city-item" data-city="500 Donald Street East, Thunder Bay, ON P7C 5K4">Thunder Bay, ON</button>
-    <button type="button" class="menu-item city-item" data-city="510 Main Street, Winnipeg, MB R3B 1B9">Winnipeg, MB</button>
-    <button type="button" class="menu-item city-item" data-city="2476 Victoria Avenue, Regina, SK S4P 3C8">Regina, SK</button>
-    <button type="button" class="menu-item city-item" data-city="222 3rd Avenue North, Saskatoon, SK S7K 1M8">Saskatoon, SK</button>
-    <button type="button" class="menu-item city-item" data-city="275 Rue Notre-Dame Est, Montreal, QC H2Y 1C6">Montreal, QC</button>
-    <button type="button" class="menu-item city-item" data-city="25 Rue Laurier, Gatineau, QC J8X 4C8">Gatineau, QC</button>
-    <button type="button" class="menu-item city-item" data-city="5015 Duke Street, Halifax, NS B3J 2T5">Halifax, NS</button>
-    <button type="button" class="menu-item city-item" data-city="655 Main Street, Moncton, NB E1C 1E8">Moncton, NB</button>
-    <button type="button" class="menu-item city-item" data-city="10 New Gower Street, St. John's, NL A1C 5M2">St. John's, NL</button>
-    <button type="button" class="menu-item city-item" data-city="199 Queen Street, Charlottetown, PE C1A 4B1">Charlottetown, PEI</button>
-    <button type="button" class="menu-item city-item" data-city="2121 2nd Avenue, Whitehorse, YT Y1A 1C2">Whitehorse, YT</button>
-    <button type="button" class="menu-item city-item" data-city="1085 Mivvik Street, Iqaluit, NU X0A 0H0">Iqaluit, NU</button>
+  <div class="app-content" id="appContent">
+    <div class="tab-panel" id="tab-calculator" data-tab="calculator" role="tabpanel" aria-labelledby="tab-btn-calculator">
+      <section class="card" aria-labelledby="form-title">
+        <div><h2 id="form-title" class="card-title">Extended Travel Calculator</h2><p class="card-sub">Make your selections.</p></div>
+        <div><div class="seg-label">Billing Type</div><div class="segmented" role="group" aria-label="Billing type"><button type="button" class="segment active" data-trip="oneway" aria-pressed="true">One-Way</button><button type="button" class="segment" data-trip="roundtrip" aria-pressed="false">Round Trip</button></div></div>
+        <div class="field"><label for="city">Starting Location</label>
+    <div class="menu-wrap city-wrap">
+      <button type="button" id="cityButton" class="menu-btn city-btn">
+        <span id="cityLabel">Select</span>
+      </button>
+
+      <div id="cityDropdown" class="menu-panel city-panel" hidden>
+        <button type="button" class="menu-item city-item" data-city="800 Macleod Trail SE, Calgary, AB T2P 2M5">Calgary, AB</button>
+        <button type="button" class="menu-item city-item" data-city="1 Sir Winston Churchill Square, Edmonton, AB T5J 2R7">Edmonton, AB</button>
+        <button type="button" class="menu-item city-item" data-city="800 Robson Street, Vancouver, BC V6Z 3B7">Vancouver, BC</button>
+        <button type="button" class="menu-item city-item" data-city="1 Centennial Square, Victoria, BC V8W 1P6">Victoria, BC</button>
+        <button type="button" class="menu-item city-item" data-city="1435 Water Street, Kelowna, BC V1Y 1J4">Kelowna, BC</button>
+        <button type="button" class="menu-item city-item" data-city="100 Queen Street West, Toronto, ON M5H 2N2">GTA, ON</button>
+        <button type="button" class="menu-item city-item" data-city="110 Laurier Avenue West, Ottawa, ON K1P 1J1">Ottawa, ON</button>
+        <button type="button" class="menu-item city-item" data-city="300 Dufferin Avenue, London, ON N6A 6G9">London, ON</button>
+        <button type="button" class="menu-item city-item" data-city="350 City Hall Square West, Windsor, ON N9A 6S1">Windsor, ON</button>
+        <button type="button" class="menu-item city-item" data-city="200 Brady Street, Greater Sudbury, ON P3A 5P3">Sudbury, ON</button>
+        <button type="button" class="menu-item city-item" data-city="500 Donald Street East, Thunder Bay, ON P7C 5K4">Thunder Bay, ON</button>
+        <button type="button" class="menu-item city-item" data-city="510 Main Street, Winnipeg, MB R3B 1B9">Winnipeg, MB</button>
+        <button type="button" class="menu-item city-item" data-city="2476 Victoria Avenue, Regina, SK S4P 3C8">Regina, SK</button>
+        <button type="button" class="menu-item city-item" data-city="222 3rd Avenue North, Saskatoon, SK S7K 1M8">Saskatoon, SK</button>
+        <button type="button" class="menu-item city-item" data-city="275 Rue Notre-Dame Est, Montreal, QC H2Y 1C6">Montreal, QC</button>
+        <button type="button" class="menu-item city-item" data-city="25 Rue Laurier, Gatineau, QC J8X 4C8">Gatineau, QC</button>
+        <button type="button" class="menu-item city-item" data-city="5015 Duke Street, Halifax, NS B3J 2T5">Halifax, NS</button>
+        <button type="button" class="menu-item city-item" data-city="655 Main Street, Moncton, NB E1C 1E8">Moncton, NB</button>
+        <button type="button" class="menu-item city-item" data-city="10 New Gower Street, St. John's, NL A1C 5M2">St. John's, NL</button>
+        <button type="button" class="menu-item city-item" data-city="199 Queen Street, Charlottetown, PE C1A 4B1">Charlottetown, PEI</button>
+        <button type="button" class="menu-item city-item" data-city="2121 2nd Avenue, Whitehorse, YT Y1A 1C2">Whitehorse, YT</button>
+        <button type="button" class="menu-item city-item" data-city="1085 Mivvik Street, Iqaluit, NU X0A 0H0">Iqaluit, NU</button>
+      </div>
+
+      <select id="city" style="display:none;">
+        <option value="">Select Starting Location</option>
+        <option value="800 Macleod Trail SE, Calgary, AB T2P 2M5">Calgary, AB</option>
+        <option value="1 Sir Winston Churchill Square, Edmonton, AB T5J 2R7">Edmonton, AB</option>
+        <option value="800 Robson Street, Vancouver, BC V6Z 3B7">Vancouver, BC</option>
+        <option value="1 Centennial Square, Victoria, BC V8W 1P6">Victoria, BC</option>
+        <option value="1435 Water Street, Kelowna, BC V1Y 1J4">Kelowna, BC</option>
+        <option value="100 Queen Street West, Toronto, ON M5H 2N2">GTA, ON</option>
+        <option value="110 Laurier Avenue West, Ottawa, ON K1P 1J1">Ottawa, ON</option>
+        <option value="300 Dufferin Avenue, London, ON N6A 6G9">London, ON</option>
+        <option value="350 City Hall Square West, Windsor, ON N9A 6S1">Windsor, ON</option>
+        <option value="200 Brady Street, Greater Sudbury, ON P3A 5P3">Sudbury, ON</option>
+        <option value="500 Donald Street East, Thunder Bay, ON P7C 5K4">Thunder Bay, ON</option>
+        <option value="510 Main Street, Winnipeg, MB R3B 1B9">Winnipeg, MB</option>
+        <option value="2476 Victoria Avenue, Regina, SK S4P 3C8">Regina, SK</option>
+        <option value="222 3rd Avenue North, Saskatoon, SK S7K 1M8">Saskatoon, SK</option>
+        <option value="275 Rue Notre-Dame Est, Montreal, QC H2Y 1C6">Montreal, QC</option>
+        <option value="25 Rue Laurier, Gatineau, QC J8X 4C8">Gatineau, QC</option>
+        <option value="5015 Duke Street, Halifax, NS B3J 2T5">Halifax, NS</option>
+        <option value="655 Main Street, Moncton, NB E1C 1E8">Moncton, NB</option>
+        <option value="10 New Gower Street, St. John's, NL A1C 5M2">St. John's, NL</option>
+        <option value="199 Queen Street, Charlottetown, PE C1A 4B1">Charlottetown, PEI</option>
+        <option value="2121 2nd Avenue, Whitehorse, YT Y1A 1C2">Whitehorse, YT</option>
+        <option value="1085 Mivvik Street, Iqaluit, NU X0A 0H0">Iqaluit, NU</option>
+      </select>
+    </div>
+    <div class="hint" id="cityAddressHint"></div></div>
+        <div class="field"><label for="event">Surveillance Event Address</label><input id="event" type="text" placeholder="Enter the Full Event Address" autocomplete="off" /><button class="btn btn-secondary" id="mapsBtn" type="button">Open In Google Maps</button><div class="hint">This opens Google Maps App using the selected Starting Location and the Surveillance Event Address.</div></div>
+        <div class="field"><label for="hours">Hours: Full One-Way Travel Time</label><input id="hours" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 1" /><div class="hint">Get this from Google Maps — Example: 1 hour → enter 1 in hours.</div></div>
+        <div class="field"><label for="minutes">Minutes: Full One-Way Travel Time</label><input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="e.g. 45" /><div class="hint">Get this from Google Maps — Example: 45 minutes → enter 45 in minutes.</div></div>
+        <div class="field"><label for="distance">Distance: Full One-Way Travel Mileage</label><input id="distance" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 148" /><div class="hint">Get this from Google Maps — travel from the starting location to the event address, one-way, travel mileage.</div></div>
+        <button class="btn btn-secondary" id="clearBtn" type="button">Clear Form</button>
+        <button class="btn btn-primary" id="calculateBtn" type="button">Calculate Billing</button>
+        <div class="status hidden" id="statusBox" aria-live="polite" role="status"></div>
+      </section>
+      <section class="card hidden" id="resultsSection" aria-labelledby="results-title"><div><h2 id="results-title" class="card-title">Billable Results</h2><p class="card-sub" id="resultTripLine"></p></div><div class="metric-grid top-grid"><div class="metric"><small>Billable Travel Hours</small><strong id="billableHours">—</strong></div><div class="metric"><small>Billable Travel Minutes</small><strong id="billableMinutes">—</strong></div><div class="metric"><small>Billable Travel Distance</small><strong id="billableKm">—</strong></div></div><div class="metric-grid bottom-grid"><div class="metric"><small>Non-Billable Travel Time Removed</small><strong id="removedTime">—</strong></div><div class="metric"><small>Non-Billable Travel Distance Removed</small><strong id="removedKm">—</strong></div></div><div class="summary-block"><b id="summaryLine"></b><span id="summaryNote"></span></div></section>
+      <p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.1.4 · © 2026 Mitchell (CIM)</p>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-hotels" data-tab="hotels" role="tabpanel" aria-labelledby="tab-btn-hotels">
+      <p class="coming-soon">Coming Soon</p>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-requests" data-tab="requests" role="tabpanel" aria-labelledby="tab-btn-requests">
+      <p class="coming-soon">Coming Soon</p>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-camera" data-tab="camera" role="tabpanel" aria-labelledby="tab-btn-camera">
+      <p class="coming-soon">Coming Soon</p>
+    </div>
   </div>
 
-  <select id="city" style="display:none;">
-    <option value="">Select Starting Location</option>
-    <option value="800 Macleod Trail SE, Calgary, AB T2P 2M5">Calgary, AB</option>
-    <option value="1 Sir Winston Churchill Square, Edmonton, AB T5J 2R7">Edmonton, AB</option>
-    <option value="800 Robson Street, Vancouver, BC V6Z 3B7">Vancouver, BC</option>
-    <option value="1 Centennial Square, Victoria, BC V8W 1P6">Victoria, BC</option>
-    <option value="1435 Water Street, Kelowna, BC V1Y 1J4">Kelowna, BC</option>
-    <option value="100 Queen Street West, Toronto, ON M5H 2N2">GTA, ON</option>
-    <option value="110 Laurier Avenue West, Ottawa, ON K1P 1J1">Ottawa, ON</option>
-    <option value="300 Dufferin Avenue, London, ON N6A 6G9">London, ON</option>
-    <option value="350 City Hall Square West, Windsor, ON N9A 6S1">Windsor, ON</option>
-    <option value="200 Brady Street, Greater Sudbury, ON P3A 5P3">Sudbury, ON</option>
-    <option value="500 Donald Street East, Thunder Bay, ON P7C 5K4">Thunder Bay, ON</option>
-    <option value="510 Main Street, Winnipeg, MB R3B 1B9">Winnipeg, MB</option>
-    <option value="2476 Victoria Avenue, Regina, SK S4P 3C8">Regina, SK</option>
-    <option value="222 3rd Avenue North, Saskatoon, SK S7K 1M8">Saskatoon, SK</option>
-    <option value="275 Rue Notre-Dame Est, Montreal, QC H2Y 1C6">Montreal, QC</option>
-    <option value="25 Rue Laurier, Gatineau, QC J8X 4C8">Gatineau, QC</option>
-    <option value="5015 Duke Street, Halifax, NS B3J 2T5">Halifax, NS</option>
-    <option value="655 Main Street, Moncton, NB E1C 1E8">Moncton, NB</option>
-    <option value="10 New Gower Street, St. John's, NL A1C 5M2">St. John's, NL</option>
-    <option value="199 Queen Street, Charlottetown, PE C1A 4B1">Charlottetown, PEI</option>
-    <option value="2121 2nd Avenue, Whitehorse, YT Y1A 1C2">Whitehorse, YT</option>
-    <option value="1085 Mivvik Street, Iqaluit, NU X0A 0H0">Iqaluit, NU</option>
-  </select>
+  <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+    <button type="button" class="tab-bar-item active" id="tab-btn-calculator" data-tab="calculator" role="tab" aria-selected="true" aria-controls="tab-calculator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg>
+      <span>Calculator</span>
+    </button>
+    <button type="button" class="tab-bar-item" id="tab-btn-hotels" data-tab="hotels" role="tab" aria-selected="false" aria-controls="tab-hotels">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>
+      <span>Hotels</span>
+    </button>
+    <button type="button" class="tab-bar-item" id="tab-btn-requests" data-tab="requests" role="tab" aria-selected="false" aria-controls="tab-requests">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
+      <span>Requests</span>
+    </button>
+    <button type="button" class="tab-bar-item" id="tab-btn-camera" data-tab="camera" role="tab" aria-selected="false" aria-controls="tab-camera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+      <span>Camera</span>
+    </button>
+  </nav>
 </div>
-<div class="hint" id="cityAddressHint"></div></div>
-    <div class="field"><label for="event">Surveillance Event Address</label><input id="event" type="text" placeholder="Enter the Full Event Address" autocomplete="off" /><button class="btn btn-secondary" id="mapsBtn" type="button">Open In Google Maps</button><div class="hint">This opens Google Maps App using the selected Starting Location and the Surveillance Event Address.</div></div>
-    <div class="field"><label for="hours">Hours: Full One-Way Travel Time</label><input id="hours" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 1" /><div class="hint">Get this from Google Maps — Example: 1 hour → enter 1 in hours.</div></div>
-    <div class="field"><label for="minutes">Minutes: Full One-Way Travel Time</label><input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="e.g. 45" /><div class="hint">Get this from Google Maps — Example: 45 minutes → enter 45 in minutes.</div></div>
-    <div class="field"><label for="distance">Distance: Full One-Way Travel Mileage</label><input id="distance" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 148" /><div class="hint">Get this from Google Maps — travel from the starting location to the event address, one-way, travel mileage.</div></div>
-    <button class="btn btn-secondary" id="clearBtn" type="button">Clear Form</button>
-    <button class="btn btn-primary" id="calculateBtn" type="button">Calculate Billing</button>
-    <div class="status hidden" id="statusBox" aria-live="polite" role="status"></div>
-  </section>
-  <section class="card hidden" id="resultsSection" aria-labelledby="results-title"><div><h2 id="results-title" class="card-title">Billable Results</h2><p class="card-sub" id="resultTripLine"></p></div><div class="metric-grid top-grid"><div class="metric"><small>Billable Travel Hours</small><strong id="billableHours">—</strong></div><div class="metric"><small>Billable Travel Minutes</small><strong id="billableMinutes">—</strong></div><div class="metric"><small>Billable Travel Distance</small><strong id="billableKm">—</strong></div></div><div class="metric-grid bottom-grid"><div class="metric"><small>Non-Billable Travel Time Removed</small><strong id="removedTime">—</strong></div><div class="metric"><small>Non-Billable Travel Distance Removed</small><strong id="removedKm">—</strong></div></div><div class="summary-block"><b id="summaryLine"></b><span id="summaryNote"></span></div></section>
 
-  <div class='modal hidden' id='howModal' aria-hidden='true'>
+<div class='modal hidden' id='howModal' aria-hidden='true'>
   <div class='modal-card'>
 
     <div class='modal-head'>
@@ -228,8 +332,24 @@ html{
   </div>
 </div>
 
-<p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v3.0.0 · © 2026 Mitchell (CIM)</p>
-</main>
+<div class='modal hidden' id='aboutModal' aria-hidden='true'>
+  <div class='modal-card'>
+
+    <div class='modal-head'>
+      <h2 style="font-size:1.25rem;">About Investigator Toolbox</h2>
+
+      <button class='icon-btn' id='closeAbout' type='button' aria-label='Close how-to page'>
+        <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
+          <path d='M18 6 6 18M6 6l12 12'/>
+        </svg>
+      </button>
+    </div>
+
+   <p>This tool operates entirely in the user’s browser and does not persist, transmit, or log any client data externally. As a static GitHub Pages deployment, it serves only front-end assets and does not include server-side processing or data storage components.</p>
+     <br>
+  </div>
+</div>
+
 
 <script>
 (() => {
@@ -251,7 +371,7 @@ html{
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const APP_VERSION = 'v3.0.0';
+  const APP_VERSION = 'v2.1.4';
 
   const menuToggle = qs('[data-menu-toggle]');
   const menuPanel = $('menuPanel');
@@ -263,6 +383,9 @@ html{
   const calculateBtn = $('calculateBtn');
   const clearBtn = $('clearBtn');
   const menuHowBtn = $('menuHowBtn');
+  const menuAboutBtn = $('menuAboutBtn');
+  const aboutModal = $('aboutModal');
+  const closeAbout = $('closeAbout');
 
   let updateToast = null;
   let waitingSW = null;
@@ -519,13 +642,43 @@ $('summaryNote').textContent =
     else themeContainer.prepend(row);
   }
 
-  $('menuLightBtn')?.addEventListener('click', () => { applyTheme('light'); closeMenu(); });
-  $('menuDarkBtn')?.addEventListener('click', () => { applyTheme('dark'); closeMenu(); });
-  menuHowBtn?.addEventListener('click', openHowTo);
-  closeHow?.addEventListener('click', closeHowTo);
-  howModal?.addEventListener('click', (event) => {
-    if (event.target === howModal) closeHowTo();
-  });
+  $('menuLightBtn')?.addEventListener('click', () => {
+  applyTheme('light');
+  closeMenu();
+});
+
+$('menuDarkBtn')?.addEventListener('click', () => {
+  applyTheme('dark');
+  closeMenu();
+});
+
+menuHowBtn?.addEventListener('click', openHowTo);
+
+closeHow?.addEventListener('click', closeHowTo);
+
+howModal?.addEventListener('click', (event) => {
+  if (event.target === howModal) closeHowTo();
+});
+
+// OPEN ABOUT MODAL
+menuAboutBtn?.addEventListener('click', () => {
+  aboutModal?.classList.remove('hidden');
+  aboutModal?.setAttribute('aria-hidden', 'false');
+  closeMenu();
+});
+
+// CLOSE ABOUT MODAL
+function closeAboutModal() {
+  if (!aboutModal) return;
+  aboutModal.classList.add('hidden');
+  aboutModal.setAttribute('aria-hidden', 'true');
+}
+
+closeAbout?.addEventListener('click', closeAboutModal);
+
+aboutModal?.addEventListener('click', (event) => {
+  if (event.target === aboutModal) closeAboutModal();
+});
 
   mapsBtn?.addEventListener('click', launchMaps);
   calculateBtn?.addEventListener('click', calculate);
@@ -801,6 +954,40 @@ document.addEventListener('DOMContentLoaded', () => {
   lightBtn.addEventListener('click', () => setSelected('light'));
   darkBtn.addEventListener('click', () => setSelected('dark'));
   setSelected(document.documentElement.getAttribute('data-theme') || 'light');
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  const tabButtons = document.querySelectorAll('.tab-bar-item');
+  const appContent = document.getElementById('appContent');
+
+  function switchTab(tabId) {
+    tabPanels.forEach((panel) => {
+      const isActive = panel.dataset.tab === tabId;
+      panel.classList.toggle('hidden', !isActive);
+    });
+    tabButtons.forEach((btn) => {
+      const isActive = btn.dataset.tab === tabId;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    if (appContent) appContent.scrollTop = 0;
+    const settingsMenu = document.getElementById('menuPanel');
+    if (settingsMenu) settingsMenu.classList.add('hidden');
+    const cityDrop = document.getElementById('cityDropdown');
+    if (cityDrop) cityDrop.hidden = true;
+  }
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.dataset.tab;
+      if (tabId) switchTab(tabId);
+    });
+  });
+
+  switchTab('calculator');
 });
 </script>
 

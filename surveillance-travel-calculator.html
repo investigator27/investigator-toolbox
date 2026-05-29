@@ -2,6 +2,27 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
+  <script>
+  (function () {
+    var theme = 'light';
+    try {
+      var saved = localStorage.getItem('travelCalcTheme');
+      if (saved === 'dark' || saved === 'light') theme = saved;
+      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+    } catch (e) {}
+    var root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    root.style.backgroundColor = theme === 'dark' ? '#171614' : '#f7f6f2';
+    root.style.colorScheme = theme;
+    var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = theme === 'dark' ? '#171614' : '#f7f6f2';
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
@@ -10,7 +31,21 @@
   <meta name="apple-mobile-web-app-title" content="Investigator Toolbox" />
   <title>Investigator Toolbox</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <script>window.__BASE_PATH__ = '/investigator-toolbox/';</script>
+  <script>
+  (function () {
+    const deployBase = '/investigator-toolbox/';
+    const path = location.pathname;
+    if (path.startsWith(deployBase)) {
+      window.__BASE_PATH__ = deployBase;
+      return;
+    }
+    if (path.endsWith('.html')) {
+      window.__BASE_PATH__ = path.slice(0, path.lastIndexOf('/') + 1);
+      return;
+    }
+    window.__BASE_PATH__ = path.endsWith('/') ? path : `${path}/`;
+  })();
+  </script>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
   <style>
@@ -28,6 +63,8 @@
       --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.875rem;--radius-xl:1rem;--radius-full:9999px;
       --shadow-sm:0 1px 2px rgb(25 23 18/.06);--shadow-md:0 8px 22px rgb(25 23 18/.08);
       --font-body:'Satoshi',Inter,sans-serif;--transition:180ms cubic-bezier(0.16,1,0.3,1);
+      --update-banner-duration:1s;
+      --update-banner-ease:cubic-bezier(0.16,1,0.3,1);
       --tab-bar-height:4.5rem;
     }
     [data-theme="dark"] {
@@ -75,12 +112,13 @@
       overflow-x:hidden;
       -webkit-overflow-scrolling:touch;
       overscroll-behavior:contain;
+      overflow-anchor:none;
       padding:var(--space-4);
       scrollbar-width:none;
       -ms-overflow-style:none;
     }
     .app-content::-webkit-scrollbar{display:none}
-    .tab-panel{display:grid;gap:var(--space-4)}
+    .tab-panel{display:grid;gap:var(--space-4);align-content:start;min-height:0}
     .tab-panel.hidden{display:none!important}
     .coming-soon{
       display:flex;
@@ -131,12 +169,28 @@
     .brand h1{font-size:var(--text-lg);line-height:1.1}
     .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
     .icon-btn{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);box-shadow:var(--shadow-sm);flex-shrink:0}
+    .icon-btn.menu-has-update{position:relative}
+    .icon-btn.menu-has-update::after{
+      content:'';
+      position:absolute;
+      top:7px;
+      right:7px;
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      background:var(--color-primary-hover);
+      border:2px solid var(--color-surface);
+      box-shadow:0 0 0 1px color-mix(in srgb,var(--color-text) 12%,transparent);
+      pointer-events:none;
+    }
     .card{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:var(--space-5);display:grid;gap:var(--space-4)}
     .card-title{font-size:var(--text-lg);line-height:1.15}
     .card-sub{color:var(--color-text-muted);font-size:var(--text-sm)}
     .field{display:grid;gap:var(--space-2)}
     .field label{font-size:var(--text-sm);font-weight:700}
-    .field input,.field select{width:100%;min-height:52px;padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-border);font-size:var(--text-base);-webkit-appearance:none;appearance:none}
+    .field input,.field select,.field textarea{width:100%;min-height:52px;padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-border);font-size:var(--text-base);-webkit-appearance:none;appearance:none}
+    .field input::placeholder,.field textarea::placeholder{color:var(--color-text-faint);opacity:1}
+    .field textarea{min-height:96px;resize:vertical;line-height:1.45}
     .field input:focus,.field select:focus{border-color:var(--color-primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent)}
     .hint{font-size:var(--text-xs);color:var(--color-text-muted)}
     .seg-label{font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-2)}
@@ -155,6 +209,9 @@
     #mapsBtn:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
     .status{font-size:var(--text-sm);padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-offset);color:var(--color-text-muted);display:none}
     .status.show{display:block}.status.error{background:color-mix(in srgb,var(--color-error) 10%,var(--color-surface));color:var(--color-error)}.status.success{background:color-mix(in srgb,var(--color-success) 12%,var(--color-surface));color:var(--color-success)}
+    .status.searching{background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface-offset));color:var(--color-text);display:grid;gap:var(--space-3)}
+    .hotel-search-status__text{line-height:1.45;color:var(--color-text-muted)}
+    .hotel-search-progress{margin-top:var(--space-1)}
     .metric-grid{display:grid;gap:var(--space-3)}.top-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.bottom-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .metric{padding:var(--space-4);background:var(--color-surface-2);border-radius:var(--radius-lg);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)}
     .metric small{display:block;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:0.3rem}
@@ -163,6 +220,140 @@
     .summary-block b{display:block;margin-bottom:0.3rem}.steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
     .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
     .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-2)}.hidden{display:none!important}
+    .hotel-form-grid{display:grid;gap:var(--space-4)}
+    @media(min-width:480px){.hotel-form-grid--dates{grid-template-columns:1fr 1fr}}
+    @media(min-width:480px){
+      .hotel-form-grid--aligned{align-items:flex-end}
+    }
+    .field--paired-control .hint{display:none}
+    .hotel-amenity-toggles{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-top:var(--space-1)}
+    .toggle{position:relative;display:flex;align-items:center;gap:var(--space-3);min-height:52px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-lg);background:var(--color-surface-offset);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+    .toggle input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
+    .toggle input:focus{outline:none}
+    .toggle-slider{flex-shrink:0;width:52px;height:30px;border-radius:999px;background:var(--color-divider);position:relative;z-index:1;pointer-events:none;transition:background var(--transition)}
+    .toggle-slider::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:999px;background:var(--color-surface);box-shadow:var(--shadow-sm);transition:transform var(--transition)}
+    .toggle input:checked + .toggle-slider{background:var(--color-success)}
+    .toggle input:checked + .toggle-slider::after{transform:translateX(22px)}
+    .toggle:has(input:focus-visible) .toggle-slider{outline:2px solid var(--color-primary);outline-offset:2px}
+    .toggle-label{font-size:var(--text-sm);font-weight:700;pointer-events:none;position:relative;z-index:1}
+    .hotel-price-hint{margin-top:calc(-1 * var(--space-3));margin-bottom:var(--space-3);color:var(--color-text-muted);font-size:var(--text-xs)}
+    section#hotelEmailSection.hotel-email-collapsed{display:none!important}
+    section#hotelEmailSection:not(.hotel-email-collapsed){display:grid}
+    .address-preview{min-height:52px;padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-offset);border:1px solid var(--color-border);font-size:var(--text-sm);color:var(--color-text-muted);word-break:break-word}
+    .address-preview.has-value{color:var(--color-text)}
+    .map-box{min-height:200px;border-radius:var(--radius-lg);border:1px solid var(--color-border);background:linear-gradient(135deg,color-mix(in srgb,var(--color-primary) 12%,var(--color-surface)) 0%,var(--color-surface-offset) 100%);padding:var(--space-4);display:grid;gap:var(--space-3);align-content:center}
+    .map-box__label{font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em}
+    .map-box__event,.map-box__hotel{font-size:var(--text-sm);line-height:1.45}
+    .map-box__meta{font-size:var(--text-sm);color:var(--color-text-muted)}
+    .map-box__placeholder{color:var(--color-text-muted);text-align:center;font-size:var(--text-sm)}
+    .map-box a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+    .hotel-results{display:grid;gap:var(--space-3)}
+    .hotel-results:empty{display:none}
+    .hotel-card{display:grid;gap:var(--space-3);padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)}
+    .hotel-card[tabindex="0"]{cursor:pointer}
+    .hotel-card.selected{border-color:var(--color-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 14%,transparent)}
+    .hotel-card__head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3)}
+    .hotel-card__rank{font-size:var(--text-xs);font-weight:700;color:var(--color-text-faint);flex-shrink:0}
+    .hotel-card__badges{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-1);flex-shrink:0}
+    .hotel-card__score{font-size:var(--text-xs);font-weight:700;color:#fff;background:#003b95;border-radius:6px;padding:.2rem .45rem;white-space:nowrap}
+    .hotel-meta{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;font-size:var(--text-sm);color:var(--color-text-muted)}
+    .hotel-meta__sub{font-size:var(--text-sm);color:var(--color-text-muted);margin-top:var(--space-1)}
+    .hotel-card--area-search{border-style:dashed}
+    .hotel-meta__rating{font-weight:700;color:var(--color-text)}
+    .hotel-actions{display:flex;gap:var(--space-2);flex-wrap:wrap}
+    .hotel-actions .btn{flex:1;min-width:min(100%,8rem);min-height:46px;padding:.8rem 1rem}
+    .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
+    .email-preview{white-space:pre-wrap;background:var(--color-surface-offset);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);font-size:var(--text-sm);line-height:1.55;max-height:280px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+    .email-preview::-webkit-scrollbar{display:none}
+    .card--disabled{opacity:0.55;pointer-events:none}
+    #updatePromptHost{
+      display:grid;
+      grid-template-rows:0fr;
+      overflow:hidden;
+      opacity:0;
+      padding-top:0;
+      padding-bottom:0;
+      transition:grid-template-rows var(--update-banner-duration) var(--update-banner-ease),opacity var(--update-banner-duration) var(--update-banner-ease),padding var(--update-banner-duration) var(--update-banner-ease);
+    }
+    #updatePromptHost.is-visible{
+      grid-template-rows:1fr;
+      opacity:1;
+      padding-top:var(--space-4);
+      padding-bottom:var(--space-5);
+    }
+    .app-header:has(#updatePromptHost.is-visible){
+      padding-bottom:0;
+    }
+    .update-banner{
+      margin:0;
+      padding:var(--space-3) var(--space-4) var(--space-4);
+      background:color-mix(in srgb,var(--color-primary-highlight) 55%,var(--color-surface));
+      color:var(--color-text);
+      border:1px solid color-mix(in srgb,var(--color-primary) 35%,var(--color-border));
+      border-radius:var(--radius-xl);
+      box-shadow:var(--shadow-md);
+      display:grid;
+      gap:var(--space-3);
+      min-height:0;
+      overflow:hidden;
+      transform:translateY(-0.5rem);
+      transition:transform var(--update-banner-duration) var(--update-banner-ease);
+    }
+    #updatePromptHost.is-visible .update-banner{transform:translateY(0)}
+    .update-banner__top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)}
+    .update-banner__body{flex:1;min-width:0;display:grid;gap:var(--space-2)}
+    .update-banner__title{font-weight:700;font-size:var(--text-sm);margin:0;line-height:1.35}
+    .update-banner__text{font-size:var(--text-xs);color:var(--color-text-muted);margin:0;line-height:1.45}
+    .update-banner__status{
+      font-size:var(--text-xs);
+      color:var(--color-text-muted);
+      line-height:1.45;
+      margin:0;
+    }
+    .update-progress{
+      height:8px;
+      border-radius:var(--radius-full);
+      background:var(--color-border);
+      border:1px solid color-mix(in srgb,var(--color-text) 18%,var(--color-border));
+      overflow:hidden;
+    }
+    .update-progress__bar{
+      display:block;
+      height:100%;
+      width:0%;
+      border-radius:inherit;
+      background:var(--color-primary-hover);
+      transition:width 0.2s linear;
+    }
+    .update-banner--ready .update-progress__bar{background:var(--color-success)}
+    .update-progress.is-indeterminate .update-progress__bar{
+      width:40%!important;
+      background:var(--color-primary-hover);
+      animation:update-indeterminate 1.1s ease-in-out infinite;
+    }
+    @keyframes update-indeterminate{
+      0%{transform:translateX(-120%)}
+      100%{transform:translateX(320%)}
+    }
+    .update-progress__percent{
+      font-size:var(--text-xs);
+      font-weight:700;
+      color:var(--color-text);
+      margin-top:var(--space-1);
+    }
+    .update-banner__actions{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap}
+    .update-banner .btn{width:auto;min-height:44px;padding:0 var(--space-4);flex-shrink:0}
+    #updateDetailsModal .modal-head{margin-bottom:var(--space-2)}
+    #updateDetailsModal .modal-head h2{margin:0;line-height:1.3}
+    #updateDetailsIntro{margin:0 0 var(--space-4);line-height:1.45}
+    #updateDetailsModal .update-notes-section h3{
+      font-size:var(--text-base);
+      font-weight:700;
+      margin:0 0 var(--space-2);
+    }
+    .update-notes{margin:0;padding-left:1.25rem;display:grid;gap:var(--space-2)}
+    .update-notes li{font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-1)}
+    .update-notes-section + .update-notes-section{margin-top:var(--space-6)}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
   </style>
 </head>
@@ -172,7 +363,7 @@
     <div class="topbar">
       <div class="brand">
         <div class="logo logo-icon" aria-hidden="true"></div>
-        <div><h1>Investigator Toolbox</h1><p>Resoruces for Investigators</p></div>
+        <div><h1>Investigator Toolbox</h1><p>Resources for Investigator</p></div>
       </div>
       <button class="icon-btn" type="button" data-menu-toggle aria-label="Open settings menu"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg></button>
     </div>
@@ -180,7 +371,9 @@
     <div class='menu-panel hidden' id='menuPanel' role='dialog' aria-label='Settings menu'>
       <div id='menuThemeRow' class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
       <button class='menu-item' id='menuHowBtn' type='button'>How To Use</button>
-      <button class='menu-item' id='menuAboutBtn' type='button'>About Toolbox</button>
+      <button class='menu-item' id='menuCheckUpdateBtn' type='button'>Check for updates</button>
+      <button class='menu-item hidden' id='menuPwaTestBtn' type='button'>Test update flow locally</button>
+      <p class='menu-version' id='menuAppVersion' style='padding:0.5rem 1rem;font-size:var(--text-xs);color:var(--color-text-muted)'></p>
     </div>
   </header>
 
@@ -256,11 +449,169 @@
         <div class="status hidden" id="statusBox" aria-live="polite" role="status"></div>
       </section>
       <section class="card hidden" id="resultsSection" aria-labelledby="results-title"><div><h2 id="results-title" class="card-title">Billable Results</h2><p class="card-sub" id="resultTripLine"></p></div><div class="metric-grid top-grid"><div class="metric"><small>Billable Travel Hours</small><strong id="billableHours">—</strong></div><div class="metric"><small>Billable Travel Minutes</small><strong id="billableMinutes">—</strong></div><div class="metric"><small>Billable Travel Distance</small><strong id="billableKm">—</strong></div></div><div class="metric-grid bottom-grid"><div class="metric"><small>Non-Billable Travel Time Removed</small><strong id="removedTime">—</strong></div><div class="metric"><small>Non-Billable Travel Distance Removed</small><strong id="removedKm">—</strong></div></div><div class="summary-block"><b id="summaryLine"></b><span id="summaryNote"></span></div></section>
-      <p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v2.1.4 · © 2026 Mitchell (CIM)</p>
+      <p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v3.0.0 · © 2026 Mitchell (CIM)</p>
     </div>
 
     <div class="tab-panel hidden" id="tab-hotels" data-tab="hotels" role="tabpanel" aria-labelledby="tab-btn-hotels">
-      <p class="coming-soon">Coming Soon</p>
+      <section class="card" aria-labelledby="hotel-title">
+        <div>
+          <h2 id="hotel-title" class="card-title">Hotel Finder</h2>
+          <p class="card-sub">Live Booking.com hotels near the event, sorted by distance.</p>
+        </div>
+
+        <div class="field">
+          <label for="hotelEventSourceBtn">Surveillance Event Source</label>
+          <div class="menu-wrap city-wrap">
+            <button type="button" id="hotelEventSourceBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelEventSourceLabel">Use current calculator event address</span>
+            </button>
+            <div id="hotelEventSourceDrop" class="menu-panel city-panel" hidden role="listbox">
+              <button type="button" class="menu-item city-item" data-picker-value="calculator">Use current calculator event address</button>
+              <button type="button" class="menu-item city-item" data-picker-value="custom">Enter a different surveillance event address</button>
+            </div>
+            <select id="hotelEventSource" hidden aria-hidden="true">
+              <option value="calculator" selected>Use current calculator event address</option>
+              <option value="custom">Enter a different surveillance event address</option>
+            </select>
+          </div>
+          <div class="hint">Pulls from the Calculator tab when that option is selected.</div>
+        </div>
+
+        <div class="field hidden" id="hotelCustomEventWrap">
+          <label for="hotelCustomEvent">Surveillance Event Address</label>
+          <input id="hotelCustomEvent" type="text" placeholder="Enter the full surveillance event address" autocomplete="off" />
+        </div>
+
+        <div class="hotel-form-grid hotel-form-grid--dates">
+          <div class="field">
+            <label for="hotelCheckin">Check In Date</label>
+            <input id="hotelCheckin" type="date" required />
+          </div>
+          <div class="field">
+            <label for="hotelCheckout">Check Out Date</label>
+            <input id="hotelCheckout" type="date" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hotelMatchCountBtn">Number of Matches</label>
+          <div class="menu-wrap city-wrap">
+            <button type="button" id="hotelMatchCountBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelMatchCountLabel">5</span>
+            </button>
+            <div id="hotelMatchCountDrop" class="menu-panel city-panel" hidden role="listbox">
+              <button type="button" class="menu-item city-item" data-picker-value="1">1</button>
+              <button type="button" class="menu-item city-item" data-picker-value="3">3</button>
+              <button type="button" class="menu-item city-item" data-picker-value="5">5</button>
+              <button type="button" class="menu-item city-item" data-picker-value="8">8</button>
+            </div>
+            <select id="hotelMatchCount" hidden aria-hidden="true">
+              <option value="1">1</option>
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hotelMaxDistanceBtn">Max Distance From Event</label>
+          <div class="menu-wrap city-wrap">
+            <button type="button" id="hotelMaxDistanceBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelMaxDistanceLabel">25 km</span>
+            </button>
+            <div id="hotelMaxDistanceDrop" class="menu-panel city-panel" hidden role="listbox">
+              <button type="button" class="menu-item city-item" data-picker-value="5">5 km</button>
+              <button type="button" class="menu-item city-item" data-picker-value="10">10 km</button>
+              <button type="button" class="menu-item city-item" data-picker-value="25">25 km</button>
+              <button type="button" class="menu-item city-item" data-picker-value="50">50 km</button>
+            </div>
+            <select id="hotelMaxDistance" hidden aria-hidden="true">
+              <option value="5">5 km</option>
+              <option value="10">10 km</option>
+              <option value="25" selected>25 km</option>
+              <option value="50">50 km</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hotel-amenity-toggles" role="group" aria-label="Required amenities">
+          <label class="toggle" for="hotelFreeBreakfast"><input id="hotelFreeBreakfast" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free breakfast</span></label>
+          <label class="toggle" for="hotelFreeParking"><input id="hotelFreeParking" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free parking</span></label>
+          <label class="toggle" for="hotelFreeCancellation"><input id="hotelFreeCancellation" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free cancellation</span></label>
+          <label class="toggle" for="hotelHotelsOnly"><input id="hotelHotelsOnly" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Hotels &amp; motels only</span></label>
+        </div>
+        <div class="hint">"Hotels &amp; motels only" excludes vacation rentals, chalets, apartments and B&amp;Bs (keeps hotels, motels, inns, lodges, resorts).</div>
+
+        <button class="btn btn-secondary" id="hotelClearBtn" type="button">Clear Form</button>
+        <button class="btn btn-primary" id="searchHotelBtn" type="button">Search Hotels</button>
+        <div class="status hidden" id="hotelStatus" aria-live="polite" role="status"></div>
+
+        <div class="hotel-results" id="hotelResults" role="list" aria-label="Hotel search results"></div>
+      </section>
+
+      <section class="card hotel-email-collapsed" id="hotelEmailSection" aria-labelledby="hotel-email-title" aria-hidden="true">
+        <div>
+          <h2 id="hotel-email-title" class="card-title">Email Draft</h2>
+          <p class="card-sub">Review the message below, then tap <strong>Send Email</strong> to open your mail app with this draft addressed to admin. <strong>Copy Draft</strong> is optional.</p>
+        </div>
+
+        <div class="field">
+          <label for="hotelInvestigatorEmail">Your Email</label>
+          <input id="hotelInvestigatorEmail" type="email" placeholder="firstname.lastname@intrepid.ca" autocomplete="email" />
+          <div class="hint">CC'd on the request when you hit Send Email. Saved on this device.</div>
+        </div>
+
+        <div class="field">
+          <label for="hotelRecipientBtn">Send To</label>
+          <div class="menu-wrap city-wrap">
+            <button type="button" id="hotelRecipientBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelRecipientLabel">Select recipient</span>
+            </button>
+            <div id="hotelRecipientDrop" class="menu-panel city-panel" hidden role="listbox"></div>
+            <select id="hotelRecipient" hidden aria-hidden="true"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hotelClientBilledBtn">Client Billed</label>
+          <div class="menu-wrap city-wrap">
+            <button type="button" id="hotelClientBilledBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelClientBilledLabel">No</span>
+            </button>
+            <div id="hotelClientBilledDrop" class="menu-panel city-panel" hidden role="listbox">
+              <button type="button" class="menu-item city-item" data-picker-value="Yes">Yes</button>
+              <button type="button" class="menu-item city-item" data-picker-value="No">No</button>
+              <button type="button" class="menu-item city-item" data-picker-value="TBD">TBD — confirm with admin</button>
+            </div>
+            <select id="hotelClientBilled" hidden aria-hidden="true">
+              <option value="Yes">Yes</option>
+              <option value="No" selected>No</option>
+              <option value="TBD">TBD — confirm with admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field hidden" id="hotelTrackopsWrap">
+          <label for="hotelTrackopsCase">Trackops Case Number</label>
+          <input id="hotelTrackopsCase" type="text" placeholder="Enter Trackops case number" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="hotelEmailSubject">Subject Line</label>
+          <input id="hotelEmailSubject" type="text" readonly />
+        </div>
+
+        <div class="field">
+          <label for="hotelEmailBody">Message</label>
+          <div id="hotelEmailBody" class="email-preview" tabindex="0" aria-readonly="true"></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="hotelCopyEmailBtn" type="button" disabled>Copy Draft</button>
+          <button class="btn btn-primary" id="hotelSendEmailBtn" type="button" disabled>Send Email</button>
+        </div>
+      </section>
     </div>
 
     <div class="tab-panel hidden" id="tab-requests" data-tab="requests" role="tabpanel" aria-labelledby="tab-btn-requests">
@@ -332,24 +683,20 @@
   </div>
 </div>
 
-<div class='modal hidden' id='aboutModal' aria-hidden='true'>
-  <div class='modal-card'>
-
-    <div class='modal-head'>
-      <h2 style="font-size:1.25rem;">About Investigator Toolbox</h2>
-
-      <button class='icon-btn' id='closeAbout' type='button' aria-label='Close how-to page'>
-        <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
-          <path d='M18 6 6 18M6 6l12 12'/>
+<div class="modal hidden" id="updateDetailsModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 style="font-size:1.25rem;">Update Details</h2>
+      <button class="icon-btn" id="closeUpdateDetails" type="button" aria-label="Close Update Details">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18M6 6l12 12"/>
         </svg>
       </button>
     </div>
-
-   <p>This tool operates entirely in the user’s browser and does not persist, transmit, or log any client data externally. As a static GitHub Pages deployment, it serves only front-end assets and does not include server-side processing or data storage components.</p>
-     <br>
+    <p id="updateDetailsIntro" style="font-size:var(--text-sm);color:var(--color-text-muted)"></p>
+    <div id="updateDetailsBody"></div>
   </div>
 </div>
-
 
 <script>
 (() => {
@@ -371,40 +718,864 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const APP_VERSION = 'v2.1.4';
+  let APP_VERSION = '3.0.0';
+  const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
+  const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
+    || /[?&]pwa=1(?:&|$)/.test(location.search);
+  const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
+  let PWA_CACHE_VERSION = 'v38';
+  const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
+  const UPDATE_BANNER_TRANSITION_MS = 1000;
+  const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
 
   const menuToggle = qs('[data-menu-toggle]');
   const menuPanel = $('menuPanel');
   const howModal = $('howModal');
   const closeHow = $('closeHow');
+  const updateDetailsModal = $('updateDetailsModal');
+  const closeUpdateDetails = $('closeUpdateDetails');
+  const updateDetailsIntro = $('updateDetailsIntro');
+  const updateDetailsBody = $('updateDetailsBody');
   const installBtn = $('installBtn');
 
   const mapsBtn = $('mapsBtn');
   const calculateBtn = $('calculateBtn');
   const clearBtn = $('clearBtn');
   const menuHowBtn = $('menuHowBtn');
-  const menuAboutBtn = $('menuAboutBtn');
-  const aboutModal = $('aboutModal');
-  const closeAbout = $('closeAbout');
+  const menuCheckUpdateBtn = $('menuCheckUpdateBtn');
+  const menuPwaTestBtn = $('menuPwaTestBtn');
+  const menuAppVersion = $('menuAppVersion');
 
-  let updateToast = null;
   let waitingSW = null;
+  let reloadAfterUpdate = false;
+  let updateBannerHideTimer = null;
+  let updateUIState = 'idle';
+  let updateProgressValue = 0;
+  let swRegistration = null;
+  let registeredBuild = '';
+  let pendingUpdateBuild = '';
+  let cachedReleaseNotesManifest = null;
+  let waitingReadyPollTimer = null;
+  let downloadStallTimer = null;
+  let lastDownloadProgressAt = 0;
+  let updateFlowChain = Promise.resolve();
+  let suppressUpdatePromptOnLoad = false;
+  let quietUpdateLoad = false;
+  let applyingAppUpdate = false;
 
-  function showUpdateToast() {
+  function runUpdateFlowTask(task) {
+    const run = updateFlowChain.then(() => task());
+    updateFlowChain = run.catch(() => {});
+    return run;
+  }
+
+  function isUpdateBusy() {
+    return applyingAppUpdate
+      || updateUIState === 'downloading'
+      || updateUIState === 'ready'
+      || updateUIState === 'installing';
+  }
+
+  function parseBuildFromCacheName(cacheName) {
+    const match = String(cacheName || '').match(/surveillance-travel-pwa-(v\d+)/i);
+    return match ? match[1] : '';
+  }
+
+  function parseBuildFromScriptUrl(scriptUrl) {
+    try {
+      const url = new URL(String(scriptUrl || ''), location.origin);
+      return url.searchParams.get('build') || '';
+    } catch {
+      return '';
+    }
+  }
+
+  function markUpdateReadyForBanner() {
+    try { sessionStorage.setItem('toolboxUpdateReady', '1'); } catch {}
+  }
+
+  function shouldAutoPromptUpdate() {
+    return !DEV_MODE;
+  }
+
+  function clearUpdateReadyMark() {
+    try { sessionStorage.removeItem('toolboxUpdateReady'); } catch {}
+  }
+
+  function getDisplayUpdateBuild() {
+    if (pendingUpdateBuild) return pendingUpdateBuild;
+    return PWA_CACHE_VERSION;
+  }
+
+  function formatAppVersionLabel() {
+    return `Version ${APP_VERSION}`;
+  }
+
+  function getFriendlyUptodateStatus() {
+    return `You're on the latest ${formatAppVersionLabel()}. Tap Details to see what's new.`;
+  }
+
+  function getFriendlyReleaseIntro() {
+    return `Here's what's included in ${formatAppVersionLabel()}.`;
+  }
+
+  function normalizeReleaseNotesForDisplay(notes) {
+    const base = notes || getDefaultReleaseNotes(getDisplayUpdateBuild());
+    return {
+      intro: getFriendlyReleaseIntro(),
+      sections: base.sections || []
+    };
+  }
+
+  async function syncBuildLabelFromReleaseNotes() {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    try {
+      const response = await fetch(`${BASE_PATH}release-notes.json?ts=${Date.now()}`, {
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.latest) PWA_CACHE_VERSION = data.latest;
+      if (data.appVersion) APP_VERSION = data.appVersion;
+    } catch {
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function clearServiceWorkersForDev() {
+    if (!('serviceWorker' in navigator)) return;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+  }
+
+  function reloadLatestDev() {
+    const url = new URL(location.href);
+    url.searchParams.delete('_');
+    url.searchParams.set('_', String(Date.now()));
+    if (url.toString() !== location.href) {
+      location.replace(url.toString());
+      return;
+    }
+    location.reload();
+  }
+
+  function getDefaultReleaseNotes(build) {
+    return {
+      intro: getFriendlyReleaseIntro(),
+      sections: [
+        {
+          heading: "What's New",
+          items: [
+            'Latest travel calculator and hotel search improvements.',
+            'General updates for reliability and offline use.'
+          ]
+        }
+      ]
+    };
+  }
+
+  async function loadReleaseNotesManifest() {
+    if (cachedReleaseNotesManifest) return cachedReleaseNotesManifest;
+    try {
+      const response = await fetch(`${BASE_PATH}release-notes.json?build=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('notes unavailable');
+      cachedReleaseNotesManifest = await response.json();
+      return cachedReleaseNotesManifest;
+    } catch {
+      return null;
+    }
+  }
+
+  async function resolveReleaseNotesForBuild(build) {
+    const manifest = await loadReleaseNotesManifest();
+    const fromFile = manifest?.builds?.[build];
+    if (fromFile?.sections?.length) return fromFile;
+    return getDefaultReleaseNotes(build);
+  }
+
+  function renderReleaseNotesHtml(notes) {
+    return (notes?.sections || []).map((section, index) => `
+      <section class="update-notes-section">
+        <h3>${index === 0 ? "What's New" : (section.heading || "What's New")}</h3>
+        <ul class="update-notes">
+          ${section.items.map((item) => `<li>${item}</li>`).join('')}
+        </ul>
+      </section>
+    `).join('');
+  }
+
+  async function openUpdateDetails() {
+    if (!updateDetailsModal) return;
+    cachedReleaseNotesManifest = null;
+    const build = getDisplayUpdateBuild();
+    if (updateDetailsIntro) {
+      updateDetailsIntro.textContent = 'Loading update details…';
+    }
+    if (updateDetailsBody) {
+      updateDetailsBody.innerHTML = '<p style="font-size:var(--text-sm);color:var(--color-text-muted)">Loading…</p>';
+    }
+    updateDetailsModal.classList.remove('hidden');
+    updateDetailsModal.setAttribute('aria-hidden', 'false');
+    closeMenu();
+
+    const notes = normalizeReleaseNotesForDisplay(await resolveReleaseNotesForBuild(build));
+    if (updateDetailsIntro) {
+      updateDetailsIntro.textContent = notes.intro;
+    }
+    if (updateDetailsBody) updateDetailsBody.innerHTML = renderReleaseNotesHtml(notes);
+  }
+
+  function isUpdateMenuBadgeActive() {
+    if (updateUIState === 'installing' || updateUIState === 'uptodate') return false;
+    if (updateUIState === 'ready' || updateUIState === 'downloading') return true;
+    if (waitingSW) return true;
+    try {
+      return sessionStorage.getItem('toolboxUpdateReady') === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function refreshUpdateMenuBadge() {
+    if (!menuToggle) return;
+    const pending = isUpdateMenuBadgeActive();
+    menuToggle.classList.toggle('menu-has-update', pending);
+    menuToggle.setAttribute(
+      'aria-label',
+      pending ? 'Open settings menu — update available' : 'Open settings menu'
+    );
+  }
+
+  function refreshMenuVersionLabel() {
+    refreshUpdateMenuBadge();
+    if (!menuAppVersion) {
+      return;
+    }
+    if (IS_LOCAL_DEV && menuPwaTestBtn) {
+      menuPwaTestBtn.classList.remove('hidden');
+      menuPwaTestBtn.textContent = PWA_TEST_MODE
+        ? 'Use fast reload (dev mode)'
+        : 'Test update flow locally';
+    }
+    if (DEV_MODE) {
+      menuAppVersion.textContent = `Fast dev (no update bar). Tap "Test update flow locally" below, then test again. · app ${APP_VERSION}`;
+      if (menuCheckUpdateBtn) menuCheckUpdateBtn.textContent = 'Reload latest';
+      return;
+    }
+    if (menuCheckUpdateBtn) menuCheckUpdateBtn.textContent = 'Check for updates';
+    const pending = getDisplayUpdateBuild();
+    const suffix = isUpdateMenuBadgeActive()
+      ? ' · New update ready'
+      : '';
+    if (PWA_TEST_MODE && IS_LOCAL_DEV) {
+      menuAppVersion.textContent = `Update testing mode · ${formatAppVersionLabel()}${suffix}`;
+      return;
+    }
+    menuAppVersion.textContent = `${formatAppVersionLabel()}${suffix}`;
+  }
+
+  function closeUpdateDetailsModal() {
+    if (!updateDetailsModal) return;
+    updateDetailsModal.classList.add('hidden');
+    updateDetailsModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function reportLiveProgress(state, progress, statusLine) {
+    if (updateUIState === 'ready' || updateUIState === 'uptodate' || updateUIState === 'installing') return;
+    if (state === 'checking' && updateUIState === 'downloading') return;
+    updateUIState = state;
+    updateProgressValue = Math.max(0, Math.min(100, progress));
+    renderUpdateBanner(state, { progress: updateProgressValue, statusLine });
+  }
+
+  function bindUpdateBannerActions() {
+    document.getElementById('updateNowBtn')?.addEventListener('click', applyAppUpdate);
+    document.getElementById('updateDetailsBtn')?.addEventListener('click', openUpdateDetails);
+    document.getElementById('updateRetryBtn')?.addEventListener('click', () => runUpdateCheckFlow());
+  }
+
+  function showUpdateReadyBanner() {
+    stopWaitingReadyPoll();
+    updateProgressValue = 100;
+    updateUIState = 'ready';
+    renderUpdateBanner('ready');
+    refreshMenuVersionLabel();
+  }
+
+  function showUptodateBanner(opts = {}) {
+    stopWaitingReadyPoll();
+    waitingSW = null;
+    pendingUpdateBuild = '';
+    updateUIState = 'uptodate';
+    renderUpdateBanner('uptodate', opts);
+    refreshMenuVersionLabel();
+    if (opts.autoHide !== false) {
+      if (updateBannerHideTimer) clearTimeout(updateBannerHideTimer);
+      const hideMs = typeof opts.autoHideMs === 'number' ? opts.autoHideMs : 15000;
+      updateBannerHideTimer = setTimeout(hideUpdateBanner, hideMs);
+    }
+  }
+
+  function renderUpdateBanner(state, opts = {}) {
     const host = document.getElementById('updatePromptHost');
     if (!host) return;
-    host.innerHTML = '<div id="updateToast" style="margin:0 16px 12px;padding:12px 16px;background:#fff3cd;color:#000;border:2px solid #d39e00;border-radius:var(--radius-xl);box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:space-between;gap:12px"><div><div style="font-weight:700;margin-bottom:2px">Update available</div><div style="font-size:var(--text-sm)">Tap Update to load the newest version.</div></div><button id="updateNowBtn" class="btn btn-primary" style="width:auto;min-height:44px;padding:0 16px">Update</button></div>';
-    document.getElementById('updateNowBtn')?.addEventListener('click', () => {
-      if (waitingSW) waitingSW.postMessage({ type: 'SKIP_WAITING' });
-      else navigator.serviceWorker.getRegistration().then((reg) => reg?.waiting?.postMessage({ type: 'SKIP_WAITING' }));
+    if (updateBannerHideTimer) {
+      clearTimeout(updateBannerHideTimer);
+      updateBannerHideTimer = null;
+    }
+    const animateIn = !host.classList.contains('is-visible');
+    updateUIState = state;
+
+    if (typeof opts.progress === 'number') updateProgressValue = opts.progress;
+
+    const copy = {
+      checking: {
+        title: 'Checking for updates',
+        status: opts.statusLine || 'Connecting to the update server…',
+        showProgress: true,
+        progress: Math.max(0, Math.min(100, updateProgressValue || 0)),
+        indeterminate: false,
+        showUpdate: false,
+        showDetails: false,
+        bannerClass: ''
+      },
+      downloading: {
+        title: 'Downloading update',
+        status: opts.statusLine || 'Please wait…',
+        showProgress: true,
+        progress: Math.max(0, Math.min(100, updateProgressValue || 0)),
+        indeterminate: false,
+        showUpdate: false,
+        showDetails: false,
+        bannerClass: ''
+      },
+      ready: {
+        title: 'Update available',
+        status: opts.statusLine || 'Download complete. Tap Update to install.',
+        showProgress: false,
+        progress: 0,
+        indeterminate: false,
+        showUpdate: true,
+        showDetails: false,
+        bannerClass: 'update-banner--ready'
+      },
+      installing: {
+        title: 'Installing update',
+        status: opts.statusLine || 'Restarting the app…',
+        showProgress: false,
+        progress: 0,
+        indeterminate: false,
+        showUpdate: false,
+        showDetails: false,
+        bannerClass: ''
+      },
+      uptodate: {
+        title: 'Investigator Toolbox is up to date',
+        status: opts.statusLine || getFriendlyUptodateStatus(),
+        showProgress: false,
+        progress: 0,
+        showUpdate: false,
+        showDetails: true,
+        bannerClass: 'update-banner--uptodate'
+      },
+      error: {
+        title: 'Update check failed',
+        status: opts.statusLine || 'The download was interrupted. Wait a moment, then tap Retry.',
+        showProgress: false,
+        showUpdate: false,
+        showDetails: false,
+        showRetry: true,
+        bannerClass: ''
+      }
+    };
+
+    const cfg = copy[state] || copy.ready;
+    const progress = typeof cfg.progress === 'number' ? cfg.progress : updateProgressValue;
+    const progressPct = Math.round(progress);
+    const progressHtml = cfg.showProgress
+      ? `<div class="update-progress${cfg.indeterminate ? ' is-indeterminate' : ''}" role="progressbar" aria-valuenow="${progressPct}" aria-valuemin="0" aria-valuemax="100">
+          <span class="update-progress__bar" style="width:${cfg.indeterminate ? '40' : progressPct}%"></span>
+        </div>
+        ${cfg.indeterminate ? '' : `<div class="update-progress__percent">${progressPct}%</div>`}`
+      : '';
+
+    const actionsHtml = (cfg.showUpdate || cfg.showDetails || cfg.showRetry)
+      ? `<div class="update-banner__actions">
+          ${cfg.showUpdate ? '<button id="updateNowBtn" class="btn btn-primary" type="button">Update</button>' : ''}
+          ${cfg.showRetry ? '<button id="updateRetryBtn" class="btn btn-primary" type="button">Retry</button>' : ''}
+          ${cfg.showDetails ? '<button id="updateDetailsBtn" class="btn btn-secondary" type="button">Details</button>' : ''}
+        </div>`
+      : '';
+
+    host.innerHTML = `<div class="update-banner ${cfg.bannerClass}" role="status" aria-live="polite">
+      <div class="update-banner__top">
+        <div class="update-banner__body">
+          <div class="update-banner__title">${cfg.title}</div>
+          <p class="update-banner__status">${cfg.status}</p>
+        </div>
+      </div>
+      ${progressHtml}
+      ${actionsHtml}
+    </div>`;
+    bindUpdateBannerActions();
+
+    if (animateIn) {
+      host.classList.remove('is-visible');
+      void host.offsetHeight;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          host.classList.add('is-visible');
+        });
+      });
+    } else {
+      host.classList.add('is-visible');
+    }
+    refreshUpdateMenuBadge();
+  }
+
+  function showUpdateBanner(mode = 'ready') {
+    renderUpdateBanner(mode === 'available' ? 'ready' : mode);
+  }
+
+  function stopWaitingReadyPoll() {
+    if (waitingReadyPollTimer) {
+      clearInterval(waitingReadyPollTimer);
+      waitingReadyPollTimer = null;
+    }
+    if (downloadStallTimer) {
+      clearTimeout(downloadStallTimer);
+      downloadStallTimer = null;
+    }
+  }
+
+  function startWaitingReadyPoll() {
+    stopWaitingReadyPoll();
+    let ticks = 0;
+    waitingReadyPollTimer = setInterval(async () => {
+      ticks += 1;
+      const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
+      if (reg?.waiting) {
+        stopWaitingReadyPoll();
+        bindWaitingWorker(reg, { showBanner: true });
+        return;
+      }
+      const installing = reg?.installing;
+      if (installing && (installing.state === 'installed' || installing.state === 'activated')) {
+        stopWaitingReadyPoll();
+        finishDownloadAndShowReady();
+        return;
+      }
+      if (ticks >= 24) {
+        stopWaitingReadyPoll();
+        await promoteDownloadToReady(reg);
+      }
+    }, 250);
+  }
+
+  async function promoteDownloadToReady(registration) {
+    if (applyingAppUpdate) return;
+    stopWaitingReadyPoll();
+    let reg = registration
+      || swRegistration
+      || await navigator.serviceWorker.getRegistration(BASE_PATH);
+
+    if (reg?.waiting) {
+      pendingUpdateBuild = parseBuildFromScriptUrl(reg.waiting.scriptURL) || PWA_CACHE_VERSION;
+      waitingSW = reg.waiting;
+      markUpdateReadyForBanner();
+      showUpdateReadyBanner();
+      return;
+    }
+
+    if (reg?.installing) {
+      await waitForServiceWorkerSettle(reg, 15000);
+      reg = await navigator.serviceWorker.getRegistration(BASE_PATH);
+      swRegistration = reg;
+      if (reg?.waiting) {
+        pendingUpdateBuild = parseBuildFromScriptUrl(reg.waiting.scriptURL) || PWA_CACHE_VERSION;
+        waitingSW = reg.waiting;
+        markUpdateReadyForBanner();
+        showUpdateReadyBanner();
+        return;
+      }
+    }
+
+    if (reg && !reg.installing && !reg.waiting) {
+      try {
+        await reg.update();
+        await waitForServiceWorkerSettle(reg, 12000);
+      } catch {}
+      reg = await navigator.serviceWorker.getRegistration(BASE_PATH);
+      swRegistration = reg;
+      if (reg?.waiting) {
+        pendingUpdateBuild = parseBuildFromScriptUrl(reg.waiting.scriptURL) || PWA_CACHE_VERSION;
+        waitingSW = reg.waiting;
+        markUpdateReadyForBanner();
+        showUpdateReadyBanner();
+        return;
+      }
+    }
+
+    const activeBuild = parseBuildFromScriptUrl(reg?.active?.scriptURL);
+    if (activeBuild && activeBuild === PWA_CACHE_VERSION) {
+      waitingSW = null;
+      refreshMenuVersionLabel();
+      return;
+    }
+
+    renderUpdateBanner('error', {
+      statusLine: 'Could not finish the update. Tap Retry or refresh the page (Ctrl+Shift+R).'
     });
   }
 
-  function bindWaitingWorker(registration) {
-    if (registration.waiting) {
-      waitingSW = registration.waiting;
-      showUpdateToast();
+  function scheduleDownloadStallRecovery() {
+    if (downloadStallTimer) clearTimeout(downloadStallTimer);
+    downloadStallTimer = setTimeout(() => {
+      if (updateUIState !== 'downloading') return;
+      promoteDownloadToReady();
+    }, 6000);
+  }
+
+  function finishDownloadAndShowReady(versionHint) {
+    stopWaitingReadyPoll();
+    updateProgressValue = 100;
+    pendingUpdateBuild = parseBuildFromCacheName(versionHint) || PWA_CACHE_VERSION;
+    cachedReleaseNotesManifest = null;
+    markUpdateReadyForBanner();
+    if (swRegistration && bindWaitingWorker(swRegistration, { showBanner: true })) return;
+    startWaitingReadyPoll();
+  }
+
+  function handleDownloadProgress(data) {
+    const pct = Number(data.percent) || 0;
+    const label = String(data.label || '').trim();
+    const done = Number(data.done) || 0;
+    const total = Number(data.total) || 0;
+    const allFilesDone = (total > 0 && done >= total) || /complete/i.test(label) || pct >= 100;
+
+    if (allFilesDone) {
+      updateProgressValue = 100;
+      pendingUpdateBuild = parseBuildFromCacheName(data.version) || pendingUpdateBuild || PWA_CACHE_VERSION;
+      startWaitingReadyPoll();
+      scheduleDownloadStallRecovery();
+      promoteDownloadToReady();
+      return;
     }
+
+    updateProgressValue = pct;
+    lastDownloadProgressAt = Date.now();
+    renderUpdateBanner('downloading', { progress: pct, statusLine: label || 'Downloading update files…' });
+
+    if ((total > 0 && done >= total - 1) || pct >= 85) {
+      startWaitingReadyPoll();
+      scheduleDownloadStallRecovery();
+    }
+  }
+
+  function handleServiceWorkerMessage(event) {
+    const data = event.data || {};
+    if (data.type === 'UPDATE_PROGRESS') {
+      handleDownloadProgress(data);
+      return;
+    }
+    if (data.type === 'UPDATE_READY') {
+      finishDownloadAndShowReady(data.version);
+    }
+  }
+
+  function attachRegistrationListeners(registration) {
+    if (!registration || registration._updateListenersAttached) return;
+    registration._updateListenersAttached = true;
+
+    registration.addEventListener('updatefound', () => {
+      const sw = registration.installing;
+      if (!sw) return;
+      if (!quietUpdateLoad) {
+        renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
+      }
+      startWaitingReadyPoll();
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed') {
+          finishDownloadAndShowReady();
+        }
+      });
+    });
+
+    if (registration.waiting && navigator.serviceWorker.controller) {
+      bindWaitingWorker(registration);
+    }
+  }
+
+  async function registerForCurrentBuild() {
+    await syncBuildLabelFromReleaseNotes();
+    const swUrl = `${BASE_PATH}service-worker.js?build=${encodeURIComponent(PWA_CACHE_VERSION)}`;
+    let registration = await navigator.serviceWorker.getRegistration(BASE_PATH);
+
+    const buildChanged = registration && registeredBuild && registeredBuild !== PWA_CACHE_VERSION;
+    const midDownload = registration && (registration.installing || registration.waiting);
+
+    if (buildChanged && !midDownload) {
+      await registration.unregister();
+      registration = null;
+      waitingSW = null;
+    }
+
+    if (!registration) {
+      registration = await navigator.serviceWorker.register(swUrl, {
+        scope: BASE_PATH,
+        updateViaCache: 'none'
+      });
+    } else if (!registration.installing && !registration.waiting) {
+      try {
+        await fetch(swUrl, { cache: 'no-store' });
+      } catch {}
+      await registration.update();
+    }
+
+    registeredBuild = PWA_CACHE_VERSION;
+    swRegistration = registration;
+    attachRegistrationListeners(registration);
+    return registration;
+  }
+
+  function hideUpdateBanner() {
+    const host = document.getElementById('updatePromptHost');
+    if (!host || !host.querySelector('.update-banner')) return;
+    if (updateBannerHideTimer) clearTimeout(updateBannerHideTimer);
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      host.innerHTML = '';
+      host.classList.remove('is-visible');
+      return;
+    }
+
+    host.classList.remove('is-visible');
+    updateBannerHideTimer = setTimeout(() => {
+      host.innerHTML = '';
+      host.classList.remove('is-visible');
+      updateBannerHideTimer = null;
+    }, UPDATE_BANNER_HIDE_MS);
+  }
+
+  async function applyAppUpdate() {
+    applyingAppUpdate = true;
+    clearUpdateReadyMark();
+    refreshUpdateMenuBadge();
+    updateUIState = 'installing';
+    renderUpdateBanner('installing', { statusLine: 'Installing update…' });
+
+    let reloaded = false;
+    const reloadOnce = () => {
+      if (reloaded) return;
+      reloaded = true;
+      reloadAfterUpdate = false;
+      try { sessionStorage.setItem('toolboxShowUptodate', '1'); } catch {}
+      const host = document.getElementById('updatePromptHost');
+      if (host) {
+        host.innerHTML = '';
+        host.classList.remove('is-visible', 'is-hiding');
+      }
+      window.location.reload();
+    };
+
+    const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
+    const waiting = waitingSW || reg?.waiting;
+    if (!waiting) {
+      await pause(1200);
+      reloadOnce();
+      return;
+    }
+
+    waitingSW = waiting;
+    const previousController = navigator.serviceWorker.controller;
+
+    const activationDone = new Promise((resolve) => {
+      const maxWait = setTimeout(resolve, 12000);
+      const finish = () => {
+        clearTimeout(maxWait);
+        resolve();
+      };
+
+      navigator.serviceWorker.addEventListener('controllerchange', finish, { once: true });
+      waiting.addEventListener('statechange', () => {
+        if (waiting.state === 'activated') finish();
+      }, { once: true });
+
+      const poll = setInterval(() => {
+        const ctrl = navigator.serviceWorker.controller;
+        if (ctrl && ctrl !== previousController) {
+          clearInterval(poll);
+          finish();
+        }
+      }, 150);
+
+      setTimeout(() => clearInterval(poll), 12000);
+
+      try {
+        waiting.postMessage({ type: 'SKIP_WAITING' });
+      } catch {
+        finish();
+      }
+    });
+
+    await activationDone;
+    renderUpdateBanner('installing', { statusLine: 'Update installed. Restarting…' });
+    await pause(5000);
+    reloadOnce();
+  }
+
+  function bindWaitingWorker(registration, opts = {}) {
+    if (!registration?.waiting) return false;
+    waitingSW = registration.waiting;
+    pendingUpdateBuild = parseBuildFromScriptUrl(waitingSW.scriptURL)
+      || parseBuildFromCacheName(pendingUpdateBuild)
+      || PWA_CACHE_VERSION;
+    const showBanner = !quietUpdateLoad && (opts.showBanner ?? shouldAutoPromptUpdate());
+    if (showBanner) {
+      markUpdateReadyForBanner();
+      showUpdateReadyBanner();
+    } else {
+      refreshMenuVersionLabel();
+    }
+    return true;
+  }
+
+  function watchInstallingWorker(registration) {
+    attachRegistrationListeners(registration);
+    const sw = registration.installing;
+    if (!sw || !navigator.serviceWorker.controller) return;
+    if (updateUIState === 'ready') return;
+    if (!quietUpdateLoad) {
+      renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
+    }
+    startWaitingReadyPoll();
+  }
+
+  function waitForServiceWorkerSettle(registration, maxMs = 12000) {
+    return new Promise((resolve) => {
+      if (!registration) {
+        resolve();
+        return;
+      }
+      if (registration.waiting) {
+        resolve();
+        return;
+      }
+      const installing = registration.installing;
+      if (!installing) {
+        resolve();
+        return;
+      }
+      const finish = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(finish, maxMs);
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed') finish();
+      });
+      if (installing.state === 'installed') finish();
+    });
+  }
+
+  async function checkForAppUpdate(opts = {}) {
+    if (!('serviceWorker' in navigator)) return 'unsupported';
+
+    return runUpdateFlowTask(async () => {
+      if (updateUIState === 'downloading' || updateUIState === 'installing') {
+        await promoteDownloadToReady();
+        return updateUIState === 'ready' ? 'available' : 'pending';
+      }
+      if (updateUIState === 'ready' && waitingSW) {
+        return 'available';
+      }
+
+      try {
+        if (opts.showCheckingUi !== false) {
+          reportLiveProgress('checking', 20, 'Preparing update check…');
+        }
+        const registration = await registerForCurrentBuild();
+        if (opts.showCheckingUi !== false) {
+          reportLiveProgress('checking', 45, 'Comparing installed version…');
+        }
+        if (registration.waiting) {
+          return bindWaitingWorker(registration, { showBanner: true }) ? 'available' : 'current';
+        }
+        if (opts.showCheckingUi !== false) {
+          reportLiveProgress('checking', 70, 'Looking for a newer pack…');
+        }
+        if (registration.installing) {
+          watchInstallingWorker(registration);
+          await waitForServiceWorkerSettle(registration, 20000);
+          if (bindWaitingWorker(registration, { showBanner: true })) return 'available';
+          return 'pending';
+        }
+        if (opts.showCheckingUi !== false) {
+          reportLiveProgress('checking', 100, 'Check complete.');
+        }
+        if (bindWaitingWorker(registration, { showBanner: true })) return 'available';
+        return 'current';
+      } catch (err) {
+        const registration = await navigator.serviceWorker.getRegistration(BASE_PATH);
+        if (registration?.waiting) {
+          return bindWaitingWorker(registration, { showBanner: true }) ? 'available' : 'pending';
+        }
+        if (registration?.installing) {
+          watchInstallingWorker(registration);
+          return 'pending';
+        }
+        console.warn('Update check error', err);
+        return 'error';
+      }
+    });
+  }
+
+  async function runUpdateCheckFlow() {
+    if (DEV_MODE) {
+      await syncBuildLabelFromReleaseNotes();
+      cachedReleaseNotesManifest = null;
+      refreshMenuVersionLabel();
+      reloadLatestDev();
+      return;
+    }
+    if (!('serviceWorker' in navigator)) {
+      showUptodateBanner({ autoHideMs: 5000 });
+      return;
+    }
+    if (updateUIState === 'ready' && waitingSW) {
+      showUpdateReadyBanner();
+      return;
+    }
+    if (updateUIState === 'downloading' || updateUIState === 'installing') {
+      await promoteDownloadToReady();
+      return;
+    }
+    await syncBuildLabelFromReleaseNotes();
+    renderUpdateBanner('checking', { progress: 5, statusLine: 'Looking for a new version…' });
+    const status = await checkForAppUpdate({ showCheckingUi: true });
+
+    if (status === 'available') return;
+    if (status === 'pending') {
+      const registration = await navigator.serviceWorker.getRegistration(BASE_PATH);
+      swRegistration = registration;
+      await waitForServiceWorkerSettle(registration, 20000);
+      if (bindWaitingWorker(registration, { showBanner: true })) return;
+    }
+    if (status === 'error') {
+      renderUpdateBanner('error');
+      return;
+    }
+
+    const testHint = PWA_TEST_MODE && IS_LOCAL_DEV
+      ? `You already have the latest test version (${APP_VERSION}).`
+      : '';
+    showUptodateBanner({ statusLine: testHint || undefined, autoHideMs: 10000 });
   }
 
   function syncThemeMeta(theme) {
@@ -642,43 +1813,41 @@ $('summaryNote').textContent =
     else themeContainer.prepend(row);
   }
 
-  $('menuLightBtn')?.addEventListener('click', () => {
-  applyTheme('light');
-  closeMenu();
-});
-
-$('menuDarkBtn')?.addEventListener('click', () => {
-  applyTheme('dark');
-  closeMenu();
-});
-
-menuHowBtn?.addEventListener('click', openHowTo);
-
-closeHow?.addEventListener('click', closeHowTo);
-
-howModal?.addEventListener('click', (event) => {
-  if (event.target === howModal) closeHowTo();
-});
-
-// OPEN ABOUT MODAL
-menuAboutBtn?.addEventListener('click', () => {
-  aboutModal?.classList.remove('hidden');
-  aboutModal?.setAttribute('aria-hidden', 'false');
-  closeMenu();
-});
-
-// CLOSE ABOUT MODAL
-function closeAboutModal() {
-  if (!aboutModal) return;
-  aboutModal.classList.add('hidden');
-  aboutModal.setAttribute('aria-hidden', 'true');
-}
-
-closeAbout?.addEventListener('click', closeAboutModal);
-
-aboutModal?.addEventListener('click', (event) => {
-  if (event.target === aboutModal) closeAboutModal();
-});
+  $('menuLightBtn')?.addEventListener('click', () => { applyTheme('light'); closeMenu(); });
+  $('menuDarkBtn')?.addEventListener('click', () => { applyTheme('dark'); closeMenu(); });
+  menuHowBtn?.addEventListener('click', openHowTo);
+  syncBuildLabelFromReleaseNotes().then(() => refreshMenuVersionLabel());
+  menuPwaTestBtn?.addEventListener('click', () => {
+    closeMenu();
+    try {
+      sessionStorage.removeItem('toolboxShowUptodate');
+      sessionStorage.removeItem('toolboxUpdateReady');
+      sessionStorage.setItem('toolboxQuietLoad', '1');
+    } catch {}
+    const host = document.getElementById('updatePromptHost');
+    if (host) {
+      host.innerHTML = '';
+      host.classList.remove('is-visible', 'is-hiding');
+    }
+    if (PWA_TEST_MODE) {
+      localStorage.removeItem('toolboxPwaTest');
+    } else {
+      localStorage.setItem('toolboxPwaTest', '1');
+    }
+    location.reload();
+  });
+  menuCheckUpdateBtn?.addEventListener('click', () => {
+    closeMenu();
+    runUpdateCheckFlow();
+  });
+  closeHow?.addEventListener('click', closeHowTo);
+  closeUpdateDetails?.addEventListener('click', closeUpdateDetailsModal);
+  howModal?.addEventListener('click', (event) => {
+    if (event.target === howModal) closeHowTo();
+  });
+  updateDetailsModal?.addEventListener('click', (event) => {
+    if (event.target === updateDetailsModal) closeUpdateDetailsModal();
+  });
 
   mapsBtn?.addEventListener('click', launchMaps);
   calculateBtn?.addEventListener('click', calculate);
@@ -707,35 +1876,95 @@ aboutModal?.addEventListener('click', (event) => {
     installBtn.classList.add('hidden');
   });
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-      try {
-        const registration = await navigator.serviceWorker.register(window.BASEPATH + '/service-worker.js');
-        const host = document.getElementById('updateBannerHost');
-        if (host && !navigator.serviceWorker.controller) host.innerHTML = '';
-        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-        bindWaitingWorker(registration);
-        registration.addEventListener('updatefound', () => {
-          const sw = registration.installing;
-          if (!sw) return;
-          showUpdateToast();
-          const dbg = document.getElementById('updateDebug');
-          if (dbg) dbg.textContent = 'Update download started.';
-          sw.addEventListener('statechange', () => {
-            if (sw.state === 'installed') {
-              bindWaitingWorker(registration);
-              const dbg2 = document.getElementById('updateDebug');
-              if (dbg2) dbg2.textContent = 'Update ready.';
-            }
-          });
-        });
-        await registration.update();
-        if (registration.installing) showUpdateToast();
-        bindWaitingWorker(registration);
-        if (navigator.serviceWorker.controller && !document.getElementById('updateToast')) showUpdateToast();
-      } catch {}
+  window.addEventListener('load', async () => {
+    await syncBuildLabelFromReleaseNotes();
+    refreshMenuVersionLabel();
+
+    try {
+      if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
+        sessionStorage.removeItem('toolboxQuietLoad');
+        quietUpdateLoad = true;
+        suppressUpdatePromptOnLoad = true;
+      }
+      if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
+        sessionStorage.removeItem('toolboxShowUptodate');
+        suppressUpdatePromptOnLoad = true;
+        waitingSW = null;
+        showUptodateBanner();
+      }
+    } catch {}
+
+    if (DEV_MODE) {
+      await clearServiceWorkersForDev();
+      const host = document.getElementById('updatePromptHost');
+      if (host) {
+        host.innerHTML = '';
+        host.classList.remove('is-visible', 'is-hiding');
+      }
+      return;
+    }
+
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloadAfterUpdate) window.location.reload();
     });
-  }
+
+    runUpdateFlowTask(async () => {
+      const registration = await registerForCurrentBuild();
+
+      if (suppressUpdatePromptOnLoad) {
+        quietUpdateLoad = false;
+        refreshMenuVersionLabel();
+        return;
+      }
+
+      if (!navigator.serviceWorker.controller) {
+        const host = document.getElementById('updatePromptHost');
+        if (host) {
+          host.innerHTML = '';
+          host.classList.remove('is-visible', 'is-hiding');
+        }
+        return;
+      }
+
+      if (registration.waiting) {
+        bindWaitingWorker(registration);
+        return;
+      }
+      if (registration.installing) {
+        watchInstallingWorker(registration);
+        await waitForServiceWorkerSettle(registration, 10000);
+        bindWaitingWorker(registration);
+        return;
+      }
+      if (!registration.installing && !registration.waiting) {
+        await registration.update();
+      }
+      if (registration.waiting) {
+        bindWaitingWorker(registration);
+      } else if (registration.installing) {
+        watchInstallingWorker(registration);
+        await waitForServiceWorkerSettle(registration, 10000);
+        bindWaitingWorker(registration);
+      }
+    }).catch(() => {});
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (isUpdateBusy()) return;
+      checkForAppUpdate({ showCheckingUi: false }).then((status) => {
+        if (status === 'available') bindWaitingWorker(swRegistration);
+      });
+    });
+    setInterval(() => {
+      if (isUpdateBusy()) return;
+      checkForAppUpdate({ showCheckingUi: false }).then((status) => {
+        if (status === 'available') bindWaitingWorker(swRegistration);
+      });
+    }, 30 * 60 * 1000);
+  });
 })();
 </script>
 
@@ -876,6 +2105,8 @@ textarea:focus, textarea:focus-visible {
 [data-theme="light"] .segment.active,
 [data-theme="light"] #mapsBtn,
 [data-theme="light"] #calculateBtn,
+[data-theme="light"] #searchHotelBtn,
+[data-theme="light"] #hotelSendEmailBtn,
 [data-theme="light"] .btn-primary,
 [data-theme="light"] .menu-panel .menu-item.selected,
 [data-theme="light"] .menu-panel .menu-half.selected,
@@ -894,6 +2125,10 @@ textarea:focus, textarea:focus-visible {
 [data-theme="light"] #mapsBtn:active,
 [data-theme="light"] #calculateBtn:hover,
 [data-theme="light"] #calculateBtn:active,
+[data-theme="light"] #searchHotelBtn:hover,
+[data-theme="light"] #searchHotelBtn:active,
+[data-theme="light"] #hotelSendEmailBtn:hover,
+[data-theme="light"] #hotelSendEmailBtn:active,
 [data-theme="light"] .btn-primary:hover,
 [data-theme="light"] .btn-primary:active,
 [data-theme="light"] .menu-panel .menu-item.selected:hover,
@@ -909,6 +2144,8 @@ textarea:focus, textarea:focus-visible {
 [data-theme="dark"] .segment.active,
 [data-theme="dark"] #mapsBtn,
 [data-theme="dark"] #calculateBtn,
+[data-theme="dark"] #searchHotelBtn,
+[data-theme="dark"] #hotelSendEmailBtn,
 [data-theme="dark"] .btn-primary,
 [data-theme="dark"] .menu-panel .menu-item.selected,
 [data-theme="dark"] .menu-panel .menu-half.selected,
@@ -927,6 +2164,10 @@ textarea:focus, textarea:focus-visible {
 [data-theme="dark"] #mapsBtn:active,
 [data-theme="dark"] #calculateBtn:hover,
 [data-theme="dark"] #calculateBtn:active,
+[data-theme="dark"] #searchHotelBtn:hover,
+[data-theme="dark"] #searchHotelBtn:active,
+[data-theme="dark"] #hotelSendEmailBtn:hover,
+[data-theme="dark"] #hotelSendEmailBtn:active,
 [data-theme="dark"] .btn-primary:hover,
 [data-theme="dark"] .btn-primary:active,
 [data-theme="dark"] .menu-panel .menu-item.selected:hover,
@@ -978,6 +2219,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (settingsMenu) settingsMenu.classList.add('hidden');
     const cityDrop = document.getElementById('cityDropdown');
     if (cityDrop) cityDrop.hidden = true;
+    document.querySelectorAll('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
+    document.querySelectorAll('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+    if (tabId === 'hotels' && window.HotelFinder?.refreshResolvedAddress) {
+      window.HotelFinder.refreshResolvedAddress();
+    }
   }
 
   tabButtons.forEach((btn) => {
@@ -989,6 +2235,1787 @@ document.addEventListener('DOMContentLoaded', () => {
 
   switchTab('calculator');
 });
+</script>
+
+<script>
+(() => {
+  'use strict';
+
+  const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
+
+  /**
+   * HOTEL CONFIG — recipients for email; nearby hotels and live rates from Booking.com.
+   */
+  const CA_PROVINCE_NAMES = {
+    AB: 'Alberta', BC: 'British Columbia', MB: 'Manitoba', NB: 'New Brunswick',
+    NL: 'Newfoundland and Labrador', NS: 'Nova Scotia', NT: 'Northwest Territories',
+    NU: 'Nunavut', ON: 'Ontario', PE: 'Prince Edward Island', QC: 'Quebec',
+    SK: 'Saskatchewan', YT: 'Yukon'
+  };
+
+  const CA_PROVINCE_CODES = 'AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT';
+
+  const HOTEL_CONFIG = {
+    // Cloudflare Worker that returns Booking.com listings (lets the Hotel Finder
+    // work from static GitHub Pages without a local server). Paste your deployed
+    // Worker URL here, e.g. 'https://booking-lookup.yourname.workers.dev'.
+    // Leave blank to use the local PowerShell server (api/booking-search) for dev.
+    bookingApiUrl: 'https://booking-lookup.investigator-toolbox.workers.dev',
+    maxNightlyTotalCad: 200,
+    maxNightlyByProvince: {
+      AB: 200, BC: 200, MB: 200, NB: 200, NL: 200, NS: 200, NT: 200, NU: 200,
+      ON: 200, PE: 200, QC: 200, SK: 200, YT: 200
+    },
+    searchRadiusKm: 60,
+    recipients: [
+      { name: 'Operations Admin', email: 'operations@intrepidinvestigations.ca' },
+      { name: 'Scheduling Admin', email: 'scheduling@intrepidinvestigations.ca' }
+    ]
+  };
+
+  const PROFILE_KEYS = {
+    name: 'hotelInvestigatorName',
+    email: 'hotelInvestigatorEmail'
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  const els = {
+    eventSource: $('hotelEventSource'),
+    customWrap: $('hotelCustomEventWrap'),
+    customEvent: $('hotelCustomEvent'),
+    resolvedAddress: $('hotelResolvedAddress'),
+    checkin: $('hotelCheckin'),
+    checkout: $('hotelCheckout'),
+    matchCount: $('hotelMatchCount'),
+    maxDistance: $('hotelMaxDistance'),
+    freeBreakfast: $('hotelFreeBreakfast'),
+    freeParking: $('hotelFreeParking'),
+    freeCancellation: $('hotelFreeCancellation'),
+    hotelsOnly: $('hotelHotelsOnly'),
+    emailSection: $('hotelEmailSection'),
+    clearBtn: $('hotelClearBtn'),
+    searchBtn: $('searchHotelBtn'),
+    status: $('hotelStatus'),
+    results: $('hotelResults'),
+    selectedName: $('hotelSelectedName'),
+    recipient: $('hotelRecipient'),
+    clientBilled: $('hotelClientBilled'),
+    trackopsWrap: $('hotelTrackopsWrap'),
+    trackopsCase: $('hotelTrackopsCase'),
+    investigatorName: $('hotelInvestigatorName'),
+    investigatorEmail: $('hotelInvestigatorEmail'),
+    emailSubject: $('hotelEmailSubject'),
+    emailBody: $('hotelEmailBody'),
+    copyBtn: $('hotelCopyEmailBtn'),
+    sendBtn: $('hotelSendEmailBtn'),
+    calculatorEvent: $('event'),
+    calculatorCity: $('city'),
+    searchArea: $('hotelSearchArea')
+  };
+
+  if (!els.searchBtn || !els.results) return;
+
+  let selectedHotel = null;
+  let lastResults = [];
+  let lastTaxMeta = null;
+  let lastSearchContext = null;
+  let geocodeCache = { key: '', result: null };
+  const pickerRegistry = [];
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function showHotelSearchProgress(message) {
+    if (!els.status) return;
+    const label = String(message || 'Searching for hotels…');
+    els.status.className = 'status show searching';
+    els.status.innerHTML = `
+      <span class="hotel-search-status__text">${escapeHtml(label)}</span>
+      <div class="hotel-search-progress update-progress is-indeterminate" role="progressbar" aria-busy="true" aria-valuemin="0" aria-valuemax="100" aria-valuetext="${escapeHtml(label)}">
+        <span class="update-progress__bar"></span>
+      </div>`;
+  }
+
+  function setStatus(message, mode = '') {
+    if (!els.status) return;
+    els.status.className = `status show${mode ? ` ${mode}` : ''}`;
+    els.status.textContent = message;
+  }
+
+  function hideStatus() {
+    if (!els.status) return;
+    els.status.className = 'status hidden';
+    els.status.textContent = '';
+    els.status.innerHTML = '';
+  }
+
+  function getSurveillanceAddress() {
+    if (els.eventSource?.value === 'custom') {
+      return (els.customEvent?.value || '').trim();
+    }
+    return (els.calculatorEvent?.value || '').trim();
+  }
+
+  function refreshResolvedAddress() {
+    const addr = getSurveillanceAddress();
+    if (!els.resolvedAddress) return;
+    els.resolvedAddress.textContent = addr || 'No surveillance event address available yet.';
+    els.resolvedAddress.classList.toggle('has-value', Boolean(addr));
+    refreshSearchAreaPreview();
+  }
+
+  function deriveAreaLabel(address) {
+    if (!address) return 'Surveillance Assignment';
+    const cityMatch = address.match(/,\s*([^,]+),\s*([A-Z]{2})\b/);
+    if (cityMatch) return `${cityMatch[1].trim()}, ${cityMatch[2]}`;
+    const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+    return parts.length >= 2 ? parts.slice(-2).join(', ') : 'Surveillance Assignment';
+  }
+
+  function parseProvinceCode(address) {
+    if (!address) return '';
+    const match = address.match(/\b(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT)\b/i);
+    return match ? match[1].toUpperCase() : '';
+  }
+
+  function titleCaseCity(name) {
+    return String(name || '').trim().replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  }
+
+  /** Parse city + province (+ postal) from any Canadian-style address string. */
+  function parseCanadianAddress(raw) {
+    const address = String(raw || '').trim();
+    if (!address) return null;
+
+    const provinceMatch = address.match(new RegExp(`\\b(${CA_PROVINCE_CODES})\\b`, 'i'));
+    const province = provinceMatch ? provinceMatch[1].toUpperCase() : '';
+    if (!province) return null;
+
+    const postalMatch = address.match(/\b([A-Z]\d[A-Z])\s*(\d[A-Z]\d)\b/i);
+    const postal = postalMatch ? `${postalMatch[1]} ${postalMatch[2]}`.toUpperCase() : '';
+
+    let city = '';
+    const cityProv = address.match(new RegExp(`,\\s*([^,]+),\\s*${province}\\b`, 'i'));
+    if (cityProv) city = cityProv[1].trim();
+
+    if (!city) {
+      const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+      const provIdx = parts.findIndex((p) => new RegExp(`^${province}$`, 'i').test(p));
+      if (provIdx > 0) city = parts[provIdx - 1];
+    }
+
+    const provinceName = CA_PROVINCE_NAMES[province] || province;
+    const destination = city
+      ? `${titleCaseCity(city)}, ${provinceName}, Canada`
+      : `${provinceName}, Canada`;
+    const label = city ? `${titleCaseCity(city)}, ${province}` : province;
+
+    return {
+      address,
+      city: titleCaseCity(city),
+      province,
+      postal,
+      label,
+      destination,
+      searchQuery: address
+    };
+  }
+
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const r = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2
+      + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function formatDriveTime(km) {
+    const mins = Math.max(1, Math.round((km / 55) * 60));
+    if (mins < 60) return `${mins} min`;
+    const hours = Math.floor(mins / 60);
+    const rem = mins % 60;
+    return rem ? `${hours} hr ${rem} min` : `${hours} hr`;
+  }
+
+  async function nominatimSearch(query) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ca&q=${encodeURIComponent(query)}`;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Accept-Language': 'en-CA',
+        'User-Agent': 'InvestigatorToolbox/3.0.0 (hotel-search; contact: operations@intrepidinvestigations.ca)'
+      }
+    });
+    if (!response.ok) return null;
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows.length) return null;
+    const hit = rows[0];
+    const result = {
+      lat: Number.parseFloat(hit.lat),
+      lng: Number.parseFloat(hit.lon),
+      displayName: hit.display_name
+    };
+    if (!Number.isFinite(result.lat) || !Number.isFinite(result.lng)) return null;
+    return result;
+  }
+
+  function geocodeResultMatchesParsedCity(result, parsed) {
+    if (!parsed?.city || !result?.displayName) return true;
+    const dn = result.displayName.toLowerCase();
+    const city = parsed.city.toLowerCase();
+    if (dn.includes(city)) return true;
+    if (parsed.postal) {
+      const compact = parsed.postal.replace(/\s+/g, '').toLowerCase();
+      if (dn.includes(parsed.postal.toLowerCase()) || dn.includes(compact)) return true;
+    }
+    return false;
+  }
+
+  async function geocodeCanadianAddress(address, parsedOrFallback) {
+    const trimmed = String(address || '').trim();
+    if (!trimmed) return null;
+    const key = trimmed.toLowerCase();
+    if (geocodeCache.key === key) return geocodeCache.result;
+
+    const parsed = parsedOrFallback && typeof parsedOrFallback === 'object' && parsedOrFallback.province
+      ? parsedOrFallback
+      : parseCanadianAddress(trimmed);
+    const fallbackDest = typeof parsedOrFallback === 'string'
+      ? parsedOrFallback
+      : (parsed?.destination || '');
+
+    const queries = [];
+    const seen = new Set();
+    const addQuery = (query) => {
+      const q = String(query || '').trim();
+      if (!q || seen.has(q.toLowerCase())) return;
+      seen.add(q.toLowerCase());
+      queries.push(q);
+    };
+
+    addQuery(trimmed);
+    if (!/canada/i.test(trimmed)) addQuery(`${trimmed}, Canada`);
+    if (parsed?.postal && parsed.city) {
+      addQuery(`${parsed.postal}, ${parsed.city}, ${parsed.province}, Canada`);
+    }
+    if (parsed?.city) {
+      addQuery(`${parsed.address}, ${parsed.city}, ${parsed.province}, Canada`);
+      addQuery(parsed.destination);
+    }
+    if (fallbackDest) addQuery(fallbackDest);
+
+    let cityAnchor = null;
+    if (parsed?.destination) {
+      try {
+        cityAnchor = await nominatimSearch(parsed.destination);
+      } catch {}
+    }
+
+    let bestMismatch = null;
+    for (const query of queries) {
+      try {
+        const result = await nominatimSearch(query);
+        if (!result) continue;
+        if (!geocodeResultMatchesParsedCity(result, parsed)) {
+          if (!bestMismatch) bestMismatch = result;
+          continue;
+        }
+        if (cityAnchor) {
+          const distKm = haversineKm(cityAnchor.lat, cityAnchor.lng, result.lat, result.lng);
+          if (distKm > 40) continue;
+        }
+        geocodeCache = { key, result };
+        return result;
+      } catch {}
+    }
+
+    if (cityAnchor) {
+      geocodeCache = { key, result: cityAnchor };
+      return cityAnchor;
+    }
+    if (bestMismatch) {
+      geocodeCache = { key, result: bestMismatch };
+      return bestMismatch;
+    }
+    return null;
+  }
+
+  function getHotelsComAmenityParams() {
+    const codes = [];
+    if (els.freeBreakfast?.checked) codes.push('FREE_BREAKFAST');
+    if (els.freeParking?.checked) codes.push('FREE_PARKING');
+    if (els.freeCancellation?.checked) codes.push('FREE_CANCELLATION');
+    if (els.hotelsOnly?.checked) codes.push('HOTELS_MOTELS_ONLY');
+    return codes;
+  }
+
+  function getMaxNightlyCad(provinceCode) {
+    const code = String(provinceCode || lastSearchContext?.province || '').toUpperCase();
+    return HOTEL_CONFIG.maxNightlyByProvince[code] ?? HOTEL_CONFIG.maxNightlyTotalCad;
+  }
+
+  function normalizeExternalUrl(raw) {
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    return `https://${value}`;
+  }
+
+  function appendHotelsComSearchParams(u, geo) {
+    u.searchParams.set('locale', 'en_CA');
+    u.searchParams.set('adults', '2');
+    u.searchParams.set('rooms', '1');
+    u.searchParams.set('sort', 'DISTANCE');
+    if (geo) u.searchParams.set('latLong', `${geo.lat},${geo.lng}`);
+    if (els.checkin?.value) {
+      u.searchParams.set('chkin', els.checkin.value);
+      u.searchParams.set('startDate', els.checkin.value);
+      u.searchParams.set('d1', els.checkin.value);
+    }
+    if (els.checkout?.value) {
+      u.searchParams.set('chkout', els.checkout.value);
+      u.searchParams.set('endDate', els.checkout.value);
+      u.searchParams.set('d2', els.checkout.value);
+    }
+    getHotelsComAmenityParams().forEach((code) => u.searchParams.append('amenities', code));
+  }
+
+  function extractHotelsComListingUrl(website) {
+    const raw = normalizeExternalUrl(website);
+    if (!raw || !/hotels\.com/i.test(raw)) return '';
+    try {
+      const parsed = new URL(raw);
+      if (!/^\/ho\d+/i.test(parsed.pathname)) return '';
+      const u = new URL(`https://ca.hotels.com${parsed.pathname}`);
+      u.searchParams.set('locale', 'en_CA');
+      if (els.checkin?.value) u.searchParams.set('chkin', els.checkin.value);
+      if (els.checkout?.value) u.searchParams.set('chkout', els.checkout.value);
+      return u.toString();
+    } catch {
+      return '';
+    }
+  }
+
+  function extractHotelsComHoId(website) {
+    const raw = normalizeExternalUrl(website);
+    const match = raw.match(/\/ho(\d+)\//i);
+    return match ? match[1] : '';
+  }
+
+  function normalizeHotelNameForMatch(name) {
+    return String(name || '')
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\b(hotels?|motels?|inns?|suites?|resort|lodge|canada)\b/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function tokenOverlapScore(a, b) {
+    const tokensA = normalizeHotelNameForMatch(a).split(' ').filter((t) => t.length > 2);
+    const tokensB = normalizeHotelNameForMatch(b).split(' ').filter((t) => t.length > 2);
+    if (!tokensA.length || !tokensB.length) return 0;
+    const setB = new Set(tokensB);
+    let overlap = 0;
+    tokensA.forEach((t) => { if (setB.has(t)) overlap += 1; });
+    return overlap;
+  }
+
+  function hotelNameMatchesInventoryName(hotelName, inventoryName) {
+    const a = normalizeHotelNameForMatch(hotelName);
+    const b = normalizeHotelNameForMatch(inventoryName);
+    if (!a || !b) return false;
+    if (a === b) return true;
+
+    const tokensA = a.split(' ').filter((t) => t.length > 2);
+    const tokensB = b.split(' ').filter((t) => t.length > 2);
+    const overlap = tokenOverlapScore(hotelName, inventoryName);
+    const minLen = Math.min(tokensA.length, tokensB.length);
+
+    if (minLen >= 2) return overlap >= 2;
+    if (minLen === 1) {
+      return tokensA[0] === tokensB[0] || (a.includes(b) || b.includes(a));
+    }
+    return a.includes(b) || b.includes(a);
+  }
+
+  function buildInventoryMatchers(inventory) {
+    const names = [];
+    const hoIds = new Set();
+    (inventory?.properties || []).forEach((entry) => {
+      if (entry.hoId) hoIds.add(String(entry.hoId));
+      if (entry.name) names.push(entry.name);
+    });
+    return { names, hoIds };
+  }
+
+  function hotelMatchesHotelsComInventory(hotel, matchers) {
+    if (!matchers) return false;
+    const hoId = extractHotelsComHoId(hotel.website) || hotel.hotelsComHoId || '';
+    if (hoId && matchers.hoIds.has(hoId)) return true;
+    return matchers.names.some((inventoryName) => hotelNameMatchesInventoryName(hotel.name, inventoryName));
+  }
+
+  function hotelHasDirectHotelsComLink(hotel) {
+    const website = normalizeExternalUrl(hotel.website);
+    return Boolean(extractHotelsComListingUrl(website) || extractHotelsComHoId(website));
+  }
+
+  function passesHotelsComVerification(hotel, verify) {
+    if (!verify || verify.mode === 'map-nearby') return true;
+    if (verify.mode === 'bookable') {
+      return hotelHasDirectHotelsComLink(hotel);
+    }
+    if (verify.mode === 'inventory') {
+      return hotelMatchesHotelsComInventory(hotel, verify.matchers);
+    }
+    return false;
+  }
+
+  function getHotelsInventoryApiUrl(params) {
+    return new URL(`api/hotels-inventory?${params}`, location.href).toString();
+  }
+
+  function getBookingApiUrl(params) {
+    const base = (HOTEL_CONFIG.bookingApiUrl || '').trim();
+    if (base) {
+      return `${base.replace(/\/+$/, '')}/?${params}`;
+    }
+    return new URL(`api/booking-search?${params}`, location.href).toString();
+  }
+
+  function buildBookingAreaSearchUrl(ctx, geo) {
+    if (!ctx) return '';
+    const u = new URL('https://www.booking.com/searchresults.html');
+    u.searchParams.set('ss', ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`);
+    if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)) {
+      u.searchParams.set('latitude', String(geo.lat));
+      u.searchParams.set('longitude', String(geo.lng));
+      u.searchParams.set('order', 'distance_from_search');
+    }
+    if (els.checkin?.value) u.searchParams.set('checkin', els.checkin.value);
+    if (els.checkout?.value) u.searchParams.set('checkout', els.checkout.value);
+    u.searchParams.set('group_adults', '2');
+    u.searchParams.set('no_rooms', '1');
+    u.searchParams.set('selected_currency', 'CAD');
+    return u.toString();
+  }
+
+  function withBookingDates(rawUrl) {
+    const base = String(rawUrl || '').trim();
+    if (!base) return '';
+    try {
+      const u = new URL(base);
+      if (els.checkin?.value) u.searchParams.set('checkin', els.checkin.value);
+      if (els.checkout?.value) u.searchParams.set('checkout', els.checkout.value);
+      u.searchParams.set('group_adults', '2');
+      u.searchParams.set('no_rooms', '1');
+      u.searchParams.set('selected_currency', 'CAD');
+      return u.toString();
+    } catch {
+      return base;
+    }
+  }
+
+  async function loadBookingHotels(ctx, geo) {
+    if (!ctx) return { ok: false, hotels: [], error: 'missing-context' };
+    const params = new URLSearchParams({
+      destination: ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`
+    });
+    if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)) {
+      params.set('lat', String(geo.lat));
+      params.set('lng', String(geo.lng));
+    }
+    if (els.checkin?.value) params.set('chkin', els.checkin.value);
+    if (els.checkout?.value) params.set('chkout', els.checkout.value);
+    getHotelsComAmenityParams().forEach((code) => params.append('amenities', code));
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(getBookingApiUrl(params), { cache: 'no-store', signal: controller.signal });
+      if (response.status === 404) {
+        return { ok: false, hotels: [], error: 'Local search API not found. Stop the server (Ctrl+C), run Start Local Server.bat again, then hard refresh (Ctrl+Shift+R).' };
+      }
+      if (!response.ok) throw new Error(`booking ${response.status}`);
+      const data = await response.json();
+      const rawHotels = Array.isArray(data.hotels)
+        ? data.hotels
+        : (data.hotels && typeof data.hotels === 'object' ? [data.hotels] : []);
+      return {
+        ok: !!data.ok,
+        hotels: rawHotels,
+        error: data.error || ''
+      };
+    } catch (err) {
+      const msg = (err && err.name === 'AbortError')
+        ? 'Booking.com search timed out (the page took too long to load). Try again.'
+        : String(err?.message || err);
+      return { ok: false, hotels: [], error: msg };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function applyHotelsComInventoryToHotel(hotel, inventoryState) {
+    if (!inventoryState?.inventoryByName) return false;
+    let nameMatch = null;
+    for (const inv of inventoryState.inventoryByName.values()) {
+      if (!hotelNameMatchesInventoryName(hotel.name, inv.name)) continue;
+      if (inv.path && /\/ho\d+\//i.test(inv.path)) {
+        hotel.hotelsComPath = inv.path;
+        if (inv.hoId) hotel.hotelsComHoId = String(inv.hoId);
+        hotel.hotelsComListingName = inv.name;
+        return true;
+      }
+      if (!nameMatch) nameMatch = inv;
+    }
+    if (nameMatch) {
+      hotel.hotelsComListingName = nameMatch.name;
+      return true;
+    }
+    return false;
+  }
+
+  async function loadHotelsComPropertyInventory(hotel, ctx) {
+    if (!ctx || !hotel?.name) return { ok: false, matched: false, properties: [] };
+    const area = ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`;
+    const params = new URLSearchParams({
+      destination: `${hotel.name}, ${area}`,
+      lat: String(hotel.lat),
+      lng: String(hotel.lng)
+    });
+    if (els.checkin?.value) params.set('chkin', els.checkin.value);
+    if (els.checkout?.value) params.set('chkout', els.checkout.value);
+    getHotelsComAmenityParams().forEach((code) => params.append('amenities', code));
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(getHotelsInventoryApiUrl(params), {
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      if (!response.ok) return { ok: false, matched: false, properties: [] };
+      const data = await response.json();
+      const properties = Array.isArray(data.properties) ? data.properties : [];
+      const matchers = buildInventoryMatchers({ properties });
+      const matched = hotelMatchesHotelsComInventory(hotel, matchers);
+      const matchEntry = properties.find((entry) => hotelNameMatchesInventoryName(hotel.name, entry?.name));
+      return {
+        ok: !!data.ok,
+        matched,
+        path: matchEntry?.path || '',
+        hoId: matchEntry?.hoId || '',
+        name: matchEntry?.name || '',
+        properties
+      };
+    } catch {
+      return { ok: false, matched: false, properties: [] };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function loadHotelsComAreaInventory(ctx, geo) {
+    if (!ctx || !geo) return { ok: false, properties: [], error: 'missing-context' };
+    const params = new URLSearchParams({
+      destination: ctx.destination,
+      lat: String(geo.lat),
+      lng: String(geo.lng)
+    });
+    if (els.checkin?.value) params.set('chkin', els.checkin.value);
+    if (els.checkout?.value) params.set('chkout', els.checkout.value);
+    getHotelsComAmenityParams().forEach((code) => params.append('amenities', code));
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch(getHotelsInventoryApiUrl(params), {
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      if (response.status === 404) {
+        return {
+          ok: false,
+          properties: [],
+          error: 'Local inventory API not found. Stop the server (Ctrl+C), run Start Local Server.bat again, then hard refresh (Ctrl+Shift+R).'
+        };
+      }
+      if (!response.ok) throw new Error(`inventory ${response.status}`);
+      const data = await response.json();
+      return {
+        ok: !!data.ok,
+        properties: Array.isArray(data.properties) ? data.properties : [],
+        error: data.error || ''
+      };
+    } catch (err) {
+      return { ok: false, properties: [], error: String(err?.message || err) };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function buildHotelsComPropertySearchUrl(hotel, ctx, geo) {
+    const directListing = extractHotelsComListingUrl(hotel.website);
+    if (directListing) return directListing;
+    if (hotel.hotelsComPath) {
+      const u = new URL(`https://ca.hotels.com${hotel.hotelsComPath}`);
+      u.searchParams.set('locale', 'en_CA');
+      if (els.checkin?.value) u.searchParams.set('chkin', els.checkin.value);
+      if (els.checkout?.value) u.searchParams.set('chkout', els.checkout.value);
+      return u.toString();
+    }
+    return '';
+  }
+
+  function buildHotelsComAreaSearchUrl(ctx, geo) {
+    if (!ctx || !geo) return '';
+    const u = new URL('https://ca.hotels.com/Hotel-Search');
+    u.searchParams.set('destination', ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`);
+    appendHotelsComSearchParams(u, geo);
+    return u.toString();
+  }
+
+  function buildHotelsComNameSearchUrl(hotel, ctx, geo) {
+    if (!ctx) return '';
+    const u = new URL('https://ca.hotels.com/Hotel-Search');
+    const area = ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`;
+    u.searchParams.set('destination', hotel?.name ? `${hotel.name}, ${area}` : area);
+    const coords = geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)
+      ? geo
+      : (Number.isFinite(hotel?.lat) ? { lat: hotel.lat, lng: hotel.lng } : null);
+    appendHotelsComSearchParams(u, coords);
+    return u.toString();
+  }
+
+  function buildHotelsComListingUrlForHotel(hotel, ctx, geo) {
+    return buildHotelsComPropertySearchUrl(hotel, ctx, geo) || buildHotelsComNameSearchUrl(hotel, ctx, geo);
+  }
+
+  function isHotelsComInventoryBlocked(inventory) {
+    const err = String(inventory?.error || '');
+    return !inventory?.ok && /blocked automated|only hotels\.com-linked map hotels|403|forbidden|429/i.test(err);
+  }
+
+  function finalizeHotelForDisplay(hotel, ctx, geo) {
+    hotel.listingUrl = buildHotelsComListingUrlForHotel(hotel, ctx, geo);
+    delete hotel.qualityScore;
+    return hotel;
+  }
+
+  function osmConfirmsFreeBreakfast(tags) {
+    const t = tags || {};
+    const breakfast = String(t.breakfast || t['breakfast:hotel'] || '').trim().toLowerCase();
+    if (!breakfast || breakfast === 'no' || breakfast === 'none') return false;
+    return breakfast === 'yes' || breakfast === 'buffet' || breakfast === 'continental' || breakfast === 'included';
+  }
+
+  function osmConfirmsFreeParking(tags) {
+    const t = tags || {};
+    if (t.parking === 'no' || t['parking:fee'] === 'yes') return false;
+    if (t.parking === 'yes' || t['parking:fee'] === 'no') return true;
+    const parking = String(t.parking || '').trim().toLowerCase();
+    return parking.includes('free') || parking === 'surface' || parking === 'underground' || parking === 'private';
+  }
+
+  function osmMeetsRequiredAmenities(tags) {
+    if (els.freeBreakfast?.checked && !osmConfirmsFreeBreakfast(tags)) return false;
+    if (els.freeParking?.checked && !osmConfirmsFreeParking(tags)) return false;
+    return true;
+  }
+
+  function hotelFiltersAreActive() {
+    return !!(els.freeBreakfast?.checked || els.freeParking?.checked || els.freeCancellation?.checked || els.hotelsOnly?.checked);
+  }
+
+  function describeActiveFilters() {
+    const parts = [];
+    if (els.freeBreakfast?.checked) parts.push('Free breakfast');
+    if (els.freeParking?.checked) parts.push('Free parking');
+    if (els.freeCancellation?.checked) parts.push('Free cancellation');
+    if (els.hotelsOnly?.checked) parts.push('Hotels & motels only');
+    return parts.length ? parts.join(', ') : 'None';
+  }
+
+  function scrollHotelsTabToTop() {
+    const appContent = document.getElementById('appContent');
+    const panel = document.getElementById('tab-hotels');
+    if (!appContent || !panel) return;
+    appContent.scrollTo({ top: Math.max(0, panel.offsetTop - 8), behavior: 'instant' });
+  }
+
+  function scrollToHotelSearchActivity() {
+    const appContent = document.getElementById('appContent');
+    if (!appContent) return;
+    const statusEl = els.status;
+    const selectedField = els.selectedName?.closest('.field');
+    const searchBtn = els.searchBtn;
+    requestAnimationFrame(() => {
+      const containerRect = appContent.getBoundingClientRect();
+      const blocks = [searchBtn, statusEl, selectedField].filter((el) => {
+        if (!el) return false;
+        if (el.classList.contains('hidden')) return false;
+        return el.getBoundingClientRect().height > 0 || el === statusEl;
+      });
+      if (!blocks.length) return;
+
+      let minTop = Infinity;
+      let maxBottom = -Infinity;
+      blocks.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        minTop = Math.min(minTop, rect.top);
+        maxBottom = Math.max(maxBottom, rect.bottom);
+      });
+      if (!Number.isFinite(minTop)) return;
+
+      const viewportH = containerRect.height;
+      const blockHeight = maxBottom - minTop;
+      let scrollTop = minTop - containerRect.top + appContent.scrollTop - 12;
+      if (blockHeight > viewportH - 24) {
+        const anchor = (statusEl && statusEl.classList.contains('show')) ? statusEl : (searchBtn || statusEl);
+        if (anchor) {
+          scrollTop = anchor.getBoundingClientRect().top - containerRect.top + appContent.scrollTop - 12;
+        }
+      }
+      appContent.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
+    });
+  }
+
+  function scrollToHotelResults() {
+    scrollToHotelSearchActivity();
+  }
+
+  const OVERPASS_ENDPOINTS = [
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+  ];
+  const OVERPASS_TIMEOUT_MS = 28000;
+
+  async function fetchOverpassEndpoint(endpoint, body) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`Overpass ${response.status}`);
+      const data = await response.json();
+      if (typeof data.remark === 'string' && data.remark.includes('error') && !data.elements?.length) {
+        throw new Error(data.remark);
+      }
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function queryOverpassApi(query) {
+    const body = `data=${encodeURIComponent(query)}`;
+    let lastError = null;
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+      try {
+        return await fetchOverpassEndpoint(endpoint, body);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error('Hotel lookup failed');
+  }
+
+  const HOTEL_NAME_BLOCKLIST = [
+    'hostel', 'backpack', 'b&b', 'bed and breakfast', 'bed & breakfast', 'guest house', 'guesthouse',
+    'airbnb', 'campground', 'camping', 'rv park', 'trailer park', 'caravan', 'lodging house',
+    'student residence', 'university residence', 'dormitory', 'halfway house', 'shelter',
+    'vacant', 'permanently closed', 'not a hotel', 'test hotel', 'sample hotel', 'placeholder'
+  ];
+
+  function isBlockedHotelName(name) {
+    const normalized = String(name || '').trim().toLowerCase();
+    if (!normalized || normalized.length < 3) return true;
+    return HOTEL_NAME_BLOCKLIST.some((term) => normalized.includes(term));
+  }
+
+  function scoreHotelQuality(tags) {
+    const t = tags || {};
+    let score = 10;
+    const tourism = String(t.tourism || '').toLowerCase();
+    if (tourism === 'hotel') score += 25;
+    else if (tourism === 'motel') score += 20;
+    else return -1;
+
+    if (/hotels\.com/i.test(t.website || t['contact:website'] || '')) score += 45;
+    if (t.brand) score += 12;
+    if (t.stars || t['stars:hotels']) score += 10;
+    if (t.rooms) score += 8;
+    if (t['addr:street'] || t['addr:housenumber']) score += 10;
+    if (t.phone || t['contact:phone']) score += 5;
+
+    const name = String(t.name || '').trim();
+    if (name.length < 5) score -= 25;
+    if (/^(hotel|motel|inn|lodge)$/i.test(name)) score -= 30;
+    return score;
+  }
+
+  function isQualityHotelElement(el) {
+    const t = el.tags || {};
+    if (t.disused === 'yes' || t.abandoned === 'yes' || t.closed === 'yes') return false;
+    if (isBlockedHotelName(t.name)) return false;
+    if (hotelFiltersAreActive() && !osmMeetsRequiredAmenities(t)) return false;
+    return scoreHotelQuality(t) >= 20;
+  }
+
+  function buildOverpassHotelQuery(radiusM, lat, lng, includeWays = false) {
+    const timeoutSec = radiusM > 30000 ? 25 : 18;
+    if (includeWays && radiusM <= 30000) {
+      return `[out:json][timeout:${timeoutSec}];
+(
+  node["tourism"~"hotel|motel"]["name"](around:${radiusM},${lat},${lng});
+  way["tourism"~"hotel|motel"]["name"](around:${radiusM},${lat},${lng});
+);
+out center body;`;
+    }
+    return `[out:json][timeout:${timeoutSec}];
+node["tourism"~"hotel|motel"]["name"](around:${radiusM},${lat},${lng});
+out body;`;
+  }
+
+  async function fetchNearbyHotelsFromOverpass(geo, ctx, maxItems, verify = null) {
+    const radiusM = Math.round(HOTEL_CONFIG.searchRadiusKm * 1000);
+    let data = null;
+    let lastError = null;
+
+    const plans = [
+      { radius: radiusM, includeWays: false },
+      { radius: Math.min(radiusM, 35000), includeWays: false },
+      { radius: Math.min(radiusM, 15000), includeWays: true }
+    ];
+
+    for (const plan of plans) {
+      if (!plan.radius) continue;
+      try {
+        const attempt = await queryOverpassApi(buildOverpassHotelQuery(plan.radius, geo.lat, geo.lng, plan.includeWays));
+        data = attempt;
+        if (attempt.elements?.length) break;
+      } catch (err) {
+        lastError = err;
+        data = null;
+      }
+    }
+
+    if (!data) {
+      const detail = lastError?.message ? String(lastError.message).slice(0, 120) : '';
+      throw new Error(detail ? `Hotel lookup failed: ${detail}` : 'Hotel lookup failed');
+    }
+    const seen = new Set();
+    const candidates = [];
+    const poolSize = Math.min(Math.max(maxItems * 12, 24), 72);
+
+    for (const el of data.elements || []) {
+      const name = el.tags?.name?.trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      if (!isQualityHotelElement(el)) continue;
+
+      const lat = el.lat ?? el.center?.lat;
+      const lng = el.lon ?? el.center?.lon;
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+      const distanceKm = haversineKm(geo.lat, geo.lng, lat, lng);
+      if (distanceKm > HOTEL_CONFIG.searchRadiusKm) continue;
+
+      seen.add(key);
+      const website = (el.tags?.website || el.tags?.['contact:website'] || '').trim();
+      const qualityScore = scoreHotelQuality(el.tags);
+      const candidate = {
+        id: `osm-${el.type}-${el.id}`,
+        name,
+        lat,
+        lng,
+        website,
+        hotelsComHoId: extractHotelsComHoId(website),
+        distance: Math.round(distanceKm * 10) / 10,
+        driveTime: formatDriveTime(distanceKm),
+        qualityScore
+      };
+      if (!passesHotelsComVerification(candidate, verify)) continue;
+      candidates.push(candidate);
+    }
+
+    candidates.sort((a, b) => {
+      if (a.distance !== b.distance) return a.distance - b.distance;
+      return b.qualityScore - a.qualityScore;
+    });
+
+    return candidates.slice(0, maxItems).map((hotel) => finalizeHotelForDisplay(hotel, ctx, geo));
+  }
+
+  function resolveHotelSearchContext() {
+    const eventAddress = getSurveillanceAddress();
+    const startingAddress = (els.calculatorCity?.value || '').trim();
+    const useCustomEvent = els.eventSource?.value === 'custom';
+
+    let parsed = parseCanadianAddress(eventAddress);
+    let source = 'event';
+    let searchAddress = eventAddress;
+
+    if (!parsed && !useCustomEvent && startingAddress) {
+      parsed = parseCanadianAddress(startingAddress);
+      source = 'starting';
+      searchAddress = startingAddress;
+    }
+
+    if (!parsed) return null;
+
+    return {
+      ...parsed,
+      provinceCode: parsed.province,
+      source,
+      eventAddress,
+      startingAddress,
+      searchAddress
+    };
+  }
+
+  function refreshSearchAreaPreview() {
+    if (!els.searchArea) return;
+    const ctx = resolveHotelSearchContext();
+    if (!ctx) {
+      els.searchArea.textContent = 'Include a province or territory code (e.g. ON, BC) in the event or starting address.';
+      els.searchArea.classList.remove('has-value');
+      return;
+    }
+    const via = ctx.source === 'event' ? 'surveillance event address' : 'calculator starting location';
+    const areaLine = ctx.searchAddress && ctx.searchAddress !== ctx.label
+      ? `${ctx.searchAddress} (near ${ctx.label})`
+      : `${ctx.label}, Canada`;
+    els.searchArea.textContent = `${areaLine} — from ${via}`;
+    els.searchArea.classList.add('has-value');
+  }
+
+  function formatMoney(amount) {
+    return `$${amount.toFixed(2)}`;
+  }
+
+  function getBudgetCapForSearch() {
+    const ctx = lastSearchContext || resolveHotelSearchContext();
+    return getMaxNightlyCad(ctx?.province);
+  }
+
+  function getMaxDistanceKm() {
+    const v = Number.parseInt(els.maxDistance?.value || '', 10);
+    return Number.isFinite(v) && v > 0 ? v : HOTEL_CONFIG.searchRadiusKm;
+  }
+
+  function closeAllPickers(exceptPanel) {
+    pickerRegistry.forEach(({ panel, button }) => {
+      if (panel === exceptPanel) return;
+      panel.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function initPicker({ button, panel, hidden, label, onChange }) {
+    if (!button || !panel || !hidden || !label) return;
+
+    const setValue = (value, text) => {
+      hidden.value = value;
+      label.textContent = text;
+      panel.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      if (onChange) onChange(value, text);
+    };
+
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const willOpen = panel.hidden;
+      closeAllPickers(willOpen ? panel : null);
+      panel.hidden = !willOpen;
+      button.setAttribute('aria-expanded', String(willOpen));
+    });
+
+    panel.querySelectorAll('[data-picker-value]').forEach((item) => {
+      item.addEventListener('click', () => {
+        setValue(item.dataset.pickerValue, item.textContent.trim());
+      });
+    });
+
+    pickerRegistry.push({ panel, button });
+
+    const selected = hidden.options[hidden.selectedIndex];
+    if (selected) label.textContent = selected.textContent.trim();
+  }
+
+  function buildRecipientPicker() {
+    const drop = $('hotelRecipientDrop');
+    const hidden = els.recipient;
+    if (!drop || !hidden) return;
+    drop.innerHTML = HOTEL_CONFIG.recipients.map((person) =>
+      `<button type="button" class="menu-item city-item" data-picker-value="${escapeHtml(person.email)}">${escapeHtml(person.name)}</button>`
+    ).join('');
+    hidden.innerHTML = HOTEL_CONFIG.recipients.map((person) =>
+      `<option value="${escapeHtml(person.email)}">${escapeHtml(person.name)}</option>`
+    ).join('');
+  }
+
+  function buildHotelListingUrl(hotel) {
+    return String(hotel?.listingUrl || '').trim();
+  }
+
+  function hideEmailSectionCollapsible() {
+    const el = els.emailSection;
+    if (!el) return;
+    el.classList.add('hotel-email-collapsed');
+    el.setAttribute('aria-hidden', 'true');
+  }
+
+  function revealEmailSectionCollapsible() {
+    const el = els.emailSection;
+    if (!el) return;
+    el.classList.remove('hotel-email-collapsed');
+    el.setAttribute('aria-hidden', 'false');
+    window.requestAnimationFrame(() => {
+      const appContent = document.getElementById('appContent');
+      if (!appContent) return;
+      const panel = document.getElementById('tab-hotels');
+      const panelTop = panel ? panel.offsetTop : 0;
+      const targetTop = el.offsetTop - panelTop - 16;
+      const viewBottom = appContent.scrollTop + appContent.clientHeight;
+      if (el.offsetTop > viewBottom - 80) {
+        appContent.scrollTo({ top: Math.max(panelTop, targetTop), behavior: 'smooth' });
+      }
+    });
+  }
+
+  function loadInvestigatorProfile() {
+    const read = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
+    if (els.investigatorName) {
+      els.investigatorName.value = read(PROFILE_KEYS.name) || '';
+    }
+    if (els.investigatorEmail) {
+      els.investigatorEmail.value = read(PROFILE_KEYS.email) || '';
+    }
+  }
+
+  function saveInvestigatorProfile() {
+    const write = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
+    if (els.investigatorName) write(PROFILE_KEYS.name, els.investigatorName.value.trim());
+    if (els.investigatorEmail) write(PROFILE_KEYS.email, els.investigatorEmail.value.trim());
+  }
+
+  function getInvestigatorProfile() {
+    return {
+      name: (els.investigatorName?.value || '').trim(),
+      email: (els.investigatorEmail?.value || '').trim()
+    };
+  }
+
+  function syncClientBilledField() {
+    const isYes = els.clientBilled?.value === 'Yes';
+    els.trackopsWrap?.classList.toggle('hidden', !isYes);
+    if (!isYes && els.trackopsCase) els.trackopsCase.value = '';
+  }
+
+  function parseDateValue(value) {
+    if (!value) return null;
+    const parts = value.split('-').map(Number);
+    if (parts.length !== 3) return null;
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function formatDisplayDate(value) {
+    const date = parseDateValue(value);
+    if (!date || Number.isNaN(date.getTime())) return '[date]';
+    return date.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function calcNights(checkin, checkout) {
+    const start = parseDateValue(checkin);
+    const end = parseDateValue(checkout);
+    if (!start || !end || end <= start) return null;
+    return Math.round((end - start) / (1000 * 60 * 60 * 24));
+  }
+
+  function getActiveMeta() {
+    const address = getSurveillanceAddress();
+    if (!address || !els.checkin?.value || !els.checkout?.value) return null;
+    const nights = calcNights(els.checkin.value, els.checkout.value);
+    if (nights === null) return null;
+    const ctx = resolveHotelSearchContext();
+    if (!ctx) return null;
+    return {
+      address,
+      nights,
+      provinceCode: ctx.provinceCode,
+      areaLabel: ctx.label,
+      searchAddress: ctx.searchAddress,
+      destination: ctx.destination
+    };
+  }
+
+  function validateSearchInputs() {
+    const address = getSurveillanceAddress();
+    const startingAddress = (els.calculatorCity?.value || '').trim();
+    if (!address && !startingAddress) {
+      setStatus('Enter a surveillance event address or select a calculator starting location before searching.', 'error');
+      return null;
+    }
+    const ctx = resolveHotelSearchContext();
+    if (!ctx) {
+      setStatus('Include a Canadian province or territory in the address (e.g. ", ON" or ", BC").', 'error');
+      refreshSearchAreaPreview();
+      return null;
+    }
+    if (!els.checkin?.value || !els.checkout?.value) {
+      setStatus('Choose both check-in and check-out dates.', 'error');
+      return null;
+    }
+    const nights = calcNights(els.checkin.value, els.checkout.value);
+    if (nights === null) {
+      setStatus('Check-out must be after check-in.', 'error');
+      return null;
+    }
+    refreshSearchAreaPreview();
+    return {
+      address: address || startingAddress,
+      nights,
+      provinceCode: ctx.provinceCode,
+      areaLabel: ctx.label,
+      searchAddress: ctx.searchAddress,
+      destination: ctx.destination
+    };
+  }
+
+  function refreshEmailDraft() {
+    if (!selectedHotel) return;
+    const meta = getActiveMeta();
+    if (meta) buildEmailDraft(selectedHotel, meta);
+  }
+
+  function buildVerifyStateFromInventory(inventory) {
+    if (!inventory?.ok || !inventory.properties?.length) return null;
+    const matchers = buildInventoryMatchers(inventory);
+    const inventoryByName = new Map();
+    inventory.properties.forEach((entry) => {
+      if (!entry?.name) return;
+      inventoryByName.set(normalizeHotelNameForMatch(entry.name), entry);
+    });
+    return { mode: 'inventory', matchers, inventoryByName };
+  }
+
+  function slugifyHotelId(name, index) {
+    const base = String(name || 'hotel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `booking-${index}-${base || 'hotel'}`;
+  }
+
+  async function fetchAndRankHotels(meta, geo, onProgress) {
+    const requested = Math.max(1, Number.parseInt(els.matchCount?.value || '3', 10));
+    const ctx = lastSearchContext;
+    if (!ctx) return { items: [], requested, verifyMode: 'none' };
+
+    if (typeof onProgress === 'function') onProgress('Searching Booking.com for hotels near your event…');
+    const result = await loadBookingHotels(ctx, geo);
+    const areaSearchUrl = buildBookingAreaSearchUrl(ctx, geo);
+
+    if (!result.ok || !result.hotels.length) {
+      return {
+        items: [],
+        requested,
+        verifyMode: 'blocked',
+        inventoryError: result.error,
+        areaSearchUrl
+      };
+    }
+
+    const radiusKm = getMaxDistanceKm();
+    const nights = Math.max(1, Number(meta?.nights) || 1);
+    const budgetCap = Number(getBudgetCapForSearch()) || 0;
+
+    const mapped = result.hotels.map((h, index) => {
+      const km = Number.isFinite(Number(h.distanceKm)) ? Number(h.distanceKm) : null;
+      const stayValue = Number.isFinite(Number(h.priceValue)) ? Number(h.priceValue) : null;
+      const taxesValue = Number.isFinite(Number(h.taxesValue)) ? Number(h.taxesValue) : 0;
+      const perNightInclTax = stayValue != null ? Math.round((stayValue + taxesValue) / nights) : null;
+      return {
+        id: slugifyHotelId(h.name, index),
+        name: h.name,
+        distance: km,
+        distanceText: h.distanceText || (km != null ? `${km} km` : ''),
+        driveTime: km != null ? formatDriveTime(km) : '',
+        perNightInclTax,
+        priceLabel: perNightInclTax != null ? `CAD ${perNightInclTax}` : '',
+        nights,
+        reviewScore: h.reviewScore ? String(h.reviewScore) : '',
+        reviewWord: h.reviewWord ? String(h.reviewWord) : '',
+        reviewCount: Number.isFinite(Number(h.reviewCount)) ? Number(h.reviewCount) : null,
+        listingUrl: withBookingDates(h.url) || areaSearchUrl,
+        lat: null,
+        lng: null
+      };
+    });
+
+    // Strict budget: only listings we can confirm are at or under the cap, incl. tax.
+    const budgetOk = (it) => budgetCap <= 0 || (it.perNightInclTax != null && it.perNightInclTax <= budgetCap);
+    const withinRadius = mapped.filter((it) => it.distance == null || it.distance <= radiusKm);
+    const withinBudget = withinRadius.filter(budgetOk);
+
+    if (withinBudget.length) {
+      return {
+        items: withinBudget.slice(0, requested),
+        requested,
+        verifyMode: 'booking',
+        budgetCap,
+        inventoryCount: result.hotels.length,
+        areaSearchUrl
+      };
+    }
+
+    // Fallback: nothing under budget within the chosen radius — show the nearest
+    // budget-compliant hotels beyond it (by distance) rather than returning nothing.
+    const expanded = mapped
+      .filter(budgetOk)
+      .slice()
+      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+
+    if (expanded.length) {
+      return {
+        items: expanded.slice(0, requested),
+        requested,
+        verifyMode: 'expanded',
+        budgetCap,
+        inventoryCount: result.hotels.length,
+        areaSearchUrl
+      };
+    }
+
+    // Nothing under budget anywhere in the returned set.
+    return {
+      items: [],
+      requested,
+      verifyMode: 'over-budget',
+      budgetCap,
+      nearbyCount: mapped.length,
+      inventoryCount: result.hotels.length,
+      areaSearchUrl
+    };
+  }
+
+  function setEmailActionsEnabled(enabled) {
+    els.copyBtn.disabled = !enabled;
+    els.sendBtn.disabled = !enabled;
+  }
+
+  function buildEmailDraft(hotel, meta) {
+    saveInvestigatorProfile();
+    const investigator = getInvestigatorProfile();
+    const recipientLabel = $('hotelRecipientLabel')?.textContent?.trim() || els.recipient?.value || '';
+    const nights = meta.nights;
+    const nightLabel = nights === 1 ? '1 night' : `${nights} nights`;
+    const area = deriveAreaLabel(meta.address);
+    const priceCap = getBudgetCapForSearch();
+    const clientBilled = els.clientBilled?.value || 'TBD';
+    const trackops = (els.trackopsCase?.value || '').trim();
+    const listingUrl = buildHotelListingUrl(hotel);
+
+    els.emailSubject.value = `Hotel Room Request — ${area}`;
+
+    const bodyParts = [
+      'Hi Admin,',
+      '',
+      `I would like a hotel room for ${nightLabel}.`,
+      `Check-in: ${formatDisplayDate(els.checkin.value)}`,
+      `Check-out: ${formatDisplayDate(els.checkout.value)}`,
+      '',
+      'Hotel:',
+      hotel.name,
+      ...(hotel.priceLabel ? [`Approx. rate: from ${hotel.priceLabel}/night incl. taxes & fees (Booking.com)`] : []),
+      '',
+      'Booking.com listing:',
+      listingUrl,
+      '',
+      `Client billed: ${clientBilled}`
+    ];
+
+    if (clientBilled === 'Yes' && trackops) {
+      bodyParts.push(`Trackops case number: ${trackops}`);
+    }
+
+    bodyParts.push('', 'Any questions about any of the above, let me know.', '', 'Kind regards,');
+
+    els.emailBody.textContent = bodyParts.join('\n');
+    setEmailActionsEnabled(true);
+  }
+
+  function selectHotel(hotel, meta) {
+    selectedHotel = hotel;
+    lastTaxMeta = meta;
+    if (els.selectedName) els.selectedName.value = hotel.name;
+    revealEmailSectionCollapsible();
+    document.querySelectorAll('.hotel-card').forEach((card) => {
+      card.classList.toggle('selected', card.dataset.hotelId === hotel.id);
+      card.setAttribute('aria-selected', card.dataset.hotelId === hotel.id ? 'true' : 'false');
+    });
+    buildEmailDraft(hotel, meta);
+  }
+
+  function renderHotelResults(items, meta, geo, requestedCount, resultMeta = {}) {
+    lastResults = items;
+    const radiusKm = getMaxDistanceKm();
+    const requested = Math.max(1, Number.parseInt(String(requestedCount || els.matchCount?.value || '3'), 10));
+    const filtersActive = hotelFiltersAreActive();
+    const listingHint = 'Opens this hotel on Booking.com for your dates';
+
+    if (!items.length) {
+      els.results.innerHTML = '';
+      selectedHotel = null;
+      lastTaxMeta = null;
+      if (els.selectedName) els.selectedName.value = '';
+      els.emailBody.textContent = '';
+      els.emailSubject.value = '';
+      setEmailActionsEnabled(false);
+      hideEmailSectionCollapsible();
+      if (resultMeta.verifyMode === 'blocked') {
+        const link = resultMeta.areaSearchUrl
+          ? ` <a href="${escapeHtml(resultMeta.areaSearchUrl)}" target="_blank" rel="noopener noreferrer">Open Booking.com for this area</a> to check manually.`
+          : '';
+        const lead = `Couldn't read Booking.com listings for this area${resultMeta.inventoryError ? ` (${resultMeta.inventoryError})` : ''}.`;
+        els.status.className = 'status show error';
+        els.status.innerHTML = `${escapeHtml(lead)}${link}`;
+        scrollToHotelResults();
+        return;
+      } else if (resultMeta.verifyMode === 'over-budget') {
+        const capLabel = resultMeta.budgetCap ? formatMoney(resultMeta.budgetCap) : '$200.00';
+        const nearby = resultMeta.nearbyCount || 0;
+        const link = resultMeta.areaSearchUrl
+          ? ` <a href="${escapeHtml(resultMeta.areaSearchUrl)}" target="_blank" rel="noopener noreferrer">See all listings on Booking.com</a>.`
+          : '';
+        const lead = `Found ${nearby} hotel${nearby === 1 ? '' : 's'} near this event, but none were ≤ ${capLabel}/night incl. tax for your dates. Try different dates or turn off amenity filters.`;
+        els.status.className = 'status show error';
+        els.status.innerHTML = `${escapeHtml(lead)}${link}`;
+        scrollToHotelResults();
+        return;
+      } else if (!geo) {
+        setStatus('Could not map this address. Check your connection and try again.', 'error');
+      } else if (filtersActive) {
+        setStatus(`No hotels within ${radiusKm} km matched ${describeActiveFilters()} on Booking.com. Turn off amenity filters to see more nearby options.`, 'error');
+      } else {
+        setStatus(`No hotels found within ${radiusKm} km of the surveillance event. Try a different address or widen your dates.`, 'error');
+      }
+      scrollToHotelResults();
+      return;
+    }
+
+    hideStatus();
+    hideEmailSectionCollapsible();
+    selectedHotel = null;
+    if (els.selectedName) {
+      els.selectedName.value = '';
+      els.selectedName.readOnly = true;
+    }
+    els.emailBody.textContent = '';
+    els.emailSubject.value = '';
+    setEmailActionsEnabled(false);
+
+    els.results.innerHTML = items.map((hotel, index) => {
+      const distancePart = hotel.distance != null
+        ? `${hotel.distance} km${hotel.driveTime ? ` · ${hotel.driveTime}` : ''}`
+        : (hotel.distanceText || 'Distance n/a');
+      const pricePart = hotel.priceLabel ? ` · from ${hotel.priceLabel}/night incl. tax` : '';
+      const reviewBadge = hotel.reviewScore
+        ? `<span class="hotel-card__score" title="${escapeHtml(hotel.reviewCount != null ? `${hotel.reviewCount} reviews on Booking.com` : 'Booking.com review score')}">${escapeHtml(hotel.reviewScore)}${hotel.reviewWord ? ` ${escapeHtml(hotel.reviewWord)}` : ''}</span>`
+        : '';
+      const reviewCountLine = hotel.reviewCount != null
+        ? `<span>${escapeHtml(`${hotel.reviewCount.toLocaleString()} reviews`)}</span>`
+        : '';
+      return `
+      <article class="hotel-card" role="listitem" data-hotel-id="${escapeHtml(hotel.id)}" tabindex="0" aria-selected="false">
+        <div class="hotel-card__head">
+          <div>
+            <strong>${escapeHtml(hotel.name)}</strong>
+            <div class="hotel-meta">
+              <span>${escapeHtml(`${distancePart}${pricePart}`)}</span>
+              ${reviewCountLine}
+              <span>${escapeHtml(listingHint)}</span>
+            </div>
+          </div>
+          <div class="hotel-card__badges">
+            <span class="hotel-card__rank">#${index + 1}</span>
+            ${reviewBadge}
+          </div>
+        </div>
+        <div class="hotel-actions">
+          <button class="btn btn-secondary" type="button" data-action="view" data-hotel-id="${escapeHtml(hotel.id)}">Open on Booking.com</button>
+          <button class="btn btn-primary" type="button" data-action="choose" data-hotel-id="${escapeHtml(hotel.id)}">Choose</button>
+        </div>
+      </article>`;
+    }).join('');
+    document.querySelectorAll('.hotel-card').forEach((c) => c.classList.remove('selected'));
+
+    const countLabel = items.length === 1 ? '1 hotel' : `${items.length} hotels`;
+    const headline = resultMeta.verifyMode === 'expanded'
+      ? `No hotels under budget within ${radiusKm} km — showing the nearest ${countLabel} beyond that, sorted by distance.`
+      : `Found ${countLabel} on Booking.com within ${radiusKm} km of the event, sorted by distance.`;
+    setStatus(headline, 'success');
+    scrollToHotelResults();
+  }
+
+  async function runSearch() {
+    const meta = validateSearchInputs();
+    if (!meta) return;
+
+    const ctx = resolveHotelSearchContext();
+    lastSearchContext = ctx;
+
+    els.searchBtn.disabled = true;
+    hideEmailSectionCollapsible();
+    // Clear any previous results/selection so the area below is empty until new results arrive.
+    els.results.innerHTML = '';
+    lastResults = [];
+    selectedHotel = null;
+    lastTaxMeta = null;
+    if (els.selectedName) els.selectedName.value = '';
+    els.emailBody.textContent = '';
+    els.emailSubject.value = '';
+    setEmailActionsEnabled(false);
+    showHotelSearchProgress('Mapping address…');
+    requestAnimationFrame(() => requestAnimationFrame(scrollToHotelSearchActivity));
+
+    let geo = null;
+    try {
+      geo = await geocodeCanadianAddress(meta.searchAddress, ctx);
+      meta.geo = geo;
+      showHotelSearchProgress('Searching Booking.com for hotels near your event…');
+      scrollToHotelSearchActivity();
+      const ranked = await fetchAndRankHotels(meta, geo, showHotelSearchProgress);
+      renderHotelResults(ranked.items, meta, geo, ranked.requested, {
+        verifyMode: ranked.verifyMode,
+        inventoryError: ranked.inventoryError,
+        areaSearchUrl: ranked.areaSearchUrl,
+        budgetCap: ranked.budgetCap,
+        nearbyCount: ranked.nearbyCount
+      });
+    } catch (err) {
+      const detail = String(err?.message || '').replace(/^Hotel lookup failed:?\s*/i, '').trim();
+      const message = detail && detail !== 'Hotel lookup failed'
+        ? `Hotel lookup failed. ${detail} Wait a few seconds and try again.`
+        : 'Hotel lookup failed. Wait a few seconds and try again.';
+      setStatus(message, 'error');
+      els.results.innerHTML = '';
+      scrollToHotelResults();
+    } finally {
+      els.searchBtn.disabled = false;
+    }
+  }
+
+  function findHotelById(id) {
+    return lastResults.find((hotel) => hotel.id === id) || null;
+  }
+
+  function scrollStatusIntoView() {
+    if (!els.status) return;
+    requestAnimationFrame(() => {
+      try {
+        els.status.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch {
+        els.status.scrollIntoView();
+      }
+    });
+  }
+
+  async function copyDraft() {
+    if (!selectedHotel || !els.emailBody.textContent) {
+      setStatus('Choose a hotel before copying the draft.', 'error');
+      scrollStatusIntoView();
+      return;
+    }
+    const payload = `Subject: ${els.emailSubject.value}\n\n${els.emailBody.textContent}`;
+    try {
+      await navigator.clipboard.writeText(payload);
+      setStatus('Email draft copied to clipboard.', 'success');
+    } catch {
+      setStatus('Unable to access clipboard. Copy the message manually.', 'error');
+    }
+  }
+
+  function sendDraft() {
+    if (!selectedHotel) {
+      setStatus('Choose a hotel before sending.', 'error');
+      scrollStatusIntoView();
+      return;
+    }
+    const recipient = els.recipient?.value;
+    if (!recipient) {
+      setStatus('Select a recipient before sending.', 'error');
+      scrollStatusIntoView();
+      $('hotelRecipientBtn')?.focus();
+      return;
+    }
+    saveInvestigatorProfile();
+    const investigator = getInvestigatorProfile();
+    if (!investigator.email) {
+      setStatus('Enter your email before sending.', 'error');
+      scrollStatusIntoView();
+      els.investigatorEmail?.focus();
+      return;
+    }
+    const subject = encodeURIComponent(els.emailSubject.value || '');
+    const body = encodeURIComponent(els.emailBody.textContent || '');
+    const cc = encodeURIComponent(investigator.email);
+    const to = encodeURIComponent(recipient);
+    openOutlookCompose({ to, cc, subject, body });
+  }
+
+  function openOutlookCompose({ to, cc, subject, body }) {
+    const mailtoUrl = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    if (!isMobile) {
+      // Windows desktop: Outlook (when set as default mail app) handles mailto:.
+      window.location.href = mailtoUrl;
+      return;
+    }
+    // Android / iOS: open the Outlook app directly via its compose deep link,
+    // falling back to mailto: if the app does not take over the page.
+    const deepLink = `ms-outlook://compose?to=${to}&cc=${cc}&subject=${subject}&body=${body}`;
+    let fellBack = false;
+    const fallback = setTimeout(() => {
+      if (!fellBack && !document.hidden) {
+        fellBack = true;
+        window.location.href = mailtoUrl;
+      }
+    }, 900);
+    const onHide = () => {
+      if (document.hidden) {
+        clearTimeout(fallback);
+        document.removeEventListener('visibilitychange', onHide);
+      }
+    };
+    document.addEventListener('visibilitychange', onHide);
+    window.location.href = deepLink;
+  }
+
+  function clearHotelForm() {
+    els.eventSource.value = 'calculator';
+    $('hotelEventSourceLabel').textContent = 'Use current calculator event address';
+    els.customWrap.classList.add('hidden');
+    if (els.customEvent) els.customEvent.value = '';
+    if (els.checkin) els.checkin.value = '';
+    if (els.checkout) els.checkout.value = '';
+    if (els.matchCount) els.matchCount.value = '5';
+    $('hotelMatchCountLabel').textContent = '5';
+    if (els.maxDistance) els.maxDistance.value = '25';
+    $('hotelMaxDistanceLabel').textContent = '25 km';
+    if (els.clientBilled) els.clientBilled.value = 'No';
+    $('hotelClientBilledLabel').textContent = 'No';
+    if (els.trackopsCase) els.trackopsCase.value = '';
+    syncClientBilledField();
+    if (els.freeBreakfast) els.freeBreakfast.checked = false;
+    if (els.freeParking) els.freeParking.checked = false;
+    if (els.freeCancellation) els.freeCancellation.checked = false;
+    if (els.hotelsOnly) els.hotelsOnly.checked = false;
+    els.results.innerHTML = '';
+    selectedHotel = null;
+    lastTaxMeta = null;
+    lastSearchContext = null;
+    geocodeCache = { key: '', result: null };
+    if (els.selectedName) {
+      els.selectedName.value = '';
+      els.selectedName.readOnly = true;
+      els.selectedName.placeholder = 'Choose a hotel from the results';
+    }
+    els.emailBody.textContent = '';
+    els.emailSubject.value = '';
+    hideStatus();
+    setEmailActionsEnabled(false);
+    hideEmailSectionCollapsible();
+    onEventSourceChange();
+    refreshResolvedAddress();
+    refreshSearchAreaPreview();
+    closeAllPickers();
+    scrollHotelsTabToTop();
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  }
+
+  function onEventSourceChange() {
+    const isCustom = els.eventSource.value === 'custom';
+    els.customWrap.classList.toggle('hidden', !isCustom);
+    refreshResolvedAddress();
+    refreshEmailDraft();
+  }
+
+  els.eventSource?.addEventListener('change', onEventSourceChange);
+  els.customEvent?.addEventListener('input', () => {
+    geocodeCache = { key: '', result: null };
+    refreshResolvedAddress();
+  });
+  els.calculatorEvent?.addEventListener('input', () => {
+    if (els.eventSource.value === 'calculator') refreshResolvedAddress();
+  });
+  els.calculatorEvent?.addEventListener('change', () => {
+    if (els.eventSource.value === 'calculator') refreshResolvedAddress();
+  });
+  els.calculatorCity?.addEventListener('change', refreshSearchAreaPreview);
+
+  [els.checkin, els.checkout, els.trackopsCase].forEach((el) => {
+    el?.addEventListener('input', refreshEmailDraft);
+    el?.addEventListener('change', refreshEmailDraft);
+  });
+
+  els.clientBilled?.addEventListener('change', () => {
+    syncClientBilledField();
+    refreshEmailDraft();
+  });
+
+  els.recipient?.addEventListener('change', refreshEmailDraft);
+
+  [els.investigatorName, els.investigatorEmail].forEach((el) => {
+    el?.addEventListener('input', refreshEmailDraft);
+    el?.addEventListener('change', () => {
+      saveInvestigatorProfile();
+      refreshEmailDraft();
+    });
+  });
+
+  function bindHotelAmenityToggles() {
+    document.querySelectorAll('#tab-hotels .toggle').forEach((toggle) => {
+      const input = toggle.querySelector('input[type="checkbox"]');
+      if (!input || input.dataset.bound === '1') return;
+      input.dataset.bound = '1';
+      toggle.addEventListener('mousedown', (event) => event.preventDefault());
+      input.addEventListener('change', () => {
+        input.blur();
+        if (selectedHotel) refreshEmailDraft();
+      });
+    });
+  }
+
+  els.clearBtn?.addEventListener('click', clearHotelForm);
+  els.searchBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    runSearch();
+  });
+  bindHotelAmenityToggles();
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('#tab-hotels .city-wrap')) return;
+    closeAllPickers();
+  });
+
+  els.results.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-action]');
+    if (!button) return;
+
+    const hotel = findHotelById(button.dataset.hotelId);
+    if (!hotel) return;
+    const meta = validateSearchInputs();
+    if (!meta) return;
+    if (button.dataset.action === 'view') {
+      const ctx = lastSearchContext || resolveHotelSearchContext();
+      const geo = meta.geo || geocodeCache.result;
+      const listingUrl = buildHotelListingUrl(hotel)
+        || (ctx ? buildBookingAreaSearchUrl(ctx, geo) : '');
+      if (!listingUrl) {
+        setStatus('Listing URL not available.', 'error');
+        return;
+      }
+      window.open(listingUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (button.dataset.action === 'choose') {
+      selectHotel(hotel, meta);
+      return;
+    }
+  });
+
+  els.results.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const card = event.target.closest('.hotel-card');
+    if (!card || event.target.closest('button')) return;
+    event.preventDefault();
+    const hotel = findHotelById(card.dataset.hotelId);
+    const meta = getActiveMeta() || validateSearchInputs();
+    if (hotel && meta) selectHotel(hotel, meta);
+  });
+
+  els.copyBtn.addEventListener('click', copyDraft);
+  els.sendBtn.addEventListener('click', sendDraft);
+
+  buildRecipientPicker();
+  loadInvestigatorProfile();
+
+  initPicker({
+    button: $('hotelEventSourceBtn'),
+    panel: $('hotelEventSourceDrop'),
+    hidden: els.eventSource,
+    label: $('hotelEventSourceLabel'),
+    onChange: onEventSourceChange
+  });
+
+  initPicker({
+    button: $('hotelMatchCountBtn'),
+    panel: $('hotelMatchCountDrop'),
+    hidden: els.matchCount,
+    label: $('hotelMatchCountLabel'),
+    onChange: refreshEmailDraft
+  });
+
+  initPicker({
+    button: $('hotelMaxDistanceBtn'),
+    panel: $('hotelMaxDistanceDrop'),
+    hidden: els.maxDistance,
+    label: $('hotelMaxDistanceLabel')
+  });
+
+  initPicker({
+    button: $('hotelRecipientBtn'),
+    panel: $('hotelRecipientDrop'),
+    hidden: els.recipient,
+    label: $('hotelRecipientLabel'),
+    onChange: refreshEmailDraft
+  });
+
+  initPicker({
+    button: $('hotelClientBilledBtn'),
+    panel: $('hotelClientBilledDrop'),
+    hidden: els.clientBilled,
+    label: $('hotelClientBilledLabel'),
+    onChange: () => {
+      syncClientBilledField();
+      refreshEmailDraft();
+    }
+  });
+
+  if (els.recipient?.options.length) {
+    els.recipient.selectedIndex = 0;
+    $('hotelRecipientLabel').textContent = els.recipient.options[0].textContent.trim();
+  }
+
+  hideEmailSectionCollapsible();
+
+  onEventSourceChange();
+  syncClientBilledField();
+  setEmailActionsEnabled(false);
+
+  refreshSearchAreaPreview();
+  window.HotelFinder = { refreshResolvedAddress, refreshSearchAreaPreview };
+})();
 </script>
 
 </body>

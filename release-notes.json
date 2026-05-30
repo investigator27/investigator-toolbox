@@ -1,11 +1,25 @@
 {
-  "latest": "v61",
-  "appVersion": "3.3.9",
+  "latest": "v62",
+  "appVersion": "3.4.0",
   "highlights": [
-    "Tab locks: edit tab-policy.json on GitHub only. No Worker, no revision, no per-phone setup.",
-    "Upload v61 with tab-policy.json."
+    "Hotel Finder: search at your GPS location on site, or by city/town only — full event street address is not sent to search.",
+    "Settings: default hotel search location (GPS vs city/town)."
   ],
   "builds": {
+    "v62": {
+      "intro": "Investigator Toolbox 3.4.0 — Hotel Finder location privacy.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "At surveillance location (GPS): use only when you are on site; phone location drives search.",
+            "City or town of event: uses city and province from Calculator locally; street address stays on device.",
+            "Booking search receives city/region text and coordinates only — not the full surveillance street address.",
+            "Settings → Personalization → Hotel search: choose the default mode."
+          ]
+        }
+      ]
+    },
     "v61": {
       "intro": "Investigator Toolbox 3.3.9 — Simple tab locks.",
       "sections": [

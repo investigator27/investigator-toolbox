@@ -276,6 +276,10 @@
     }
     .field--paired-control .hint{display:none}
     .hotel-amenity-toggles{margin-top:var(--space-1)}
+    .hotel-location-at-event-hint,.hotel-location-city-hint{margin-top:var(--space-2)}
+    .hotel-search-area-preview{margin:var(--space-1) 0 0;min-height:1.25rem}
+    .hotel-search-area-preview.has-value{color:var(--color-text);font-weight:600}
+    .field-label-static{display:block;font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-2)}
     .toggle{position:relative;display:flex;align-items:center;gap:var(--space-3);min-height:52px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-lg);background:var(--color-surface-offset);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     .toggle input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
     .toggle input:focus{outline:none}
@@ -870,30 +874,39 @@
       <section class="card" aria-labelledby="hotel-title">
         <div>
           <h2 id="hotel-title" class="card-title">Hotel Finder</h2>
-          <p class="card-sub">Live Booking.com hotels near the event, sorted by distance.</p>
+          <p class="card-sub">Booking.com hotels near the surveillance area. Only city or your on-site location is sent to search — not the full event street address.</p>
         </div>
 
         <div class="field">
-          <label for="hotelEventSourceBtn">Surveillance Event Source</label>
+          <label for="hotelLocationModeBtn">Search location</label>
           <div class="menu-wrap city-wrap">
-            <button type="button" id="hotelEventSourceBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
-              <span id="hotelEventSourceLabel">Use current calculator event address</span>
+            <button type="button" id="hotelLocationModeBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelLocationModeLabel">At surveillance location (GPS)</span>
             </button>
-            <div id="hotelEventSourceDrop" class="menu-panel city-panel" hidden role="listbox">
-              <button type="button" class="menu-item city-item" data-picker-value="calculator">Use current calculator event address</button>
-              <button type="button" class="menu-item city-item" data-picker-value="custom">Enter a different surveillance event address</button>
+            <div id="hotelLocationModeDrop" class="menu-panel city-panel" hidden role="listbox">
+              <button type="button" class="menu-item city-item" data-picker-value="at-event">At surveillance location (GPS)</button>
+              <button type="button" class="menu-item city-item" data-picker-value="city-town">City or town of event</button>
             </div>
-            <select id="hotelEventSource" hidden aria-hidden="true">
-              <option value="calculator" selected>Use current calculator event address</option>
-              <option value="custom">Enter a different surveillance event address</option>
+            <select id="hotelLocationMode" hidden aria-hidden="true">
+              <option value="at-event" selected>At surveillance location (GPS)</option>
+              <option value="city-town">City or town of event</option>
             </select>
           </div>
-          <div class="hint">Pulls from the Calculator tab when that option is selected.</div>
         </div>
 
-        <div class="field hidden" id="hotelCustomEventWrap">
-          <label for="hotelCustomEvent">Surveillance Event Address</label>
-          <input id="hotelCustomEvent" type="text" placeholder="Enter the full surveillance event address" autocomplete="off" />
+        <div class="install-hint hotel-location-at-event-hint" id="hotelAtEventHint" role="note">
+          <strong>At surveillance location</strong>
+          <span>Only use this when you are physically at the surveillance site. Your phone location is used for search; the street address from Calculator is not sent.</span>
+        </div>
+
+        <div class="install-hint hidden hotel-location-city-hint" id="hotelCityTownHint" role="note">
+          <strong>City or town of event</strong>
+          <span>Uses the city and province from the Calculator event address (or starting location). The street address stays on this device only.</span>
+        </div>
+
+        <div class="field">
+          <span class="field-label-static">Search area preview</span>
+          <p class="hint hotel-search-area-preview" id="hotelSearchAreaPreview">Add a surveillance event address on the Calculator tab (with province, e.g. ON or BC).</p>
         </div>
 
         <div class="hotel-form-grid hotel-form-grid--dates">
@@ -951,19 +964,19 @@
 
         <div class="settings-group hotel-amenity-toggles" role="group" aria-label="Required amenities">
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Free Breakfast</span>
+            <span class="settings-row__label">Free breakfast</span>
             <label class="settings-switch"><input id="hotelFreeBreakfast" type="checkbox" aria-label="Free breakfast" /><span class="settings-switch__track"></span></label>
           </div>
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Free Parking</span>
+            <span class="settings-row__label">Free parking</span>
             <label class="settings-switch"><input id="hotelFreeParking" type="checkbox" aria-label="Free parking" /><span class="settings-switch__track"></span></label>
           </div>
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Free Cancellation</span>
+            <span class="settings-row__label">Free cancellation</span>
             <label class="settings-switch"><input id="hotelFreeCancellation" type="checkbox" aria-label="Free cancellation" /><span class="settings-switch__track"></span></label>
           </div>
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Hotels &amp; Motels Only</span>
+            <span class="settings-row__label">Hotels &amp; motels only</span>
             <label class="settings-switch"><input id="hotelHotelsOnly" type="checkbox" aria-label="Hotels and motels only" /><span class="settings-switch__track"></span></label>
           </div>
         </div>
@@ -1149,6 +1162,18 @@
               <label class="settings-switch"><input type="checkbox" data-font-switch="large" aria-label="Large font size" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
+          <h2 class="settings-section-title">Hotel search</h2>
+          <p class="settings-body-text" style="padding:0 var(--space-4) var(--space-2);margin:0">Default when you open Hotel Finder. You can change it on each search.</p>
+          <div class="settings-group" role="group" aria-label="Default hotel search location">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">At surveillance location (GPS)</span>
+              <label class="settings-switch"><input type="checkbox" data-hotel-location-switch="at-event" aria-label="Default at surveillance location" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">City or town of event</span>
+              <label class="settings-switch"><input type="checkbox" data-hotel-location-switch="city-town" aria-label="Default city or town of event" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1278,7 +1303,8 @@
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li>Use the surveillance event address from the Calculator tab or enter a custom address.</li>
+                <li>Choose <strong>At surveillance location (GPS)</strong> only when you are on site, or <strong>City or town of event</strong> when planning from elsewhere.</li>
+                <li>Enter the event address on the <strong>Calculator</strong> tab first (used locally for city; street address is not sent to search).</li>
                 <li>Set check-in and check-out dates.</li>
                 <li>Tap <strong>Search Hotels</strong> — results come from Booking.com (~30 seconds).</li>
                 <li>Confirm breakfast, parking, and cancellation on each hotel’s Booking.com link.</li>
@@ -1432,8 +1458,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.3.9';
-  const BUNDLED_PWA_CACHE_VERSION = 'v61';
+  const BUNDLED_APP_VERSION = '3.4.0';
+  const BUNDLED_PWA_CACHE_VERSION = 'v62';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2560,6 +2586,33 @@
     });
   }
 
+  const HOTEL_LOCATION_MODE_KEY = 'travelCalcHotelLocationMode';
+  const HOTEL_LOCATION_LABELS = {
+    'at-event': 'At surveillance location (GPS)',
+    'city-town': 'City or town of event',
+  };
+
+  function getDefaultHotelLocationMode() {
+    try {
+      const saved = localStorage.getItem(HOTEL_LOCATION_MODE_KEY);
+      if (saved === 'city-town' || saved === 'at-event') return saved;
+    } catch {}
+    return 'at-event';
+  }
+
+  function applyHotelLocationMode(mode) {
+    const pref = mode === 'city-town' ? 'city-town' : 'at-event';
+    try { localStorage.setItem(HOTEL_LOCATION_MODE_KEY, pref); } catch {}
+    syncHotelLocationSwitchUi(pref);
+    if (window.HotelFinder?.applyLocationModeUi) window.HotelFinder.applyLocationModeUi(pref);
+  }
+
+  function syncHotelLocationSwitchUi(pref) {
+    qsa('[data-hotel-location-switch]').forEach((input) => {
+      input.checked = input.dataset.hotelLocationSwitch === pref;
+    });
+  }
+
   function paintSettingsScreens() {
     if (!settingsStack) return;
     const activeId = settingsNavStack[settingsNavStack.length - 1] || 'root';
@@ -2621,6 +2674,7 @@
     } catch {
       syncFontSwitchUi('normal');
     }
+    syncHotelLocationSwitchUi(getDefaultHotelLocationMode());
     requestAnimationFrame(() => {
       settingsOverlay.classList.add('is-open');
       if (screenId && screenId !== 'root') pushSettingsScreen(screenId);
@@ -2919,6 +2973,15 @@ $('summaryNote').textContent =
       applyFontSize(input.dataset.fontSwitch || 'normal');
     });
   });
+  qsa('[data-hotel-location-switch]').forEach((input) => {
+    input.addEventListener('change', () => {
+      if (!input.checked) {
+        input.checked = true;
+        return;
+      }
+      applyHotelLocationMode(input.dataset.hotelLocationSwitch || 'at-event');
+    });
+  });
   bindSoftwareUpdateActions();
   settingsPwaTestBtn?.addEventListener('click', () => {
     try {
@@ -3038,8 +3101,8 @@ $('summaryNote').textContent =
       if (cityDrop) cityDrop.hidden = true;
       qsa('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
       qsa('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
-      if (tabId === 'hotels' && window.HotelFinder?.refreshResolvedAddress) {
-        window.HotelFinder.refreshResolvedAddress();
+      if (tabId === 'hotels' && window.HotelFinder?.refreshSearchAreaPreview) {
+        window.HotelFinder.refreshSearchAreaPreview();
       }
     }
 
@@ -3460,10 +3523,10 @@ textarea:focus, textarea:focus-visible {
   const $ = (id) => document.getElementById(id);
 
   const els = {
-    eventSource: $('hotelEventSource'),
-    customWrap: $('hotelCustomEventWrap'),
-    customEvent: $('hotelCustomEvent'),
-    resolvedAddress: $('hotelResolvedAddress'),
+    locationMode: $('hotelLocationMode'),
+    searchAreaPreview: $('hotelSearchAreaPreview'),
+    atEventHint: $('hotelAtEventHint'),
+    cityTownHint: $('hotelCityTownHint'),
     checkin: $('hotelCheckin'),
     checkout: $('hotelCheckout'),
     matchCount: $('hotelMatchCount'),
@@ -3490,7 +3553,6 @@ textarea:focus, textarea:focus-visible {
     sendBtn: $('hotelSendEmailBtn'),
     calculatorEvent: $('event'),
     calculatorCity: $('city'),
-    searchArea: $('hotelSearchArea')
   };
 
   if (!els.searchBtn || !els.results) return;
@@ -3552,11 +3614,18 @@ textarea:focus, textarea:focus-visible {
     const radiusKm = getMaxDistanceKm();
 
     if (phase === 'geocode') {
-      return [
-        `Mapping the surveillance area near ${area}…`,
-        'Looking up coordinates in Canada…',
-        'Pinning your search on the map…',
-      ];
+      const atEvent = (ctx?.locationMode || getHotelLocationMode()) === 'at-event';
+      return atEvent
+        ? [
+            'Getting your location (on-site only)…',
+            `Searching near you in the ${area} area…`,
+            'Confirming coordinates in Canada…',
+          ]
+        : [
+            `Centering search on ${area}…`,
+            'Looking up city coordinates in Canada…',
+            'Pinning the search area on the map…',
+          ];
     }
     if (phase === 'retry') {
       return [
@@ -3632,27 +3701,75 @@ textarea:focus, textarea:focus-visible {
     els.status.innerHTML = '';
   }
 
-  function getSurveillanceAddress() {
-    if (els.eventSource?.value === 'custom') {
-      return (els.customEvent?.value || '').trim();
-    }
+  function getHotelLocationMode() {
+    const v = els.locationMode?.value;
+    return v === 'city-town' ? 'city-town' : 'at-event';
+  }
+
+  function getLocalCalculatorEventAddress() {
     return (els.calculatorEvent?.value || '').trim();
   }
 
-  function refreshResolvedAddress() {
-    const addr = getSurveillanceAddress();
-    if (!els.resolvedAddress) return;
-    els.resolvedAddress.textContent = addr || 'No surveillance event address available yet.';
-    els.resolvedAddress.classList.toggle('has-value', Boolean(addr));
+  function parseSearchAreaFromCalculator() {
+    const eventRaw = getLocalCalculatorEventAddress();
+    let parsed = parseCanadianAddress(eventRaw);
+    let areaSource = 'calculator-event';
+    if (!parsed) {
+      const start = (els.calculatorCity?.value || '').trim();
+      parsed = parseCanadianAddress(start);
+      areaSource = 'starting-location';
+    }
+    if (!parsed) return null;
+    return {
+      ...parsed,
+      provinceCode: parsed.province,
+      areaSource,
+      locationMode: getHotelLocationMode(),
+    };
+  }
+
+  const HOTEL_LOCATION_LABELS = {
+    'at-event': 'At surveillance location (GPS)',
+    'city-town': 'City or town of event',
+  };
+
+  function getDefaultHotelLocationMode() {
+    try {
+      const saved = localStorage.getItem('travelCalcHotelLocationMode');
+      if (saved === 'city-town' || saved === 'at-event') return saved;
+    } catch {}
+    return 'at-event';
+  }
+
+  function applyLocationModeUi(mode) {
+    const pref = mode === 'city-town' ? 'city-town' : 'at-event';
+    if (els.locationMode) els.locationMode.value = pref;
+    const label = $('hotelLocationModeLabel');
+    if (label) label.textContent = HOTEL_LOCATION_LABELS[pref] || HOTEL_LOCATION_LABELS['at-event'];
+    els.atEventHint?.classList.toggle('hidden', pref !== 'at-event');
+    els.cityTownHint?.classList.toggle('hidden', pref !== 'city-town');
     refreshSearchAreaPreview();
   }
 
-  function deriveAreaLabel(address) {
-    if (!address) return 'Surveillance Assignment';
-    const cityMatch = address.match(/,\s*([^,]+),\s*([A-Z]{2})\b/);
-    if (cityMatch) return `${cityMatch[1].trim()}, ${cityMatch[2]}`;
-    const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
-    return parts.length >= 2 ? parts.slice(-2).join(', ') : 'Surveillance Assignment';
+  function refreshSearchAreaPreview() {
+    const el = els.searchAreaPreview;
+    if (!el) return;
+    const ctx = parseSearchAreaFromCalculator();
+    if (!ctx) {
+      el.textContent = 'Add a surveillance event address on the Calculator tab (with province, e.g. ON or BC), or select a starting location.';
+      el.classList.remove('has-value');
+      return;
+    }
+    const mode = getHotelLocationMode();
+    const via = ctx.areaSource === 'starting-location'
+      ? 'starting location (city only)'
+      : 'Calculator event (city only — street stays on this device)';
+    if (mode === 'at-event') {
+      el.textContent = `On site near ${ctx.label} — GPS at search time. Area from ${via}.`;
+    } else {
+      el.textContent = `Search centered on ${ctx.destination} — from ${via}.`;
+    }
+    el.classList.add('has-value');
   }
 
   function parseProvinceCode(address) {
@@ -3974,7 +4091,7 @@ textarea:focus, textarea:focus-visible {
   function buildBookingAreaSearchUrl(ctx, geo) {
     if (!ctx) return '';
     const u = new URL('https://www.booking.com/searchresults.html');
-    u.searchParams.set('ss', ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`);
+    u.searchParams.set('ss', ctx.destination || `${ctx.label}, Canada`);
     if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)) {
       u.searchParams.set('latitude', String(geo.lat));
       u.searchParams.set('longitude', String(geo.lng));
@@ -4075,10 +4192,9 @@ textarea:focus, textarea:focus-visible {
         error: 'Hotel search is not configured. Upload the latest surveillance-travel-calculator.html to GitHub (bookingApiUrl must be set).'
       };
     }
-    // Booking.com ss= works like the successful Worker test: city/area text, not full street address.
-    // Precise location comes from lat/lng (geocoded from the surveillance event).
+    // Only city/region text + coordinates — never the full surveillance street address.
     const params = new URLSearchParams({
-      destination: ctx.destination || `${ctx.label}, Canada`
+      destination: ctx.destination || `${ctx.label}, Canada`,
     });
     if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)) {
       params.set('lat', String(geo.lat));
@@ -4171,7 +4287,7 @@ textarea:focus, textarea:focus-visible {
 
   async function loadHotelsComPropertyInventory(hotel, ctx) {
     if (!ctx || !hotel?.name) return { ok: false, matched: false, properties: [] };
-    const area = ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`;
+    const area = ctx.destination || `${ctx.label}, Canada`;
     const params = new URLSearchParams({
       destination: `${hotel.name}, ${area}`,
       lat: String(hotel.lat),
@@ -4264,7 +4380,7 @@ textarea:focus, textarea:focus-visible {
   function buildHotelsComAreaSearchUrl(ctx, geo) {
     if (!ctx || !geo) return '';
     const u = new URL('https://ca.hotels.com/Hotel-Search');
-    u.searchParams.set('destination', ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`);
+    u.searchParams.set('destination', ctx.destination || `${ctx.label}, Canada`);
     appendHotelsComSearchParams(u, geo);
     return u.toString();
   }
@@ -4272,7 +4388,7 @@ textarea:focus, textarea:focus-visible {
   function buildHotelsComNameSearchUrl(hotel, ctx, geo) {
     if (!ctx) return '';
     const u = new URL('https://ca.hotels.com/Hotel-Search');
-    const area = ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`;
+    const area = ctx.destination || `${ctx.label}, Canada`;
     u.searchParams.set('destination', hotel?.name ? `${hotel.name}, ${area}` : area);
     const coords = geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)
       ? geo
@@ -4550,46 +4666,125 @@ out body;`;
   }
 
   function resolveHotelSearchContext() {
-    const eventAddress = getSurveillanceAddress();
-    const startingAddress = (els.calculatorCity?.value || '').trim();
-    const useCustomEvent = els.eventSource?.value === 'custom';
+    return parseSearchAreaFromCalculator();
+  }
 
-    let parsed = parseCanadianAddress(eventAddress);
-    let source = 'event';
-    let searchAddress = eventAddress;
+  async function nominatimReverse(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=10&addressdetails=1`;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Accept-Language': 'en-CA',
+        'User-Agent': `InvestigatorToolbox/${APP_VERSION} (hotel-search; contact: operations@intrepidinvestigations.ca)`
+      }
+    });
+    if (!response.ok) return null;
+    const hit = await response.json();
+    const addr = hit?.address || {};
+    const country = String(addr.country_code || '').toLowerCase();
+    if (country && country !== 'ca') return { outsideCanada: true };
 
-    if (!parsed && !useCustomEvent && startingAddress) {
-      parsed = parseCanadianAddress(startingAddress);
-      source = 'starting';
-      searchAddress = startingAddress;
+    const stateRaw = String(addr.state_code || addr.state || '').replace(/\./g, '').trim();
+    let provMatch = stateRaw.match(/\b(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT)\b/i);
+    let provCode = provMatch ? provMatch[1].toUpperCase() : '';
+    if (!provCode && stateRaw) {
+      const lower = stateRaw.toLowerCase();
+      for (const [code, name] of Object.entries(CA_PROVINCE_NAMES)) {
+        if (String(name).toLowerCase() === lower) {
+          provCode = code;
+          break;
+        }
+      }
     }
-
-    if (!parsed) return null;
+    const city = String(addr.city || addr.town || addr.municipality || addr.county || '').trim();
+    const provinceName = provCode ? (CA_PROVINCE_NAMES[provCode] || provCode) : String(addr.state || '').trim();
+    const destination = city && provCode
+      ? `${titleCaseCity(city)}, ${provinceName}, Canada`
+      : provCode
+        ? `${provinceName}, Canada`
+        : '';
+    const label = city && provCode ? `${titleCaseCity(city)}, ${provCode}` : provCode || 'Your location';
 
     return {
-      ...parsed,
-      provinceCode: parsed.province,
-      source,
-      eventAddress,
-      startingAddress,
-      searchAddress
+      lat: Number.parseFloat(hit.lat),
+      lng: Number.parseFloat(hit.lon),
+      displayName: hit.display_name || label,
+      province: provCode,
+      destination: destination || label,
+      label,
     };
   }
 
-  function refreshSearchAreaPreview() {
-    if (!els.searchArea) return;
-    const ctx = resolveHotelSearchContext();
-    if (!ctx) {
-      els.searchArea.textContent = 'Include a province or territory code (e.g. ON, BC) in the event or starting address.';
-      els.searchArea.classList.remove('has-value');
-      return;
+  function getDevicePosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Location is not available on this device.'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracyM: pos.coords.accuracy,
+        }),
+        (err) => reject(err || new Error('Could not get your location.')),
+        { enableHighAccuracy: true, timeout: 22000, maximumAge: 90000 }
+      );
+    });
+  }
+
+  async function geocodeCityDestination(ctx) {
+    if (!ctx?.destination) return null;
+    const key = `city:${ctx.destination.toLowerCase()}`;
+    if (geocodeCache.key === key) return geocodeCache.result;
+    try {
+      const result = await nominatimSearch(ctx.destination);
+      if (result) {
+        geocodeCache = { key, result };
+        return result;
+      }
+    } catch {}
+    return null;
+  }
+
+  async function resolveSearchGeo(ctx) {
+    if (!ctx) return { ok: false, error: 'Missing search context.' };
+    if (ctx.locationMode === 'at-event') {
+      let position;
+      try {
+        position = await getDevicePosition();
+      } catch (err) {
+        const code = err && err.code;
+        if (code === 1) {
+          return { ok: false, error: 'Location permission denied. Allow location for this site, or switch to City or town of event.' };
+        }
+        return { ok: false, error: 'Could not get your location. Try again on site, or switch to City or town of event.' };
+      }
+      const reverse = await nominatimReverse(position.lat, position.lng);
+      if (reverse?.outsideCanada) {
+        return { ok: false, error: 'Your location appears to be outside Canada. Use City or town of event if you are planning from abroad.' };
+      }
+      const geo = {
+        lat: position.lat,
+        lng: position.lng,
+        displayName: reverse?.displayName || ctx.label,
+        accuracyM: position.accuracyM,
+      };
+      const searchCtx = { ...ctx };
+      if (reverse?.destination) {
+        searchCtx.destination = reverse.destination;
+        searchCtx.label = reverse.label || ctx.label;
+        searchCtx.province = reverse.province || ctx.province;
+        searchCtx.provinceCode = reverse.province || ctx.provinceCode;
+      }
+      return { ok: true, geo, searchCtx };
     }
-    const via = ctx.source === 'event' ? 'surveillance event address' : 'calculator starting location';
-    const areaLine = ctx.searchAddress && ctx.searchAddress !== ctx.label
-      ? `${ctx.searchAddress} (near ${ctx.label})`
-      : `${ctx.label}, Canada`;
-    els.searchArea.textContent = `${areaLine} — from ${via}`;
-    els.searchArea.classList.add('has-value');
+
+    const geo = await geocodeCityDestination(ctx);
+    if (!geo) {
+      return { ok: false, error: `Could not map ${ctx.label}. Check the Calculator event city and province, then try again.` };
+    }
+    return { ok: true, geo, searchCtx: ctx };
   }
 
   function formatMoney(amount) {
@@ -4737,32 +4932,24 @@ out body;`;
   }
 
   function getActiveMeta() {
-    const address = getSurveillanceAddress();
-    if (!address || !els.checkin?.value || !els.checkout?.value) return null;
+    if (!els.checkin?.value || !els.checkout?.value) return null;
     const nights = calcNights(els.checkin.value, els.checkout.value);
     if (nights === null) return null;
     const ctx = resolveHotelSearchContext();
     if (!ctx) return null;
     return {
-      address,
       nights,
       provinceCode: ctx.provinceCode,
       areaLabel: ctx.label,
-      searchAddress: ctx.searchAddress,
-      destination: ctx.destination
+      destination: ctx.destination,
+      locationMode: ctx.locationMode,
     };
   }
 
   function validateSearchInputs() {
-    const address = getSurveillanceAddress();
-    const startingAddress = (els.calculatorCity?.value || '').trim();
-    if (!address && !startingAddress) {
-      setStatus('Enter a surveillance event address or select a calculator starting location before searching.', 'error');
-      return null;
-    }
     const ctx = resolveHotelSearchContext();
     if (!ctx) {
-      setStatus('Include a Canadian province or territory in the address (e.g. ", ON" or ", BC").', 'error');
+      setStatus('On the Calculator tab, enter the event address with a Canadian province (e.g. ", ON" or ", BC"), or select a starting location.', 'error');
       refreshSearchAreaPreview();
       return null;
     }
@@ -4777,12 +4964,11 @@ out body;`;
     }
     refreshSearchAreaPreview();
     return {
-      address: address || startingAddress,
       nights,
       provinceCode: ctx.provinceCode,
       areaLabel: ctx.label,
-      searchAddress: ctx.searchAddress,
-      destination: ctx.destination
+      destination: ctx.destination,
+      locationMode: ctx.locationMode,
     };
   }
 
@@ -4910,7 +5096,7 @@ out body;`;
     const recipientLabel = $('hotelRecipientLabel')?.textContent?.trim() || els.recipient?.value || '';
     const nights = meta.nights;
     const nightLabel = nights === 1 ? '1 night' : `${nights} nights`;
-    const area = deriveAreaLabel(meta.address);
+    const area = meta.areaLabel || 'Surveillance Assignment';
     const priceCap = getBudgetCapForSearch();
     const clientBilled = els.clientBilled?.value || 'TBD';
     const trackops = (els.trackopsCase?.value || '').trim();
@@ -5081,8 +5267,18 @@ out body;`;
 
     let geo = null;
     try {
-      geo = await geocodeCanadianAddress(meta.searchAddress, ctx);
-      meta.geo = geo;
+      const located = await resolveSearchGeo(ctx);
+      if (!located.ok) {
+        stopHotelSearchProgress();
+        setStatus(located.error || 'Could not determine search location.', 'error');
+        scrollToHotelResults();
+        return;
+      }
+      geo = located.geo;
+      lastSearchContext = located.searchCtx;
+      meta.provinceCode = located.searchCtx.provinceCode;
+      meta.areaLabel = located.searchCtx.label;
+      meta.destination = located.searchCtx.destination;
       startHotelSearchProgress('booking');
       scrollToHotelSearchActivity();
       const ranked = await fetchAndRankHotels(meta, geo);
@@ -5199,10 +5395,7 @@ out body;`;
   }
 
   function clearHotelForm() {
-    els.eventSource.value = 'calculator';
-    $('hotelEventSourceLabel').textContent = 'Use current calculator event address';
-    els.customWrap.classList.add('hidden');
-    if (els.customEvent) els.customEvent.value = '';
+    persistHotelLocationPreference(getDefaultHotelLocationMode());
     if (els.checkin) els.checkin.value = '';
     if (els.checkout) els.checkout.value = '';
     if (els.matchCount) els.matchCount.value = '5';
@@ -5232,33 +5425,39 @@ out body;`;
     hideStatus();
     setEmailActionsEnabled(false);
     hideEmailSectionCollapsible();
-    onEventSourceChange();
-    refreshResolvedAddress();
     refreshSearchAreaPreview();
     closeAllPickers();
     scrollHotelsTabToTop();
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   }
 
-  function onEventSourceChange() {
-    const isCustom = els.eventSource.value === 'custom';
-    els.customWrap.classList.toggle('hidden', !isCustom);
-    refreshResolvedAddress();
+  function persistHotelLocationPreference(mode) {
+    const pref = mode === 'city-town' ? 'city-town' : 'at-event';
+    applyLocationModeUi(pref);
+    try { localStorage.setItem('travelCalcHotelLocationMode', pref); } catch {}
+    document.querySelectorAll('[data-hotel-location-switch]').forEach((input) => {
+      input.checked = input.dataset.hotelLocationSwitch === pref;
+    });
+    geocodeCache = { key: '', result: null };
+  }
+
+  function onHotelLocationModeChange() {
+    persistHotelLocationPreference(getHotelLocationMode());
     refreshEmailDraft();
   }
 
-  els.eventSource?.addEventListener('change', onEventSourceChange);
-  els.customEvent?.addEventListener('input', () => {
-    geocodeCache = { key: '', result: null };
-    refreshResolvedAddress();
-  });
   els.calculatorEvent?.addEventListener('input', () => {
-    if (els.eventSource.value === 'calculator') refreshResolvedAddress();
+    geocodeCache = { key: '', result: null };
+    refreshSearchAreaPreview();
   });
   els.calculatorEvent?.addEventListener('change', () => {
-    if (els.eventSource.value === 'calculator') refreshResolvedAddress();
+    geocodeCache = { key: '', result: null };
+    refreshSearchAreaPreview();
   });
-  els.calculatorCity?.addEventListener('change', refreshSearchAreaPreview);
+  els.calculatorCity?.addEventListener('change', () => {
+    geocodeCache = { key: '', result: null };
+    refreshSearchAreaPreview();
+  });
 
   [els.checkin, els.checkout, els.trackopsCase].forEach((el) => {
     el?.addEventListener('input', refreshEmailDraft);
@@ -5349,11 +5548,11 @@ out body;`;
   loadInvestigatorProfile();
 
   initPicker({
-    button: $('hotelEventSourceBtn'),
-    panel: $('hotelEventSourceDrop'),
-    hidden: els.eventSource,
-    label: $('hotelEventSourceLabel'),
-    onChange: onEventSourceChange
+    button: $('hotelLocationModeBtn'),
+    panel: $('hotelLocationModeDrop'),
+    hidden: els.locationMode,
+    label: $('hotelLocationModeLabel'),
+    onChange: onHotelLocationModeChange,
   });
 
   initPicker({
@@ -5397,13 +5596,13 @@ out body;`;
 
   hideEmailSectionCollapsible();
 
-  onEventSourceChange();
+  applyLocationModeUi(getDefaultHotelLocationMode());
   syncClientBilledField();
   setEmailActionsEnabled(false);
 
   refreshSearchAreaPreview();
 
-  window.HotelFinder = { refreshResolvedAddress, refreshSearchAreaPreview };
+  window.HotelFinder = { applyLocationModeUi, refreshSearchAreaPreview };
 })();
 </script>
 

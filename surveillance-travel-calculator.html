@@ -1427,8 +1427,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.5.2';
-  const BUNDLED_PWA_CACHE_VERSION = 'v74';
+  const BUNDLED_APP_VERSION = '3.5.3';
+  const BUNDLED_PWA_CACHE_VERSION = 'v75';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5134,6 +5134,23 @@ out body;`;
     return `booking-${index}-${base || 'hotel'}`;
   }
 
+  function parseStayPriceFromHotel(h, nights) {
+    let stayValue = Number.isFinite(Number(h?.priceValue)) ? Number(h.priceValue) : null;
+    if (stayValue == null && h?.price) {
+      const pm = String(h.price).match(/([\d][\d,]*(?:\.\d+)?)/);
+      if (pm) stayValue = Math.round(parseFloat(pm[1].replace(/,/g, '')));
+    }
+    const taxesValue = Number.isFinite(Number(h?.taxesValue)) ? Number(h.taxesValue) : 0;
+    const n = Math.max(1, Number(nights) || 1);
+    if (stayValue == null) return { stayValue: null, perNightInclTax: null, priceLabel: '' };
+    const perNightInclTax = Math.round((stayValue + taxesValue) / n);
+    return {
+      stayValue,
+      perNightInclTax,
+      priceLabel: `CAD ${perNightInclTax}`,
+    };
+  }
+
   function rankBookingHotels(meta, geo, rawHotels, areaSearchUrl) {
     const requested = Math.max(1, Number.parseInt(els.matchCount?.value || '3', 10));
     const filtered = applyClientHotelFilters(rawHotels);
@@ -5154,17 +5171,16 @@ out body;`;
 
     const mapped = filtered.map((h, index) => {
       const km = Number.isFinite(Number(h.distanceKm)) ? Number(h.distanceKm) : null;
-      const stayValue = Number.isFinite(Number(h.priceValue)) ? Number(h.priceValue) : null;
-      const taxesValue = Number.isFinite(Number(h.taxesValue)) ? Number(h.taxesValue) : 0;
-      const perNightInclTax = stayValue != null ? Math.round((stayValue + taxesValue) / nights) : null;
+      const priced = parseStayPriceFromHotel(h, nights);
       return {
         id: slugifyHotelId(h.name, index),
         name: h.name,
         distance: km,
         distanceText: h.distanceText || (km != null ? `${km} km` : ''),
         driveTime: km != null ? formatDriveTime(km) : '',
-        perNightInclTax,
-        priceLabel: perNightInclTax != null ? `CAD ${perNightInclTax}` : '',
+        perNightInclTax: priced.perNightInclTax,
+        priceLabel: priced.priceLabel,
+        rawPrice: h.price || '',
         nights,
         reviewScore: h.reviewScore ? String(h.reviewScore) : '',
         reviewWord: h.reviewWord ? String(h.reviewWord) : '',
@@ -5371,7 +5387,9 @@ out body;`;
       const distancePart = hotel.distance != null
         ? `${hotel.distance} km${hotel.driveTime ? ` · ${hotel.driveTime}` : ''}`
         : (hotel.distanceText || 'Distance n/a');
-      const pricePart = hotel.priceLabel ? ` · from ${hotel.priceLabel}/night incl. tax` : '';
+      const pricePart = hotel.priceLabel
+        ? ` · from ${hotel.priceLabel}/night incl. tax`
+        : (hotel.rawPrice ? ` · ${hotel.rawPrice}` : '');
       const reviewBadge = hotel.reviewScore
         ? `<span class="hotel-card__score" title="${escapeHtml(hotel.reviewCount != null ? `${hotel.reviewCount} reviews on Booking.com` : 'Booking.com review score')}">${escapeHtml(hotel.reviewScore)}${hotel.reviewWord ? ` ${escapeHtml(hotel.reviewWord)}` : ''}</span>`
         : '';

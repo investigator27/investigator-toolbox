@@ -1,10 +1,23 @@
 {
-  "latest": "v74",
-  "appVersion": "3.5.2",
+  "latest": "v75",
+  "appVersion": "3.5.3",
   "highlights": [
-    "Hotel Finder: blocks empty Worker searches (saves ScraperAPI credits)."
+    "Hotel Finder: nightly prices restored in results and email draft."
   ],
   "builds": {
+    "v75": {
+      "intro": "Investigator Toolbox 3.5.3 — restore Booking nightly prices.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Worker 60 extracts prices from cards and embedded JSON (merge when cards lack rates).",
+            "Results and email draft show per-night CAD again when Booking returns a price.",
+            "Deploy booking-worker-60 plus the three GitHub files."
+          ]
+        }
+      ]
+    },
     "v74": {
       "intro": "Investigator Toolbox 3.5.2 — reject hotel searches with no location/dates.",
       "sections": [

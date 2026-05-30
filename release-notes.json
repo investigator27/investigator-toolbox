@@ -1,17 +1,22 @@
 {
-  "latest": "v60",
-  "appVersion": "3.3.8",
-  "tabAccess": {
-    "hotels": true,
-    "requests": true,
-    "camera": true
-  },
+  "latest": "v61",
+  "appVersion": "3.3.9",
   "highlights": [
-    "Tab policy loads from tab-policy.json on GitHub (Worker no longer overrides with all tabs on).",
-    "Apply for all investigators copies JSON for GitHub upload.",
-    "Upload v60 plus tab-policy.json with locks you want."
+    "Tab locks: edit tab-policy.json on GitHub only. No Worker, no revision, no per-phone setup.",
+    "Upload v61 with tab-policy.json."
   ],
   "builds": {
+    "v61": {
+      "intro": "Investigator Toolbox 3.3.9 — Simple tab locks.",
+      "sections": [
+        {
+          "heading": "Tab locks",
+          "items": [
+            "Edit tab-policy.json on GitHub (false = locked). Phones load it on open."
+          ]
+        }
+      ]
+    },
     "v60": {
       "intro": "Investigator Toolbox 3.3.8 — GitHub tab-policy fix.",
       "sections": [

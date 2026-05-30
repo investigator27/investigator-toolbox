@@ -1306,134 +1306,17 @@
             </div>
           </div>
           <div id="developerPanel" class="hidden">
-            <p class="hint" style="padding:0 var(--space-4) var(--space-2);margin:0">Turn tabs off → <strong>Apply for all investigators</strong> copies <strong>tab-policy.json</strong> for GitHub. Upload that file; phones load it on next open.</p>
-            <h2 class="settings-section-title">Tabs</h2>
             <div class="settings-group">
-              <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Hotels tab</span>
-                <label class="settings-switch"><input type="checkbox" id="devTabHotels" checked aria-label="Enable Hotels tab" /><span class="settings-switch__track"></span></label>
+              <div class="settings-body-text">
+                <p><strong>Lock tabs for everyone:</strong> On GitHub, open <strong>tab-policy.json</strong> (same folder as the app). Set a tab to <strong>false</strong> to lock it. Save the file.</p>
+                <p>Phones load that file when they open the app. Calculator is always on.</p>
+                <p id="developerPolicyStatus" style="margin-top:var(--space-3)">—</p>
               </div>
-              <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Requests tab</span>
-                <label class="settings-switch"><input type="checkbox" id="devTabRequests" checked aria-label="Enable Requests tab" /><span class="settings-switch__track"></span></label>
-              </div>
-              <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Camera tab</span>
-                <label class="settings-switch"><input type="checkbox" id="devTabCamera" checked aria-label="Enable Camera tab" /><span class="settings-switch__track"></span></label>
-              </div>
-            </div>
-            <h2 class="settings-section-title">Reference</h2>
-            <div class="settings-group">
-              <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-menu">
-                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>
-                <span class="settings-row__label">Developer Notes</span>
-                <span class="settings-row__chevron" aria-hidden="true">›</span>
-              </button>
             </div>
             <div class="settings-group">
               <div class="settings-field-block settings-field-block--action">
-                <button type="button" class="btn btn-primary" id="developerApplyTabPolicyBtn">Apply for all investigators</button>
-                <p class="hint hidden" id="developerApplyTabPolicyStatus" role="status"></p>
                 <button type="button" class="btn btn-secondary" id="developerLockBtn">Lock</button>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-screen" data-screen="developer-notes-menu" aria-hidden="true">
-        <div class="settings-scroll">
-          <h1 class="settings-screen-title">Developer Notes</h1>
-          <div class="settings-group">
-            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-tabs">
-              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-              <span class="settings-row__label">Tab locks</span>
-              <span class="settings-row__chevron" aria-hidden="true">›</span>
-            </button>
-            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-github">
-              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-              <span class="settings-row__label">Publish to GitHub</span>
-              <span class="settings-row__chevron" aria-hidden="true">›</span>
-            </button>
-            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-updates">
-              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
-              <span class="settings-row__label">Updates on devices</span>
-              <span class="settings-row__chevron" aria-hidden="true">›</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-screen" data-screen="developer-notes-tabs" aria-hidden="true">
-        <div class="settings-scroll">
-          <h1 class="settings-screen-title">Tab locks</h1>
-          <div class="settings-group">
-            <div class="settings-body-text">
-              <p>Tab policy lives in <strong>tab-policy.json</strong> on GitHub. Calculator is always available.</p>
-              <ol class="steps-list">
-                <li>Turn a tab switch <strong>off</strong> to lock it.</li>
-                <li>Tap <strong>Apply for all investigators</strong> — JSON is copied for GitHub.</li>
-                <li>Replace <strong>tab-policy.json</strong> on GitHub, save, and bump <strong>revision</strong> each time.</li>
-                <li>Phones on v3.3.8+ load the file when the app opens or returns to the foreground.</li>
-              </ol>
-              <p>Set <code>false</code> on a tab to lock it. Example: <code>"hotels": false</code>.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-screen" data-screen="developer-notes-github" aria-hidden="true">
-        <div class="settings-scroll">
-          <h1 class="settings-screen-title">Publish to GitHub</h1>
-          <h2 class="settings-section-title">Files to upload</h2>
-          <div class="settings-group">
-            <div class="settings-body-text">
-              <p>Upload these files to your GitHub Pages folder (<strong id="developerDeployPath">…</strong>):</p>
-                <ul class="settings-file-list">
-                  <li>surveillance-travel-calculator.html</li>
-                  <li>service-worker.js</li>
-                  <li>release-notes.json</li>
-                  <li>tab-policy.json</li>
-                </ul>
-            </div>
-          </div>
-          <h2 class="settings-section-title">Steps</h2>
-          <div class="settings-group">
-            <div class="settings-body-text">
-              <ol class="steps-list">
-                  <li>Bump the version number and build in all three files so they match (e.g. <strong>3.3.6</strong> and <strong>v58</strong>).</li>
-                <li>Commit and push to GitHub, or upload the files in the browser.</li>
-                <li>Wait 1–2 minutes for GitHub Pages to deploy.</li>
-              </ol>
-              <p>Hotel search uses Cloudflare separately — redeploy <strong>booking-worker.js</strong> only if you changed the worker.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-screen" data-screen="developer-notes-updates" aria-hidden="true">
-        <div class="settings-scroll">
-          <h1 class="settings-screen-title">Updates on devices</h1>
-          <div class="settings-group">
-            <div class="settings-body-text">
-              <p>Build on this device: <strong id="developerGuideVersion">…</strong></p>
-            </div>
-          </div>
-          <h2 class="settings-section-title">On a phone or tablet</h2>
-          <div class="settings-group">
-            <div class="settings-body-text">
-              <ol class="steps-list">
-                <li>Open the app from the home screen or Chrome.</li>
-                <li><strong>Toolbox Settings</strong> → <strong>Software Update</strong> → <strong>Check for updates</strong>.</li>
-                <li>If shown, tap <strong>Update Now</strong> and wait for the reload.</li>
-                <li>If it says up to date but behavior is old: close all tabs for the site, reopen, or reinstall from Chrome once, then check again.</li>
-              </ol>
-            </div>
-          </div>
-          <h2 class="settings-section-title">After an update</h2>
-          <div class="settings-group">
-            <div class="settings-body-text">
-              <p>Tab locks are not sent with a GitHub update. Re-apply locks on each device in <strong>Developer</strong> if needed.</p>
             </div>
           </div>
         </div>
@@ -1477,9 +1360,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.3.8';
-  const BUNDLED_PWA_CACHE_VERSION = 'v60';
-  const TAB_POLICY_API_URL = 'https://booking-lookup.investigator-toolbox.workers.dev';
+  const BUNDLED_APP_VERSION = '3.3.9';
+  const BUNDLED_PWA_CACHE_VERSION = 'v61';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1489,7 +1371,6 @@
   let remoteLatestBuild = '';
   const DEVELOPER_PASSWORD = 'dev1-toolb0x';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
-  const TAB_POLICY_REVISION_KEY = 'toolboxTabPolicyRevision';
   const DEV_UNLOCK_KEY = 'toolboxDevUnlocked';
   const BASE_PATH = window.__BASE_PATH__ || '/dev1-toolb0x/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
@@ -1923,7 +1804,6 @@
       const data = await response.json();
       if (data.latest) remoteLatestBuild = data.latest;
       syncTargetBuildFromBundledAndRemote();
-      if (data.tabAccess) applyRemoteTabPolicy(parseTabPolicyPayload(data));
       refreshAllVersionDisplays();
     } catch {
     } finally {
@@ -2636,13 +2516,6 @@
       else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();
     }
-    if (
-      screenId === 'developer-notes-menu'
-      || screenId === 'developer-notes-github'
-      || screenId === 'developer-notes-updates'
-    ) {
-      refreshDeveloperGuideLabels();
-    }
   }
 
   function popSettingsScreen() {
@@ -2738,96 +2611,31 @@
 
   function applyRemoteTabPolicy(parsed) {
     if (!parsed?.map) return false;
-    const prevRevision = localStorage.getItem(TAB_POLICY_REVISION_KEY) || '';
-    const changed = prevRevision !== parsed.revision;
     remoteTabPolicyMap = parsed.map;
-    try {
-      localStorage.setItem(TAB_POLICY_REVISION_KEY, parsed.revision);
-      localStorage.setItem(TAB_VISIBILITY_KEY, JSON.stringify(parsed.map));
-    } catch {}
+    try { localStorage.setItem(TAB_VISIBILITY_KEY, JSON.stringify(parsed.map)); } catch {}
     window.ToolboxTabs?.applyVisibility?.(parsed.map);
     window.dispatchEvent(new CustomEvent('toolbox-tab-visibility', { detail: parsed.map }));
-    return changed;
+    refreshDeveloperPolicyStatus();
+    return true;
   }
 
   async function fetchRemoteTabPolicy() {
     try {
       const response = await fetch(`${BASE_PATH}tab-policy.json?ts=${Date.now()}`, { cache: 'no-store' });
-      if (response.ok) {
-        const data = await response.json();
-        const parsed = parseTabPolicyPayload(data);
-        if (parsed) return applyRemoteTabPolicy(parsed);
-      }
-    } catch {}
-
-    const workerBase = (TAB_POLICY_API_URL || '').replace(/\/$/, '');
-    if (!workerBase) return false;
-    try {
-      const response = await fetch(`${workerBase}/tab-policy`, { cache: 'no-store' });
       if (!response.ok) return false;
       const data = await response.json();
-      if (data.configured === false || data.source === 'unset') return false;
       const parsed = parseTabPolicyPayload(data);
       if (parsed) return applyRemoteTabPolicy(parsed);
     } catch {}
     return false;
   }
 
-  function buildTabPolicyJson(map) {
-    return {
-      revision: String(Date.now()),
-      updatedAt: new Date().toISOString(),
-      hotels: map.hotels,
-      requests: map.requests,
-      camera: map.camera,
-    };
-  }
-
-  async function publishRemoteTabPolicy() {
-    const map = readDeveloperTabTogglesIntoMap();
-    const payload = buildTabPolicyJson(map);
-    const jsonText = JSON.stringify(payload, null, 2);
-    const statusEl = $('developerApplyTabPolicyStatus');
-    const parsed = parseTabPolicyPayload(payload);
-    if (parsed) applyRemoteTabPolicy(parsed);
-
-    let copied = false;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(jsonText);
-        copied = true;
-      }
-    } catch {}
-
-    if (statusEl) {
-      statusEl.textContent = copied
-        ? 'Copied tab-policy.json. Paste it on GitHub (same folder as the app), save, wait 1–2 min, then reopen the app on each phone.'
-        : 'Save this on GitHub as tab-policy.json (same folder as the app). Bump revision each time you change locks.';
-      statusEl.classList.remove('hidden');
-    }
-    return true;
-  }
-
-  function readDeveloperTabTogglesIntoMap() {
-    const map = getDefaultTabVisibility();
-    const hotels = $('devTabHotels');
-    const requests = $('devTabRequests');
-    const camera = $('devTabCamera');
-    if (hotels) map.hotels = !!hotels.checked;
-    if (requests) map.requests = !!requests.checked;
-    if (camera) map.camera = !!camera.checked;
-    return map;
-  }
-
-  function saveTabVisibility(map) {
-    tabVisibilityState = { ...getDefaultTabVisibility(), ...map };
-    try { localStorage.setItem(TAB_VISIBILITY_KEY, JSON.stringify(tabVisibilityState)); } catch {}
-    window.ToolboxTabs?.applyVisibility?.(tabVisibilityState);
-    window.dispatchEvent(new CustomEvent('toolbox-tab-visibility', { detail: tabVisibilityState }));
-  }
-
-  function persistTabLocksFromDeveloper() {
-    saveTabVisibility(readDeveloperTabTogglesIntoMap());
+  function refreshDeveloperPolicyStatus() {
+    const el = $('developerPolicyStatus');
+    if (!el) return;
+    const map = remoteTabPolicyMap || loadTabVisibility();
+    const status = (on) => (on ? 'Allowed' : 'Locked');
+    el.textContent = `On this phone right now: Hotels ${status(map.hotels !== false)}, Requests ${status(map.requests !== false)}, Camera ${status(map.camera !== false)}`;
   }
 
   function isDeveloperUnlocked() {
@@ -2845,30 +2653,8 @@
     panel?.classList.toggle('hidden', !unlocked);
     if (!unlocked && $('developerPassword')) $('developerPassword').value = '';
     if (unlocked) {
-      refreshDeveloperGuideLabels();
-      fetchRemoteTabPolicy().then(() => syncDeveloperTabToggles());
+      fetchRemoteTabPolicy().then(() => refreshDeveloperPolicyStatus());
     }
-  }
-
-  function refreshDeveloperGuideLabels() {
-    const pathEl = $('developerDeployPath');
-    if (pathEl) {
-      const path = (BASE_PATH || '/').replace(/\/$/, '') || '/';
-      pathEl.textContent = path === '/' ? '(site root)' : path;
-    }
-    const verEl = $('developerGuideVersion');
-    if (verEl) verEl.textContent = `${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
-  }
-
-  function syncDeveloperTabToggles() {
-    const map = remoteTabPolicyMap || loadTabVisibility();
-    const hotels = $('devTabHotels');
-    const requests = $('devTabRequests');
-    const camera = $('devTabCamera');
-    if (hotels) hotels.checked = map.hotels !== false;
-    if (requests) requests.checked = map.requests !== false;
-    if (camera) camera.checked = map.camera !== false;
-    refreshDeveloperGuideLabels();
   }
 
   function setTrip(nextTrip) {
@@ -3082,20 +2868,9 @@ $('summaryNote').textContent =
     if (err) err.classList.add('hidden');
     if (input) input.value = '';
     setDeveloperUnlocked(true);
-    syncDeveloperTabToggles();
   });
-  $('developerApplyTabPolicyBtn')?.addEventListener('click', async () => {
-    const btn = $('developerApplyTabPolicyBtn');
-    if (btn) btn.disabled = true;
-    await publishRemoteTabPolicy();
-    if (btn) btn.disabled = false;
-  });
-  $('developerLockBtn')?.addEventListener('click', () => {
-    $('developerApplyTabPolicyStatus')?.classList.add('hidden');
-    setDeveloperUnlocked(false);
-  });
+  $('developerLockBtn')?.addEventListener('click', () => setDeveloperUnlocked(false));
   setDeveloperUnlocked(isDeveloperUnlocked());
-  if (isDeveloperUnlocked()) syncDeveloperTabToggles();
   syncBuildLabelFromReleaseNotes().then(() => refreshAllVersionDisplays());
   closeUpdateDetails?.addEventListener('click', closeUpdateDetailsModal);
   updateDetailsModal?.addEventListener('click', (event) => {

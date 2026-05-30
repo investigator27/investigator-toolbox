@@ -1,14 +1,27 @@
 {
-  "latest": "v41",
-  "appVersion": "3.0.0",
+  "latest": "v42",
+  "appVersion": "3.1.3",
   "highlights": [
-    "Fixed update loop on mobile — tapping Update restarts once and shows “up to date” without flickering.",
-    "Hotel tab layout and amenity toggles improved on phone.",
-    "Hotel Finder uses live Booking.com listings with filters, budget cap, and email draft."
+    "Version 3.1.3 shown everywhere (footer, menu, update banner, What's New).",
+    "“Up to date” banner stays longer and fades out smoothly (30 seconds).",
+    "Bottom tab bar fully visible on Android installed app."
   ],
   "builds": {
+    "v42": {
+      "intro": "Investigator Toolbox 3.1.3 — version labels, update banner timing, and Android tab bar.",
+      "sections": [
+        {
+          "heading": "Updates",
+          "items": [
+            "App version (3.1.3) now appears in the footer, settings menu, update banners, and What's New details.",
+            "After installing an update, the success banner stays for 30 seconds and eases out slowly.",
+            "Bottom navigation bar sits above the Android gesture area so all tabs stay tappable."
+          ]
+        }
+      ]
+    },
     "v41": {
-      "intro": "Investigator Toolbox 3.0.0 — update install fix for mobile.",
+      "intro": "Investigator Toolbox 3.1.2 — update install fix for mobile.",
       "sections": [
         {
           "heading": "Updates",
@@ -20,7 +33,7 @@
       ]
     },
     "v40": {
-      "intro": "Investigator Toolbox 3.0.0 — mobile layout and update improvements.",
+      "intro": "Investigator Toolbox 3.1.1 — mobile layout and update improvements.",
       "sections": [
         {
           "heading": "Hotel Finder",
@@ -33,13 +46,13 @@
           "heading": "Updates",
           "items": [
             "Update banner scrolls inside the main content area so the bottom tab bar stays visible.",
-            "After you tap Update, the app clears old cached files and restarts automatically — no manual refresh needed on phone or desktop."
+            "After you tap Update, the app clears old cached files and restarts automatically."
           ]
         }
       ]
     },
     "v39": {
-      "intro": "Investigator Toolbox 3.0.0 — Hotel Finder powered by Booking.com.",
+      "intro": "Investigator Toolbox 3.1.0 — Hotel Finder powered by Booking.com.",
       "sections": [
         {
           "heading": "Hotel Finder",
@@ -73,7 +86,7 @@
       ]
     },
     "v38": {
-      "intro": "Here's what was included in build v38.",
+      "intro": "Investigator Toolbox 3.0.0 — initial What's New and update flow.",
       "sections": [
         {
           "heading": "What's New",

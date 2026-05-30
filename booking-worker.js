@@ -67,19 +67,7 @@ export default {
           snippet: html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 800),
         });
       }
-      let hotels = parseBookingHotels(html);
-
-      // Plain proxy HTML often has search results in JSON only — try JS render once.
-      if (!hotels.length && shouldRetryWithRender(html) && env.SCRAPER_API_KEY) {
-        const rendered = await fetchBookingHtmlRendered(bookingUrl, env);
-        if (rendered) {
-          const fromRender = parseBookingHotels(rendered);
-          if (fromRender.length) {
-            html = rendered;
-            hotels = fromRender;
-          }
-        }
-      }
+      const hotels = parseBookingHotels(html);
 
       if (!hotels.length) {
         const diag = analyzeBookingHtml(html);
@@ -136,62 +124,64 @@ function buildBookingUrl({ destination, lat, lng, chkin, chkout, adults, ameniti
   return 'https://www.booking.com/searchresults.html?' + params.toString();
 }
 
-async function fetchBookingHtml(url, env) {
-  const browserHeaders = {
-    'User-Agent':
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Language': 'en-CA,en;q=0.9',
-    'Cache-Control': 'no-cache',
-  };
+/** Cloudflare Workers must finish the whole request in ~30s — keep ScraperAPI time budget tight. */
+const WORKER_FETCH_BUDGET_MS = 28000;
 
+async function fetchBookingHtml(url, env) {
   const scraperKey = env && env.SCRAPER_API_KEY;
   if (!scraperKey) {
     throw new Error(
       'SCRAPER_API_KEY is not set on this Worker. Cloudflare → booking-lookup → Settings → Variables → add SCRAPER_API_KEY → Encrypt → Save and deploy.'
     );
   }
-  return await fetchViaScraperApi(url, scraperKey);
-
-  const response = await fetch(url, { headers: browserHeaders, redirect: 'follow' });
-  if (!response.ok) throw new Error('Booking.com responded ' + response.status);
-  return await response.text();
+  return await Promise.race([
+    fetchViaScraperApi(url, scraperKey),
+    new Promise((_, reject) => {
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              'Booking lookup timed out on the server (28s). Try again, or turn off amenity filters to speed up the search.'
+            )
+          ),
+        WORKER_FETCH_BUDGET_MS
+      );
+    }),
+  ]);
 }
 
 async function fetchViaScraperApi(targetUrl, apiKey) {
-  // Booking.com is a ScraperAPI "Protected" domain — plain requests return HTTP 500
-  // ("Protected"). Must use premium proxies (~10 credits/request).
-  const attempts = [
-    { label: 'premium+ca', render: false, premium: true, countryCode: 'ca' },
-    { label: 'premium+render+ca', render: true, premium: true, countryCode: 'ca' },
-    { label: 'premium', render: false, premium: true, countryCode: null },
-  ];
+  // Booking.com is ScraperAPI "Protected" — requires premium (~10 credits/search).
+  // One primary fetch; optional short render retry only when the page looks like search results but unparsed.
   const log = [];
-  let best = '';
+  const primary = { label: 'premium+ca', render: false, premium: true, countryCode: 'ca', maxTimeout: 20000 };
+  const first = await scraperApiFetch(targetUrl, apiKey, primary);
+  log.push(`${primary.label}: HTTP ${first.status}, ${first.html.length} bytes${first.detail ? ` (${first.detail})` : ''}`);
 
-  for (const opts of attempts) {
-    const { html, status, detail } = await scraperApiFetch(targetUrl, apiKey, opts);
-    log.push(`${opts.label}: HTTP ${status}, ${html.length} bytes${detail ? ` (${detail})` : ''}`);
-    if (html.length > 50000 || parseBookingHotels(html).length > 0) {
-      return html;
-    }
-    if (html.length > best.length) best = html;
+  if (parseBookingHotels(first.html).length > 0) return first.html;
+  if (first.html.length > 80000) return first.html;
+
+  if (shouldRetryWithRender(first.html)) {
+    const retry = { label: 'premium+render+ca', render: true, premium: true, countryCode: 'ca', maxTimeout: 10000 };
+    const second = await scraperApiFetch(targetUrl, apiKey, retry);
+    log.push(`${retry.label}: HTTP ${second.status}, ${second.html.length} bytes${second.detail ? ` (${second.detail})` : ''}`);
+    if (parseBookingHotels(second.html).length > 0) return second.html;
+    if (second.html.length > first.html.length) return second.html;
   }
 
-  // Keep the largest partial page (often has JSON even without cards).
-  if (best.length > 100000) return best;
+  if (first.html.length > 100000) return first.html;
 
   throw new Error(
     log.join(' | ') +
-    ' — Check scraperapi.com/dashboard for credits. After changing Variables, click Save and deploy.'
+      ' — Check scraperapi.com/dashboard for credits. After changing Variables, click Save and deploy.'
   );
 }
 
-async function scraperApiFetch(targetUrl, apiKey, { render, premium, countryCode }) {
+async function scraperApiFetch(targetUrl, apiKey, { render, premium, countryCode, maxTimeout }) {
   const params = new URLSearchParams({ api_key: apiKey, url: targetUrl });
   if (countryCode) params.set('country_code', countryCode);
   params.set('device_type', 'desktop');
-  params.set('max_timeout', '22000');
+  params.set('max_timeout', String(maxTimeout || 20000));
   if (render) params.set('render', 'true');
   if (premium) params.set('premium', 'true');
   const proxied = 'https://api.scraperapi.com/?' + params.toString();
@@ -211,13 +201,6 @@ async function scraperApiFetch(targetUrl, apiKey, { render, premium, countryCode
   } catch (err) {
     return { html: '', status: 0, detail: String(err.message || err) };
   }
-}
-
-async function fetchBookingHtmlRendered(targetUrl, env) {
-  const key = env && env.SCRAPER_API_KEY;
-  if (!key) return '';
-  const { html } = await scraperApiFetch(targetUrl, key, { render: true, premium: false, countryCode: 'ca' });
-  return html;
 }
 
 function shouldRetryWithRender(html) {

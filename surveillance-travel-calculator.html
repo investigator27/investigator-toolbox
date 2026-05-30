@@ -63,9 +63,10 @@
       --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.875rem;--radius-xl:1rem;--radius-full:9999px;
       --shadow-sm:0 1px 2px rgb(25 23 18/.06);--shadow-md:0 8px 22px rgb(25 23 18/.08);
       --font-body:'Satoshi',Inter,sans-serif;--transition:180ms cubic-bezier(0.16,1,0.3,1);
-      --update-banner-duration:1s;
+      --update-banner-duration:2.8s;
       --update-banner-ease:cubic-bezier(0.16,1,0.3,1);
-      --tab-bar-height:4.5rem;
+      --tab-bar-height:4.75rem;
+      --tab-bar-safe-bottom:max(env(safe-area-inset-bottom,0px),12px);
     }
     [data-theme="dark"] {
       --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#22211f;--color-divider:#262523;--color-border:#393836;
@@ -76,9 +77,14 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth}
+    html{
+      height:100%;
+      height:-webkit-fill-available;
+    }
     html, body{
-      height:100dvh;
-      min-height:100dvh;
+      min-height:100svh;
+      min-height:-webkit-fill-available;
+      height:100%;
       overflow:hidden;
       background:var(--color-bg);
       color:var(--color-text);
@@ -90,13 +96,16 @@
     a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
     :focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
     .app-shell{
-      display:flex;
-      flex-direction:column;
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr) auto;
+      height:100svh;
       height:100dvh;
+      max-height:100svh;
       max-width:680px;
       margin:0 auto;
       width:100%;
       background:var(--color-bg);
+      overflow:hidden;
     }
     .app-header{
       flex-shrink:0;
@@ -106,7 +115,6 @@
       border-bottom:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);
     }
     .app-content{
-      flex:1;
       min-height:0;
       overflow-y:auto;
       overflow-x:clip;
@@ -114,6 +122,7 @@
       overscroll-behavior:contain;
       overflow-anchor:none;
       padding:var(--space-4);
+      padding-bottom:var(--space-5);
       scrollbar-width:none;
       -ms-overflow-style:none;
     }
@@ -131,14 +140,14 @@
       text-align:center;
     }
     .tab-bar{
-      flex-shrink:0;
-      z-index:150;
+      z-index:200;
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:var(--space-1);
       background:var(--color-surface);
       border-top:1px solid var(--color-border);
-      padding:var(--space-2) var(--space-2) max(env(safe-area-inset-bottom),var(--space-2));
+      padding:var(--space-2) var(--space-2) calc(var(--tab-bar-safe-bottom) + var(--space-2));
+      min-height:calc(var(--tab-bar-height) + var(--tab-bar-safe-bottom));
       box-shadow:0 -2px 12px rgb(25 23 18/.06);
     }
     [data-theme="dark"] .tab-bar{box-shadow:0 -2px 12px rgb(0 0 0/.25)}
@@ -454,7 +463,7 @@
         <div class="status hidden" id="statusBox" aria-live="polite" role="status"></div>
       </section>
       <section class="card hidden" id="resultsSection" aria-labelledby="results-title"><div><h2 id="results-title" class="card-title">Billable Results</h2><p class="card-sub" id="resultTripLine"></p></div><div class="metric-grid top-grid"><div class="metric"><small>Billable Travel Hours</small><strong id="billableHours">—</strong></div><div class="metric"><small>Billable Travel Minutes</small><strong id="billableMinutes">—</strong></div><div class="metric"><small>Billable Travel Distance</small><strong id="billableKm">—</strong></div></div><div class="metric-grid bottom-grid"><div class="metric"><small>Non-Billable Travel Time Removed</small><strong id="removedTime">—</strong></div><div class="metric"><small>Non-Billable Travel Distance Removed</small><strong id="removedKm">—</strong></div></div><div class="summary-block"><b id="summaryLine"></b><span id="summaryNote"></span></div></section>
-      <p class='footer'> Alpha (Internal / Closed) · Investigator Toolbox v3.0.0 · © 2026 Mitchell (CIM)</p>
+      <p class="footer" id="appFooter" data-app-version-footer>Alpha (Internal / Closed) · Investigator Toolbox · © 2026 Mitchell (CIM)</p>
     </div>
 
     <div class="tab-panel hidden" id="tab-hotels" data-tab="hotels" role="tabpanel" aria-labelledby="tab-btn-hotels">
@@ -723,15 +732,16 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.0.0';
+  let APP_VERSION = '3.1.3';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v41';
+  let PWA_CACHE_VERSION = 'v42';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
-  const UPDATE_BANNER_TRANSITION_MS = 1000;
+  const UPDATE_BANNER_TRANSITION_MS = 2800;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
+  const UPDATE_BANNER_AUTODISMISS_MS = 30000;
 
   const menuToggle = qs('[data-menu-toggle]');
   const menuPanel = $('menuPanel');
@@ -831,18 +841,35 @@
     return `Version ${APP_VERSION}`;
   }
 
+  function getShortVersionLabel() {
+    return `v${APP_VERSION}`;
+  }
+
+  function getFooterVersionLine() {
+    return `Alpha (Internal / Closed) · Investigator Toolbox ${getShortVersionLabel()} · © 2026 Mitchell (CIM)`;
+  }
+
+  function refreshAllVersionDisplays() {
+    document.title = `Investigator Toolbox ${getShortVersionLabel()}`;
+    document.querySelectorAll('[data-app-version-footer]').forEach((el) => {
+      el.textContent = getFooterVersionLine();
+    });
+    refreshMenuVersionLabel();
+  }
+
   function getFriendlyUptodateStatus() {
-    return `You're on the latest ${formatAppVersionLabel()}. Tap Details to see what's new.`;
+    return `You're on ${formatAppVersionLabel()} (build ${getDisplayUpdateBuild()}). Tap Details to see what's new.`;
   }
 
   function getFriendlyReleaseIntro() {
-    return `Here's what's included in ${formatAppVersionLabel()}.`;
+    return `Here's what's included in ${formatAppVersionLabel()} (build ${getDisplayUpdateBuild()}).`;
   }
 
   function normalizeReleaseNotesForDisplay(notes) {
     const base = notes || getDefaultReleaseNotes(getDisplayUpdateBuild());
+    const intro = String(base.intro || '').trim() || getFriendlyReleaseIntro();
     return {
-      intro: getFriendlyReleaseIntro(),
+      intro,
       sections: base.sections || []
     };
   }
@@ -859,6 +886,7 @@
       const data = await response.json();
       if (data.latest) PWA_CACHE_VERSION = data.latest;
       if (data.appVersion) APP_VERSION = data.appVersion;
+      refreshAllVersionDisplays();
     } catch {
     } finally {
       clearTimeout(timer);
@@ -1034,7 +1062,7 @@
     refreshMenuVersionLabel();
     if (opts.autoHide !== false) {
       if (updateBannerHideTimer) clearTimeout(updateBannerHideTimer);
-      const hideMs = typeof opts.autoHideMs === 'number' ? opts.autoHideMs : 15000;
+      const hideMs = typeof opts.autoHideMs === 'number' ? opts.autoHideMs : UPDATE_BANNER_AUTODISMISS_MS;
       updateBannerHideTimer = setTimeout(hideUpdateBanner, hideMs);
     }
   }
@@ -1073,8 +1101,8 @@
         bannerClass: ''
       },
       ready: {
-        title: 'Update available',
-        status: opts.statusLine || 'Download complete. Tap Update to install.',
+        title: `Update available · ${formatAppVersionLabel()}`,
+        status: opts.statusLine || `Build ${getDisplayUpdateBuild()} is ready. Tap Update to install.`,
         showProgress: false,
         progress: 0,
         indeterminate: false,
@@ -1093,7 +1121,7 @@
         bannerClass: ''
       },
       uptodate: {
-        title: 'Investigator Toolbox is up to date',
+        title: `${formatAppVersionLabel()} · up to date`,
         status: opts.statusLine || getFriendlyUptodateStatus(),
         showProgress: false,
         progress: 0,
@@ -1593,7 +1621,7 @@
     const testHint = PWA_TEST_MODE && IS_LOCAL_DEV
       ? `You already have the latest test version (${APP_VERSION}).`
       : '';
-    showUptodateBanner({ statusLine: testHint || undefined, autoHideMs: 10000 });
+    showUptodateBanner({ statusLine: testHint || undefined, autoHideMs: UPDATE_BANNER_AUTODISMISS_MS });
   }
 
   function syncThemeMeta(theme) {
@@ -1834,7 +1862,7 @@ $('summaryNote').textContent =
   $('menuLightBtn')?.addEventListener('click', () => { applyTheme('light'); closeMenu(); });
   $('menuDarkBtn')?.addEventListener('click', () => { applyTheme('dark'); closeMenu(); });
   menuHowBtn?.addEventListener('click', openHowTo);
-  syncBuildLabelFromReleaseNotes().then(() => refreshMenuVersionLabel());
+  syncBuildLabelFromReleaseNotes().then(() => refreshAllVersionDisplays());
   menuPwaTestBtn?.addEventListener('click', () => {
     closeMenu();
     try {
@@ -1896,7 +1924,7 @@ $('summaryNote').textContent =
 
   window.addEventListener('load', async () => {
     await syncBuildLabelFromReleaseNotes();
-    refreshMenuVersionLabel();
+    refreshAllVersionDisplays();
     try {
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
@@ -1915,13 +1943,13 @@ $('summaryNote').textContent =
         quietUpdateLoad = true;
         waitingSW = null;
         applyingAppUpdate = false;
-        showUptodateBanner({ autoHideMs: 12000 });
+        showUptodateBanner({ autoHideMs: UPDATE_BANNER_AUTODISMISS_MS });
       } else if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
         sessionStorage.removeItem('toolboxShowUptodate');
         suppressUpdatePromptOnLoad = true;
         quietUpdateLoad = true;
         waitingSW = null;
-        showUptodateBanner({ autoHideMs: 12000 });
+        showUptodateBanner({ autoHideMs: UPDATE_BANNER_AUTODISMISS_MS });
       }
     } catch {}
 
@@ -2480,7 +2508,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cache: 'no-store',
       headers: {
         'Accept-Language': 'en-CA',
-        'User-Agent': 'InvestigatorToolbox/3.0.0 (hotel-search; contact: operations@intrepidinvestigations.ca)'
+        'User-Agent': `InvestigatorToolbox/${APP_VERSION} (hotel-search; contact: operations@intrepidinvestigations.ca)`
       }
     });
     if (!response.ok) return null;
@@ -2769,8 +2797,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (els.checkout?.value) params.set('chkout', els.checkout.value);
     getHotelsComAmenityParams().forEach((code) => params.append('amenities', code));
 
+    const BOOKING_SEARCH_TIMEOUT_MS = 90000;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60000);
+    const timer = setTimeout(() => controller.abort(), BOOKING_SEARCH_TIMEOUT_MS);
+    let slowHintTimer = null;
+    slowHintTimer = setTimeout(() => {
+      showHotelSearchProgress('Still searching Booking.com… this can take up to a minute. Fewer amenity filters usually load faster.');
+    }, 22000);
     try {
       const response = await fetch(getBookingApiUrl(params), { cache: 'no-store', signal: controller.signal });
       if (response.status === 404) {
@@ -2788,11 +2821,12 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     } catch (err) {
       const msg = (err && err.name === 'AbortError')
-        ? 'Booking.com search timed out (the page took too long to load). Try again.'
+        ? 'Booking.com search timed out after 90 seconds. Try again, turn off amenity filters, or open Booking.com manually.'
         : String(err?.message || err);
       return { ok: false, hotels: [], error: msg };
     } finally {
       clearTimeout(timer);
+      if (slowHintTimer) clearTimeout(slowHintTimer);
     }
   }
 
@@ -3460,7 +3494,7 @@ out body;`;
     const ctx = lastSearchContext;
     if (!ctx) return { items: [], requested, verifyMode: 'none' };
 
-    if (typeof onProgress === 'function') onProgress('Searching Booking.com for hotels near your event…');
+    if (typeof onProgress === 'function') onProgress('Searching Booking.com… usually 20–40 seconds; amenity filters can take longer.');
     const result = await loadBookingHotels(ctx, geo);
     const areaSearchUrl = buildBookingAreaSearchUrl(ctx, geo);
 
@@ -3731,7 +3765,7 @@ out body;`;
     try {
       geo = await geocodeCanadianAddress(meta.searchAddress, ctx);
       meta.geo = geo;
-      showHotelSearchProgress('Searching Booking.com for hotels near your event…');
+      showHotelSearchProgress('Searching Booking.com… usually 20–40 seconds; amenity filters can take longer.');
       scrollToHotelSearchActivity();
       const ranked = await fetchAndRankHotels(meta, geo, showHotelSearchProgress);
       renderHotelResults(ranked.items, meta, geo, ranked.requested, {

@@ -1413,7 +1413,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v93';
+  const BUNDLED_PWA_CACHE_VERSION = 'v94';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5432,7 +5432,7 @@ out body;`;
         perNightInclTax: Math.round(workerNightly),
         priceLabel: String(h?.priceLabel || '').trim() || `CAD ${Math.round(workerNightly)}`,
         priceBreakdown: String(h?.priceBreakdown || '').trim(),
-        priceReliable: h?.priceReliable !== false && !h?.taxesAmbiguous,
+        priceReliable: h?.priceReliable === true,
         taxesAmbiguous: !!h?.taxesAmbiguous,
       };
     }
@@ -5491,10 +5491,12 @@ out body;`;
       if (perNightInclTax > 0) priceLabel = `CAD ${perNightInclTax}`;
     }
 
+    const workerReliable = h?.priceReliable === true;
     return {
       stayValue: priceTotalStay != null ? priceTotalStay : pricePerNight != null ? pricePerNight * n : null,
       perNightInclTax: perNightInclTax != null && perNightInclTax > 0 ? perNightInclTax : null,
       priceLabel,
+      priceReliable: workerReliable && !taxesAmbiguous && perNightInclTax != null,
       taxesAmbiguous,
     };
   }
@@ -5654,15 +5656,61 @@ out body;`;
     const overBudgetCount = withinRadiusPriced.filter((it) => it.perNightInclTax > budgetCap).length;
     const noPriceCount = withinRadius.length - withinRadiusPriced.length;
 
+    if (
+      withinRadius.length > 0
+      && withinRadiusPriced.length > 0
+      && overBudgetCount === withinRadiusPriced.length
+    ) {
+      return {
+        items: [],
+        maxListings,
+        totalMatched: 0,
+        verifyMode: 'over-budget',
+        budgetCap,
+        nearbyCount: withinRadius.length,
+        overBudgetCount,
+        noPriceCount,
+        inventoryCount: filtered.length,
+        areaSearchUrl
+      };
+    }
+
+    if (withinRadius.length > 0) {
+      const sorted = [...withinRadius].sort((a, b) => {
+        const rank = (it) => {
+          if (it.priceReliable && Number(it.perNightInclTax) > 0 && it.perNightInclTax <= budgetCap) return 4;
+          if (it.priceReliable && Number(it.perNightInclTax) > 0) return 3;
+          if (Number(it.perNightInclTax) > 0) return 2;
+          if (it.priceLabel) return 1;
+          return 0;
+        };
+        const dr = rank(b) - rank(a);
+        if (dr !== 0) return dr;
+        return (a.distance ?? 999) - (b.distance ?? 999);
+      });
+      return {
+        items: sorted.slice(0, maxListings),
+        maxListings,
+        totalMatched: withinRadius.length,
+        verifyMode: 'unverified-rates',
+        budgetCap,
+        nearbyCount: withinRadius.length,
+        overBudgetCount,
+        noPriceCount,
+        inventoryCount: filtered.length,
+        areaSearchUrl
+      };
+    }
+
     return {
       items: [],
       maxListings,
       totalMatched: 0,
       verifyMode: 'over-budget',
       budgetCap,
-      nearbyCount: withinRadius.length,
-      overBudgetCount,
-      noPriceCount,
+      nearbyCount: 0,
+      overBudgetCount: 0,
+      noPriceCount: 0,
       inventoryCount: filtered.length,
       areaSearchUrl
     };
@@ -5887,6 +5935,11 @@ out body;`;
       headline =
         `No hotels ≤ ${capLabel}/night incl. tax within ${radiusKm} km — ` +
         `showing the nearest ${countLabel}${more} farther out (Canada only).`;
+    } else if (resultMeta.verifyMode === 'unverified-rates') {
+      const near = areaLabel ? ` of ${areaLabel}` : '';
+      headline =
+        `Showing ${countLabel}${more} within ${radiusKm} km${near} — ` +
+        `Booking did not show verifiable all-in rates on search; confirm price on each listing.`;
     } else {
       const near = areaLabel ? ` of ${areaLabel}` : '';
       headline =

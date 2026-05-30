@@ -1,10 +1,23 @@
 {
-  "latest": "v93",
+  "latest": "v94",
   "appVersion": "3.5.4",
   "highlights": [
-    "Hotel Finder: fix location dropdown and Hotel tab after truncated file."
+    "Hotel Finder: show hotels when search rates are missing; better incl. tax detection."
   ],
   "builds": {
+    "v94": {
+      "intro": "Investigator Toolbox 3.5.4 — hotels without scraped rates still list.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "If nearby hotels have no verifiable all-in rate on the search page, they still appear (up to 10) so you can open Booking.com.",
+            "Worker 73: recognizes incl. taxes and fees on search cards for multi-night stays.",
+            "Deploy booking-worker.js, surveillance-travel-calculator.html, service-worker.js, release-notes.json (v94)."
+          ]
+        }
+      ]
+    },
     "v93": {
       "intro": "Investigator Toolbox 3.5.4 — restore Hotel tab JavaScript.",
       "sections": [

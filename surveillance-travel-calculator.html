@@ -1883,12 +1883,7 @@
   function isUpdateMenuBadgeActive() {
     if (updateUIState === 'installing' || updateUIState === 'uptodate') return false;
     if (updateUIState === 'ready' || updateUIState === 'downloading') return true;
-    if (waitingSW) return true;
-    try {
-      return sessionStorage.getItem('toolboxUpdateReady') === '1';
-    } catch {
-      return false;
-    }
+    return !!waitingSW;
   }
 
   function refreshSettingsUpdateBadge() {
@@ -1945,6 +1940,7 @@
     stopWaitingReadyPoll();
     waitingSW = null;
     pendingUpdateBuild = '';
+    clearUpdateReadyMark();
     resetDisplayProgress();
     renderSoftwareUpdateUi('uptodate', opts);
     refreshSettingsVersionLabel();
@@ -2045,6 +2041,7 @@
     const activeBuild = parseBuildFromScriptUrl(reg?.active?.scriptURL);
     if (activeBuild && activeBuild === PWA_CACHE_VERSION) {
       waitingSW = null;
+      clearUpdateReadyMark();
       refreshSettingsVersionLabel();
       return;
     }
@@ -2786,7 +2783,7 @@ $('summaryNote').textContent =
   });
 
   openSettingsBtn?.addEventListener('click', () => {
-    openSettings(isUpdateMenuBadgeActive() ? 'updates' : 'root');
+    openSettings('root');
   });
   closeSettingsBtn?.addEventListener('click', closeSettings);
   settingsBackBtn?.addEventListener('click', popSettingsScreen);

@@ -215,7 +215,7 @@
     .brand{display:flex;align-items:center;gap:var(--space-3)}
     .logo{width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0}
     .logo-icon{background:var(--color-surface) url('./assets/icon-192.png') center/130% no-repeat}
-    .brand h1{font-size:var(--text-lg);line-height:1.1}
+    .brand h1{font-size:clamp(1.375rem,1.15rem + 0.55vw,1.625rem);line-height:1.1;font-weight:700}
     .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
     .icon-btn{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);box-shadow:var(--shadow-sm);flex-shrink:0}
     .icon-btn.menu-has-update{position:relative}
@@ -965,20 +965,20 @@
 
         <div class="settings-group hotel-amenity-toggles" role="group" aria-label="Required amenities">
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Free breakfast</span>
-            <label class="settings-switch"><input id="hotelFreeBreakfast" type="checkbox" aria-label="Free breakfast" /><span class="settings-switch__track"></span></label>
+            <span class="settings-row__label">Free Breakfast</span>
+            <label class="settings-switch"><input id="hotelFreeBreakfast" type="checkbox" aria-label="Free Breakfast" /><span class="settings-switch__track"></span></label>
           </div>
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Free parking</span>
-            <label class="settings-switch"><input id="hotelFreeParking" type="checkbox" aria-label="Free parking" /><span class="settings-switch__track"></span></label>
+            <span class="settings-row__label">Free Parking</span>
+            <label class="settings-switch"><input id="hotelFreeParking" type="checkbox" aria-label="Free Parking" /><span class="settings-switch__track"></span></label>
           </div>
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Free cancellation</span>
-            <label class="settings-switch"><input id="hotelFreeCancellation" type="checkbox" aria-label="Free cancellation" /><span class="settings-switch__track"></span></label>
+            <span class="settings-row__label">Free Cancellation</span>
+            <label class="settings-switch"><input id="hotelFreeCancellation" type="checkbox" aria-label="Free Cancellation" /><span class="settings-switch__track"></span></label>
           </div>
           <div class="settings-row settings-row--toggle">
-            <span class="settings-row__label">Hotels &amp; motels only</span>
-            <label class="settings-switch"><input id="hotelHotelsOnly" type="checkbox" aria-label="Hotels and motels only" /><span class="settings-switch__track"></span></label>
+            <span class="settings-row__label">Hotels &amp; Motels Only</span>
+            <label class="settings-switch"><input id="hotelHotelsOnly" type="checkbox" aria-label="Hotels and Motels Only" /><span class="settings-switch__track"></span></label>
           </div>
         </div>
         <div class="hint">Filters are applied on the Booking.com search (same as on booking.com). If nothing matches, try a larger radius or turn off a filter.</div>
@@ -1445,7 +1445,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v97';
+  const BUNDLED_PWA_CACHE_VERSION = 'v98';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4453,10 +4453,10 @@ textarea:focus, textarea:focus-visible {
   function describeFilterMissMessage(rawHotels) {
     const total = Array.isArray(rawHotels) ? rawHotels.length : 0;
     const parts = [];
-    if (els.hotelsOnly?.checked) parts.push('hotels & motels only');
-    if (els.freeBreakfast?.checked) parts.push('free breakfast');
-    if (els.freeParking?.checked) parts.push('free parking');
-    if (els.freeCancellation?.checked) parts.push('free cancellation');
+    if (els.hotelsOnly?.checked) parts.push('Hotels & Motels Only');
+    if (els.freeBreakfast?.checked) parts.push('Free Breakfast');
+    if (els.freeParking?.checked) parts.push('Free Parking');
+    if (els.freeCancellation?.checked) parts.push('Free Cancellation');
     const list = parts.length ? parts.join(', ') : 'your filters';
     const radiusKm = getMaxDistanceKm();
     if (total > 0 && lastBookingFiltersApplied.length) {
@@ -4813,10 +4813,10 @@ textarea:focus, textarea:focus-visible {
 
   function describeActiveFilters() {
     const parts = [];
-    if (els.freeBreakfast?.checked) parts.push('Free breakfast');
-    if (els.freeParking?.checked) parts.push('Free parking');
-    if (els.freeCancellation?.checked) parts.push('Free cancellation');
-    if (els.hotelsOnly?.checked) parts.push('Hotels & motels only');
+    if (els.freeBreakfast?.checked) parts.push('Free Breakfast');
+    if (els.freeParking?.checked) parts.push('Free Parking');
+    if (els.freeCancellation?.checked) parts.push('Free Cancellation');
+    if (els.hotelsOnly?.checked) parts.push('Hotels & Motels Only');
     return parts.length ? parts.join(', ') : 'None';
   }
 

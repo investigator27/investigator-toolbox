@@ -1,10 +1,23 @@
 {
-  "latest": "v97",
+  "latest": "v98",
   "appVersion": "3.5.4",
   "highlights": [
-    "Red 1 update badge on menu and Software Update only."
+    "Title-case hotel filters; larger header app title."
   ],
   "builds": {
+    "v98": {
+      "intro": "Investigator Toolbox 3.5.4 — labels and header type.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Hotel filters: Free Breakfast, Free Parking, Free Cancellation, Hotels & Motels Only.",
+            "Investigator Toolbox header title is slightly larger than section titles.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json (v98)."
+          ]
+        }
+      ]
+    },
     "v97": {
       "intro": "Investigator Toolbox 3.5.4 — update badge placement.",
       "sections": [

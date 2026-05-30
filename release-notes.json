@@ -1,10 +1,24 @@
 {
-  "latest": "v118",
+  "latest": "v119",
   "appVersion": "3.5.4",
   "highlights": [
-    "Light theme: clean white surfaces with red accents matching the Toolbox icon."
+    "UI polish: header tagline, typography tokens, dropdown chevrons, coming-soon tabs, keyboard focus on buttons."
   ],
   "builds": {
+    "v119": {
+      "intro": "Investigator Toolbox 3.5.4 — UI polish pass.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Header subtitle: Surveillance travel & hotels (replaces Testing In Progress).",
+            "Settings and modals use the same font scale as the rest of the app; dropdowns show a chevron.",
+            "Requests and Camera show a clear coming-soon card; disabled tabs stay hidden via tab policy.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v119)."
+          ]
+        }
+      ]
+    },
     "v118": {
       "intro": "Investigator Toolbox 3.5.4 — light theme refresh (white + red).",
       "sections": [

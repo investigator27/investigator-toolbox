@@ -186,16 +186,12 @@
     .app-content::-webkit-scrollbar{display:none}
     .tab-panel{display:grid;gap:var(--space-4);align-content:start;min-height:0;min-width:0;max-width:100%}
     .tab-panel.hidden{display:none!important}
-    .coming-soon{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:50vh;
-      color:var(--color-text-muted);
-      font-size:var(--text-lg);
-      font-weight:700;
+    .coming-soon-card{
       text-align:center;
+      max-width:22rem;
+      margin:var(--space-6) auto 0;
     }
+    .coming-soon-card .card-sub{margin-top:var(--space-2)}
     .tab-bar{
       grid-row:3;
       z-index:200;
@@ -256,7 +252,7 @@
     .brand{display:flex;align-items:center;gap:var(--space-3)}
     .logo{width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);display:grid;place-items:center;box-shadow:var(--shadow-sm);flex-shrink:0}
     .logo-icon{background:var(--color-surface) url('./assets/icon-192.png') center/130% no-repeat}
-    .brand h1{font-size:clamp(1.375rem,1.15rem + 0.55vw,1.625rem);line-height:1.1;font-weight:700}
+    .brand h1{font-size:var(--text-lg);line-height:1.15;font-weight:700}
     .brand p{color:var(--color-text-muted);font-size:var(--text-sm)}
     .icon-btn{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);box-shadow:var(--shadow-sm);flex-shrink:0}
     .menu-update-badge{
@@ -266,7 +262,7 @@
       width:18px;
       height:18px;
       min-width:18px;
-      font-size:11px;
+      font-size:var(--text-xs);
       border:2px solid var(--color-surface);
       box-shadow:0 1px 3px rgb(0 0 0 / .22);
       pointer-events:none;
@@ -324,9 +320,11 @@
     .metric{padding:var(--space-4);background:var(--color-surface-2);border-radius:var(--radius-lg);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)}
     .metric small{display:block;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:0.3rem}
     .metric strong{display:block;font-size:var(--text-lg);font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
-    .summary-block{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-primary-highlight)}
+    .summary-block{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-offset);border:1px solid var(--color-border)}
     .summary-block b{display:block;margin-bottom:0.3rem}.steps-list{padding-left:1.2rem;color:var(--color-text-muted);display:grid;gap:0.4rem}
     .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
+    .modal-title{margin:0;font-size:var(--text-lg);font-weight:700;line-height:1.2}
+    .modal-intro{margin:0 0 var(--space-4);font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.5}
     .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-2)}.hidden{display:none!important}
     .hotel-form-grid{display:grid;gap:var(--space-4)}
     @media(min-width:480px){.hotel-form-grid--dates{grid-template-columns:1fr 1fr}}
@@ -739,7 +737,7 @@
     .settings-page-intro__text{flex:1;min-width:0}
     .settings-page-intro__title{
       margin:0 0 var(--space-2);
-      font-size:1.125rem;
+      font-size:var(--text-lg);
       font-weight:700;
       line-height:1.2;
       color:var(--color-text);
@@ -824,7 +822,7 @@
     .settings-row__chevron{
       flex-shrink:0;
       color:var(--color-text-faint);
-      font-size:1.25rem;
+      font-size:1.15em;
       line-height:1;
       font-weight:400;
     }
@@ -988,10 +986,10 @@
       border-radius:999px;
       background:var(--color-primary);
       color:#fff;
-      font-size:12px;
+      font-size:var(--text-xs);
       font-weight:800;
       line-height:1;
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      font-family:var(--font-body),system-ui,sans-serif;
       font-variant-numeric:tabular-nums;
       flex-shrink:0;
     }
@@ -1007,7 +1005,7 @@
     <div class="topbar">
       <div class="brand">
         <div class="logo logo-icon" aria-hidden="true"></div>
-        <div><h1>Toolbox</h1><p>Testing In Progress</p></div>
+        <div><h1>Toolbox</h1><p>Surveillance travel &amp; hotels</p></div>
       </div>
       <button class="icon-btn" type="button" id="openSettingsBtn" aria-label="Open settings"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg><span class="menu-update-badge update-count-badge hidden" id="menuUpdateBadge" aria-hidden="true">1</span></button>
     </div>
@@ -1235,11 +1233,17 @@
     </div>
 
     <div class="tab-panel hidden" id="tab-requests" data-tab="requests" role="tabpanel" aria-labelledby="tab-btn-requests">
-      <p class="coming-soon">Coming Soon</p>
+      <section class="card coming-soon-card" aria-labelledby="requests-soon-title">
+        <h2 id="requests-soon-title" class="card-title">Requests</h2>
+        <p class="card-sub">This tab is not available yet. It will be added in a future Toolbox update.</p>
+      </section>
     </div>
 
     <div class="tab-panel hidden" id="tab-camera" data-tab="camera" role="tabpanel" aria-labelledby="tab-btn-camera">
-      <p class="coming-soon">Coming Soon</p>
+      <section class="card coming-soon-card" aria-labelledby="camera-soon-title">
+        <h2 id="camera-soon-title" class="card-title">Camera</h2>
+        <p class="card-sub">Field photo workflows are coming soon.</p>
+      </section>
     </div>
   </div>
 
@@ -1870,14 +1874,14 @@
 <div class="modal hidden" id="updateDetailsModal" aria-hidden="true">
   <div class="modal-card">
     <div class="modal-head">
-      <h2 style="font-size:1.25rem;">Update Details</h2>
+      <h2 class="modal-title">Update Details</h2>
       <button class="icon-btn" id="closeUpdateDetails" type="button" aria-label="Close Update Details">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6 6 18M6 6l12 12"/>
         </svg>
       </button>
     </div>
-    <p id="updateDetailsIntro" style="font-size:var(--text-sm);color:var(--color-text-muted)"></p>
+    <p class="modal-intro" id="updateDetailsIntro"></p>
     <div id="updateDetailsBody"></div>
   </div>
 </div>
@@ -1903,7 +1907,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v118';
+  const BUNDLED_PWA_CACHE_VERSION = 'v119';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4401,7 +4405,7 @@ $('summaryNote').textContent =
       tabPanels.forEach((panel) => {
         const tabId = panel.dataset.tab;
         if (!tabId || tabId === 'calculator') return;
-        if (!isTabEnabled(tabId) && !panel.classList.contains('hidden')) {
+        if (!isTabEnabled(tabId)) {
           panel.classList.add('hidden');
         }
       });
@@ -4639,9 +4643,19 @@ $('summaryNote').textContent =
 }
 
 .city-btn::after{
-  content:'☰';
-  font-size:1rem;
-  opacity:0.8;
+  content:'';
+  width:0.45rem;
+  height:0.45rem;
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  margin-top:-0.15rem;
+  opacity:0.55;
+  flex-shrink:0;
+}
+.city-btn[aria-expanded="true"]::after{
+  transform:rotate(-135deg);
+  margin-top:0.1rem;
 }
 
 .city-panel{
@@ -4731,21 +4745,31 @@ button, .btn, .btn-primary, .btn-secondary, .btn-tertiary, .segment, .icon-btn, 
   -webkit-tap-highlight-color: transparent !important;
   transition: none !important;
 }
-button:focus, button:focus-visible,
-.btn:focus, .btn:focus-visible,
-.btn-primary:focus, .btn-primary:focus-visible,
-.btn-secondary:focus, .btn-secondary:focus-visible,
-.btn-tertiary:focus, .btn-tertiary:focus-visible,
-.segment:focus, .segment:focus-visible,
-.icon-btn:focus, .icon-btn:focus-visible,
-.menu-item:focus, .menu-item:focus-visible,
-.menu-half:focus, .menu-half:focus-visible,
-.city-btn:focus, .city-btn:focus-visible,
-.city-item:focus, .city-item:focus-visible,
-input:focus, input:focus-visible,
-select:focus, select:focus-visible,
-textarea:focus, textarea:focus-visible {
+button:focus:not(:focus-visible),
+.btn:focus:not(:focus-visible),
+.segment:focus:not(:focus-visible),
+.icon-btn:focus:not(:focus-visible),
+.menu-item:focus:not(:focus-visible),
+.menu-half:focus:not(:focus-visible),
+.city-btn:focus:not(:focus-visible),
+.city-item:focus:not(:focus-visible) {
   outline: none !important;
+}
+.tab-bar-item:focus-visible,
+.icon-btn:focus-visible,
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-tertiary:focus-visible,
+.segment:focus-visible,
+.menu-item:focus-visible,
+.menu-half:focus-visible,
+.city-btn:focus-visible,
+.city-item:focus-visible,
+.settings-back:focus-visible,
+.settings-row--nav:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
 }
 input:focus, input:focus-visible,
 select:focus, select:focus-visible,

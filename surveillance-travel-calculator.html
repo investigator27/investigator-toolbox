@@ -1433,7 +1433,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v88';
+  const BUNDLED_PWA_CACHE_VERSION = 'v89';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3737,33 +3737,148 @@ textarea:focus, textarea:focus-visible {
     return GENERIC_HOTEL_LOCATION_LABELS.has(String(label || '').trim().toLowerCase());
   }
 
-  function formatGpsCoordsLabel(lat, lng) {
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
-    return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+  function looksLikeCoordinates(text) {
+    const s = String(text || '').trim();
+    return /^-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+$/.test(s);
   }
 
-  /** Human place name for picker, cards, and email — never a blank/generic "from". */
+  function provinceCodeFromNominatimAddr(addr) {
+    const stateRaw = String(addr?.state_code || addr?.state || '').replace(/\./g, '').trim();
+    let provMatch = stateRaw.match(/\b(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT)\b/i);
+    if (provMatch) return provMatch[1].toUpperCase();
+    const lower = stateRaw.toLowerCase();
+    for (const [code, name] of Object.entries(CA_PROVINCE_NAMES)) {
+      if (String(name).toLowerCase() === lower) return code;
+    }
+    return '';
+  }
+
+  function cityFromNominatimAddr(addr) {
+    return String(
+      addr?.city || addr?.town || addr?.village || addr?.hamlet || addr?.suburb
+      || addr?.neighbourhood || addr?.locality || addr?.municipality || ''
+    ).trim();
+  }
+
+  function streetLineFromNominatimAddr(addr) {
+    const road = String(
+      addr?.road || addr?.street || addr?.residential || addr?.pedestrian || ''
+    ).trim();
+    const house = String(addr?.house_number || '').trim();
+    if (house && road) return `${house} ${road}`;
+    return road;
+  }
+
+  function composePlaceLabel({ street, city, provCode }) {
+    const prov = String(provCode || '').toUpperCase();
+    const cityT = city ? titleCaseCity(city) : '';
+    if (street && cityT && prov) return `${street}, ${cityT}, ${prov}`;
+    if (cityT && prov) return `${cityT}, ${prov}`;
+    if (prov) return CA_PROVINCE_NAMES[prov] || prov;
+    return '';
+  }
+
+  function placeLabelFromDisplayName(displayName) {
+    const raw = String(displayName || '').trim();
+    if (!raw || looksLikeCoordinates(raw)) return '';
+
+    const parsed = parseCanadianAddress(raw);
+    if (!parsed?.province) return '';
+
+    const parts = raw.split(',').map((p) => p.trim()).filter(Boolean);
+    const provCode = parsed.province;
+    const provIdx = parts.findIndex((p) => {
+      const compact = p.replace(/\./g, '').toUpperCase();
+      if (compact === provCode) return true;
+      return String(CA_PROVINCE_NAMES[provCode] || '').toLowerCase() === p.toLowerCase();
+    });
+    if (provIdx < 0) return parsed.label || '';
+
+    const city = parsed.city;
+    if (city && provIdx >= 1) {
+      const beforeProv = parts.slice(0, provIdx);
+      const cityIdx = beforeProv.findIndex((p) => p.toLowerCase() === city.toLowerCase());
+      const streetParts = cityIdx >= 0 ? beforeProv.slice(0, cityIdx) : beforeProv;
+      const streetCand = streetParts.find((p) => {
+        if (/^canada$/i.test(p)) return false;
+        if (/\b[A-Z]\d[A-Z]\s*\d[A-Z]\d\b/i.test(p)) return false;
+        if (/^(?:Greater|Metro|Regional|County|District|Division)\b/i.test(p)) return false;
+        return p.length > 0 && p.length < 80;
+      });
+      if (streetCand) return composePlaceLabel({ street: streetCand, city, provCode });
+    }
+
+    return parsed.label || '';
+  }
+
+  function placeLabelScore(label) {
+    if (!label || looksLikeCoordinates(label) || isGenericHotelLocationLabel(label)) return 0;
+    const parts = label.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length >= 3) return 3;
+    if (parts.length === 2 && new RegExp(`\\b(${CA_PROVINCE_CODES})\\b`, 'i').test(parts[1])) return 2;
+    if (parts.length >= 1) return 1;
+    return 0;
+  }
+
+  function buildPlaceFromNominatimHit(hit) {
+    const addr = hit?.address || {};
+    const countryCode = String(addr.country_code || '').toLowerCase();
+    const countryName = String(addr.country || '').toLowerCase();
+    const inCanada = countryCode === 'ca' || countryName === 'canada';
+    if ((countryCode || countryName) && !inCanada) return { outsideCanada: true };
+
+    const provCode = provinceCodeFromNominatimAddr(addr);
+    const city = cityFromNominatimAddr(addr);
+    const street = streetLineFromNominatimAddr(addr);
+    const provinceName = provCode ? (CA_PROVINCE_NAMES[provCode] || provCode) : String(addr.state || '').trim();
+
+    let label = composePlaceLabel({ street, city, provCode });
+    if (!label) label = placeLabelFromDisplayName(hit?.display_name);
+    if (!label && city && provCode) label = composePlaceLabel({ city, provCode });
+    if (!label && provCode) label = composePlaceLabel({ provCode });
+
+    const destination = city && provCode
+      ? `${titleCaseCity(city)}, ${provinceName}, Canada`
+      : provCode
+        ? `${provinceName}, Canada`
+        : label || '';
+
+    return {
+      lat: Number.parseFloat(hit.lat),
+      lng: Number.parseFloat(hit.lon),
+      displayName: hit.display_name || label,
+      province: provCode,
+      destination: destination || label,
+      label,
+    };
+  }
+
+  /** Street/city/province for picker, cards, and email — never raw GPS coordinates. */
   function resolveHotelAreaDisplayLabel(ctx, geo) {
     const direct = String(ctx?.label || '').trim();
-    if (direct && !isGenericHotelLocationLabel(direct)) return direct;
+    if (direct && !isGenericHotelLocationLabel(direct) && !looksLikeCoordinates(direct)) return direct;
 
     const displayName = String(geo?.displayName || '').trim();
     if (displayName) {
+      const fromDisplay = placeLabelFromDisplayName(displayName);
+      if (fromDisplay && !looksLikeCoordinates(fromDisplay)) return fromDisplay;
       const parsed = parseCanadianAddress(displayName);
       if (parsed?.label && !isGenericHotelLocationLabel(parsed.label)) return parsed.label;
     }
 
     const destination = String(ctx?.destination || '').trim();
     if (destination) {
+      const fromDest = placeLabelFromDisplayName(destination);
+      if (fromDest) return fromDest;
       const parsed = parseCanadianAddress(destination);
       if (parsed?.label && !isGenericHotelLocationLabel(parsed.label)) return parsed.label;
-      const head = destination.match(/^([^,]+),/);
-      if (head) return titleCaseCity(head[1].trim());
     }
 
-    const coords = formatGpsCoordsLabel(geo?.lat, geo?.lng);
-    if (coords) return coords;
-    return 'surveillance site';
+    const provCode = String(ctx?.provinceCode || ctx?.province || '').toUpperCase();
+    if (provCode && CA_PROVINCE_NAMES[provCode]) return CA_PROVINCE_NAMES[provCode];
+    if (provCode) return provCode;
+
+    return '';
   }
 
   function syncHotelLocationPickerLabel(ctx, geo) {
@@ -4868,8 +4983,8 @@ out body;`;
     return lastSearchContext;
   }
 
-  async function nominatimReverse(lat, lng) {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=10&addressdetails=1`;
+  async function nominatimReverseOnce(lat, lng, zoom) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=${zoom}&addressdetails=1`;
     const response = await fetch(url, {
       cache: 'no-store',
       headers: {
@@ -4878,49 +4993,30 @@ out body;`;
       }
     });
     if (!response.ok) return null;
-    const hit = await response.json();
-    const addr = hit?.address || {};
-    const countryCode = String(addr.country_code || '').toLowerCase();
-    const countryName = String(addr.country || '').toLowerCase();
-    const inCanada = countryCode === 'ca' || countryName === 'canada';
-    if ((countryCode || countryName) && !inCanada) return { outsideCanada: true };
+    return response.json();
+  }
 
-    const stateRaw = String(addr.state_code || addr.state || '').replace(/\./g, '').trim();
-    let provMatch = stateRaw.match(/\b(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT)\b/i);
-    let provCode = provMatch ? provMatch[1].toUpperCase() : '';
-    if (!provCode && stateRaw) {
-      const lower = stateRaw.toLowerCase();
-      for (const [code, name] of Object.entries(CA_PROVINCE_NAMES)) {
-        if (String(name).toLowerCase() === lower) {
-          provCode = code;
-          break;
-        }
+  async function nominatimReverse(lat, lng) {
+    let best = null;
+    let bestScore = 0;
+    for (const zoom of [18, 16, 12]) {
+      let hit;
+      try {
+        hit = await nominatimReverseOnce(lat, lng, zoom);
+      } catch {
+        continue;
       }
+      if (!hit) continue;
+      const built = buildPlaceFromNominatimHit(hit);
+      if (built?.outsideCanada) return built;
+      const score = placeLabelScore(built?.label);
+      if (score > bestScore) {
+        best = built;
+        bestScore = score;
+      }
+      if (score >= 3) break;
     }
-    const city = String(
-      addr.city || addr.town || addr.village || addr.hamlet || addr.suburb
-      || addr.locality || addr.municipality || addr.county || ''
-    ).trim();
-    const provinceName = provCode ? (CA_PROVINCE_NAMES[provCode] || provCode) : String(addr.state || '').trim();
-    const destination = city && provCode
-      ? `${titleCaseCity(city)}, ${provinceName}, Canada`
-      : provCode
-        ? `${provinceName}, Canada`
-        : '';
-    const label = city && provCode
-      ? `${titleCaseCity(city)}, ${provCode}`
-      : provCode
-        ? `${CA_PROVINCE_NAMES[provCode] || provCode}, Canada`
-        : '';
-
-    return {
-      lat: Number.parseFloat(hit.lat),
-      lng: Number.parseFloat(hit.lon),
-      displayName: hit.display_name || label,
-      province: provCode,
-      destination: destination || label,
-      label,
-    };
+    return best;
   }
 
   function getDevicePosition() {
@@ -4986,30 +5082,44 @@ out body;`;
       return { ok: false, error: 'Your GPS position is outside Canada. Hotel search is for Canadian surveillance sites only.' };
     }
 
-    const label = reverse?.label || formatGpsCoordsLabel(position.lat, position.lng) || 'Canada';
-    const destination = reverse?.destination || label || 'Canada';
     const provCode = reverse?.province || '';
-
-    if (!Number.isFinite(position.lat) || !Number.isFinite(position.lng)) {
-      return { ok: false, error: 'Could not read GPS coordinates. Try Search again.' };
-    }
+    const destination = reverse?.destination || '';
+    const geo = {
+      lat: position.lat,
+      lng: position.lng,
+      displayName: reverse?.displayName || '',
+      accuracyM: position.accuracyM,
+    };
 
     const searchCtx = {
-      label,
+      label: '',
       destination,
       province: provCode,
       provinceCode: provCode,
       locationMode: 'gps',
     };
 
-    const geo = {
-      lat: position.lat,
-      lng: position.lng,
-      displayName: reverse?.displayName || label,
-      accuracyM: position.accuracyM,
-    };
+    searchCtx.label = resolveHotelAreaDisplayLabel(
+      { ...searchCtx, label: reverse?.label || '' },
+      geo
+    );
 
-    searchCtx.label = resolveHotelAreaDisplayLabel(searchCtx, geo);
+    if (!Number.isFinite(position.lat) || !Number.isFinite(position.lng)) {
+      return { ok: false, error: 'Could not read GPS coordinates. Try Search again.' };
+    }
+
+    if (!searchCtx.label) {
+      return {
+        ok: false,
+        error: 'Could not resolve your address to a city or street. Move outdoors or wait for GPS to settle, then pick Current Location again.',
+      };
+    }
+
+    if (!searchCtx.destination) {
+      searchCtx.destination = searchCtx.label.includes('Canada')
+        ? searchCtx.label
+        : `${searchCtx.label}, Canada`;
+    }
 
     geocodeCache = { key: `gps:${geo.lat},${geo.lng}`, result: geo };
     return { ok: true, geo, searchCtx };

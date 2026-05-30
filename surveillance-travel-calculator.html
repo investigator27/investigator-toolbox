@@ -825,8 +825,9 @@
       display:grid;
       gap:var(--space-2);
     }
-    .dev-hint{
-      margin:0 var(--space-4) var(--space-2);
+    .dev-hint,
+    .settings-permission-hint{
+      margin:0 var(--space-4) var(--space-3);
       font-size:var(--text-xs);
       color:var(--color-text-muted);
       line-height:1.45;
@@ -1164,6 +1165,11 @@
               <span class="settings-row__label">Personalization</span>
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="permissions">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/><path d="M12 2v2"/></svg></span>
+              <span class="settings-row__label">Location &amp; Notifications</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
             <button type="button" class="settings-row settings-row--nav" data-settings-push="updates">
               <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
               <span class="settings-row__label">Software Update</span>
@@ -1218,6 +1224,34 @@
               <span class="settings-row__label">Large</span>
               <label class="settings-switch"><input type="checkbox" data-font-switch="large" aria-label="Large font size" /><span class="settings-switch__track"></span></label>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="permissions" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Location &amp; Notifications</h1>
+          <p class="settings-permission-hint">Turn access on or off for Toolbox. Hotel Finder uses location today; Camera and Requests will use these when those tabs are ready.</p>
+
+          <h2 class="settings-section-title">Location</h2>
+          <div class="settings-group" role="group" aria-label="Location access">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Allow location</span>
+              <label class="settings-switch"><input type="checkbox" id="prefLocationSwitch" aria-label="Allow location in Toolbox" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
+          <p class="settings-permission-hint" id="prefLocationStatus" aria-live="polite">Checking…</p>
+
+          <h2 class="settings-section-title">Notifications</h2>
+          <div class="settings-group" role="group" aria-label="Notification access">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Allow notifications</span>
+              <label class="settings-switch"><input type="checkbox" id="prefNotificationsSwitch" aria-label="Allow notifications in Toolbox" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
+          <p class="settings-permission-hint" id="prefNotificationsStatus" aria-live="polite">Checking…</p>
+          <div class="settings-actions">
+            <button type="button" class="btn btn-secondary" id="prefOpenDeviceSettingsBtn">How to change device settings</button>
           </div>
         </div>
       </div>
@@ -1550,7 +1584,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v105';
+  const BUNDLED_PWA_CACHE_VERSION = 'v106';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1560,6 +1594,8 @@
   let remoteLatestBuild = '';
   const DEVELOPER_PASSWORD = 'dev1-toolb0x';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
+  const LOCATION_PREF_KEY = 'toolboxLocationEnabled';
+  const NOTIFICATIONS_PREF_KEY = 'toolboxNotificationsEnabled';
   const DEV_UNLOCK_KEY = 'toolboxDevUnlocked';
   const BASE_PATH = window.__BASE_PATH__ || '/dev1-toolb0x/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
@@ -1893,6 +1929,115 @@
     PWA_CACHE_VERSION = resolveTargetBuild();
   }
 
+  function readPermissionPref(key, defaultOn) {
+    try {
+      const value = localStorage.getItem(key);
+      if (value === '0') return false;
+      if (value === '1') return true;
+    } catch {}
+    return defaultOn !== false;
+  }
+
+  function setPermissionPref(key, enabled) {
+    try {
+      localStorage.setItem(key, enabled ? '1' : '0');
+    } catch {}
+  }
+
+  function isLocationEnabledInApp() {
+    return readPermissionPref(LOCATION_PREF_KEY, true);
+  }
+
+  function isNotificationsEnabledInApp() {
+    return readPermissionPref(NOTIFICATIONS_PREF_KEY, true);
+  }
+
+  async function queryGeolocationPermissionState() {
+    try {
+      if (navigator.permissions?.query) {
+        const status = await navigator.permissions.query({ name: 'geolocation' });
+        return status.state;
+      }
+    } catch {}
+    return 'unknown';
+  }
+
+  function formatSystemPermissionState(state) {
+    if (state === 'granted') return 'Allowed on device';
+    if (state === 'denied') return 'Blocked on device';
+    if (state === 'prompt') return 'Not asked yet on device';
+    return 'Unknown on device';
+  }
+
+  function buildLocationStatusText(systemState) {
+    const inApp = isLocationEnabledInApp() ? 'On in Toolbox' : 'Off in Toolbox';
+    return `${inApp} · ${formatSystemPermissionState(systemState)}`;
+  }
+
+  function buildNotificationsStatusText() {
+    const inApp = isNotificationsEnabledInApp() ? 'On in Toolbox' : 'Off in Toolbox';
+    if (!('Notification' in window)) return `${inApp} · Not supported in this browser`;
+    return `${inApp} · ${formatSystemPermissionState(Notification.permission)}`;
+  }
+
+  async function refreshPermissionSettingsUi() {
+    const locSwitch = $('prefLocationSwitch');
+    const notifSwitch = $('prefNotificationsSwitch');
+    if (locSwitch) locSwitch.checked = isLocationEnabledInApp();
+    if (notifSwitch) notifSwitch.checked = isNotificationsEnabledInApp();
+    const locStatus = $('prefLocationStatus');
+    const notifStatus = $('prefNotificationsStatus');
+    if (locStatus) {
+      locStatus.textContent = buildLocationStatusText(await queryGeolocationPermissionState());
+    }
+    if (notifStatus) notifStatus.textContent = buildNotificationsStatusText();
+  }
+
+  function bindPermissionSettings() {
+    if (window.__permissionSettingsBound) return;
+    window.__permissionSettingsBound = true;
+
+    $('prefLocationSwitch')?.addEventListener('change', async (event) => {
+      const enabled = event.target.checked;
+      setPermissionPref(LOCATION_PREF_KEY, enabled);
+      if (enabled && navigator.geolocation) {
+        try {
+          await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              () => resolve(),
+              () => resolve(),
+              { enableHighAccuracy: false, timeout: 12000, maximumAge: 120000 }
+            );
+          });
+        } catch {}
+      }
+      await refreshPermissionSettingsUi();
+    });
+
+    $('prefNotificationsSwitch')?.addEventListener('change', async (event) => {
+      const enabled = event.target.checked;
+      setPermissionPref(NOTIFICATIONS_PREF_KEY, enabled);
+      if (!enabled) {
+        void syncAppIconBadge(false);
+      } else if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      } else if (enabled && isUpdateMenuBadgeActive()) {
+        void syncAppIconBadge(true);
+      }
+      await refreshPermissionSettingsUi();
+    });
+
+    $('prefOpenDeviceSettingsBtn')?.addEventListener('click', () => {
+      const lines = [
+        'Toolbox switches control whether features may ask for access.',
+        'To fully allow or block on your phone:',
+        '• iPhone: Settings → Toolbox (or Safari) → Location / Notifications',
+        '• Android: Settings → Apps → Toolbox → Permissions',
+      ];
+      alert(lines.join('\n'));
+    });
+  }
+
   const UPDATE_NOTIFICATION_TAG = 'toolbox-update-ready';
 
   function markUpdateReadyForBanner() {
@@ -1954,6 +2099,7 @@
   }
 
   async function showUpdateReadyNotification() {
+    if (!isNotificationsEnabledInApp()) return false;
     try {
       if (sessionStorage.getItem('toolboxUpdateNotificationShown') === '1') return false;
     } catch {}
@@ -1976,6 +2122,7 @@
   }
 
   async function ensureNotificationPermissionForBadge() {
+    if (!isNotificationsEnabledInApp()) return 'disabled-in-app';
     if (!('Notification' in window)) return Notification?.permission || 'unsupported';
     if (Notification.permission !== 'default') return Notification.permission;
     try {
@@ -2184,6 +2331,11 @@
 
   async function syncAppIconBadge(show) {
     const count = show ? 1 : 0;
+
+    if (count > 0 && !isNotificationsEnabledInApp()) {
+      recordBadgeAttempt({ action: 'skipped-notifications-off' });
+      return;
+    }
 
     if (!count) {
       await closeUpdateReadyNotifications();
@@ -2925,6 +3077,10 @@
       else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();
     }
+    if (screenId === 'permissions') {
+      bindPermissionSettings();
+      refreshPermissionSettingsUi();
+    }
     if (screenId === 'developer-tools') {
       bindDeveloperToolActions();
       refreshDeveloperTools();
@@ -2957,6 +3113,7 @@
     settingsOverlay.setAttribute('aria-hidden', 'false');
     doc.body.style.overflow = 'hidden';
     refreshSettingsVersionLabel();
+    bindPermissionSettings();
     syncThemeSwitchUi(getThemePreference());
     try {
       const fontPref = localStorage.getItem('travelCalcFontSize');
@@ -3602,6 +3759,11 @@ $('summaryNote').textContent =
   setDeveloperUnlocked(isDeveloperUnlocked());
   bindDeveloperToolActions();
   syncBuildLabelFromReleaseNotes().then(() => refreshAllVersionDisplays());
+  window.ToolboxPermissions = {
+    isLocationEnabled: isLocationEnabledInApp,
+    isNotificationsEnabled: isNotificationsEnabledInApp,
+    refreshSettingsUi: refreshPermissionSettingsUi,
+  };
   window.ToolboxDev = {
     refreshTools: refreshDeveloperTools,
     logHotelSearch(payload) {
@@ -3760,7 +3922,10 @@ $('summaryNote').textContent =
   fetchRemoteTabPolicy().finally(() => initTabBar());
   bindViewportHeightSync();
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') fetchRemoteTabPolicy();
+    if (document.visibilityState === 'visible') {
+      fetchRemoteTabPolicy();
+      refreshPermissionSettingsUi();
+    }
   });
 
   window.addEventListener('load', async () => {
@@ -4309,6 +4474,9 @@ textarea:focus, textarea:focus-visible {
   }
 
   function getGeolocationBlockReason() {
+    if (window.ToolboxPermissions?.isLocationEnabled?.() === false) {
+      return 'Location is off in Toolbox Settings → Location & Notifications. Turn on Allow location to use Hotel Finder and field tools.';
+    }
     if (!window.isSecureContext) {
       return 'Location needs a secure link (https). Open the installed app or your GitHub Pages URL — not a saved file:// link.';
     }

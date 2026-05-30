@@ -1,10 +1,23 @@
 {
-  "latest": "v105",
+  "latest": "v106",
   "appVersion": "3.5.4",
   "highlights": [
-    "Home screen update indicator uses notifications on Android and permission-aware badging elsewhere."
+    "Location and Notifications settings with on/off toggles for Toolbox features."
   ],
   "builds": {
+    "v106": {
+      "intro": "Investigator Toolbox 3.5.4 — Location & Notifications settings.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "New Location & Notifications screen: allow or block location and notifications in Toolbox (used by Hotel Finder now; Camera and Requests later).",
+            "Shows whether each permission is on in Toolbox and on your device.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v106)."
+          ]
+        }
+      ]
+    },
     "v105": {
       "intro": "Investigator Toolbox 3.5.4 — home screen update badge fix.",
       "sections": [

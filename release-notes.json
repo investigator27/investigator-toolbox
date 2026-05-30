@@ -1,10 +1,23 @@
 {
-  "latest": "v119",
+  "latest": "v120",
   "appVersion": "3.5.4",
   "highlights": [
-    "UI polish: header tagline, typography tokens, dropdown chevrons, coming-soon tabs, keyboard focus on buttons."
+    "Fix red strip at top of installed PWA; smaller Calculator and Hotel Finder section titles."
   ],
   "builds": {
+    "v120": {
+      "intro": "Investigator Toolbox 3.5.4 — PWA chrome and section title sizing.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Removed red status-bar strip on Android: manifest theme_color now matches the app background (was Toolbox red).",
+            "Extended Travel Calculator and Hotel Finder section titles are slightly smaller than the Toolbox header.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json, and manifest.webmanifest (v120)."
+          ]
+        }
+      ]
+    },
     "v119": {
       "intro": "Investigator Toolbox 3.5.4 — UI polish pass.",
       "sections": [

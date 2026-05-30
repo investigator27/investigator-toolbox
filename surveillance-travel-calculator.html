@@ -964,7 +964,7 @@
             <label class="settings-switch"><input id="hotelHotelsOnly" type="checkbox" aria-label="Hotels and motels only" /><span class="settings-switch__track"></span></label>
           </div>
         </div>
-        <div class="hint">Breakfast, parking, and cancellation are verified on the Booking.com link. “Hotels &amp; motels only” hides suites and apartments from results after search.</div>
+        <div class="hint">Filters use badges shown on each Booking.com result card. If nothing matches, turn off a filter or search again. Always confirm on the Booking link before booking.</div>
 
         <button class="btn btn-secondary" id="hotelClearBtn" type="button">Clear Form</button>
         <button class="btn btn-primary" id="searchHotelBtn" type="button">Search Hotels</button>
@@ -1428,8 +1428,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.4.2';
-  const BUNDLED_PWA_CACHE_VERSION = 'v64';
+  const BUNDLED_APP_VERSION = '3.4.5';
+  const BUNDLED_PWA_CACHE_VERSION = 'v67';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3453,6 +3453,8 @@ textarea:focus, textarea:focus-visible {
   const $ = (id) => document.getElementById(id);
 
   const HOTEL_LOCATION_CURRENT = 'current';
+  const MIN_FILTER_WORKER_BUILD = 51;
+  let workerFilterSupportCache = null;
 
   const els = {
     locationBtn: $('hotelLocationBtn'),
@@ -3492,6 +3494,7 @@ textarea:focus, textarea:focus-visible {
   let lastTaxMeta = null;
   let lastSearchContext = null;
   let lastSearchGeo = null;
+  let lastSearchRankState = null;
   let geocodeCache = { key: '', result: null };
   const pickerRegistry = [];
 
@@ -3656,25 +3659,20 @@ textarea:focus, textarea:focus-visible {
     const block = getGeolocationBlockReason();
     if (block) {
       setStatus(block, 'error');
-      scrollToHotelResults();
       return false;
     }
 
     if (els.locationBtn) els.locationBtn.disabled = true;
     if (els.locationLabel) els.locationLabel.textContent = 'Getting location…';
     hideStatus();
-    startHotelSearchProgress('geocode');
-    scrollToHotelSearchActivity();
 
     const located = await resolveSearchGeo();
 
-    stopHotelSearchProgress();
     if (els.locationBtn) els.locationBtn.disabled = false;
 
     if (!located.ok) {
       resetHotelLocationPicker();
       setStatus(located.error || 'Could not get your location.', 'error');
-      scrollToHotelResults();
       return false;
     }
 
@@ -4110,14 +4108,100 @@ textarea:focus, textarea:focus-visible {
 
   function isLikelyNonHotelListing(name) {
     const n = String(name || '').toLowerCase();
-    return /\b(apartment|suite|bedroom|chalet|cottage|villa|entire|studio|hostel)\b/i.test(n)
-      || /\d\s*bedroom/i.test(n);
+    if (/\b(hotel|motel|inn|lodge|resort)\b/i.test(n)) return false;
+    return (
+      /\b(apartment|apartments|condo|condominium|studio|chalet|cottage|villa|hostel|homestay)\b/i.test(n)
+      || /\b(private room|shared room|guesthouse|guest house|vacation home|holiday home|aparthotel|apart hotel)\b/i.test(n)
+      || /\b(entire (home|place|unit|apartment|apt)|residential|townhouse|bungalow|farm stay)\b/i.test(n)
+      || /\b(\d+\s*bedroom|bedroom\s*\d|one bedroom|two bedroom|three bedroom|1br|2br|3br)\b/i.test(n)
+    );
+  }
+
+  function isLikelyNonHotelFromUrl(url) {
+    const path = String(url || '').toLowerCase();
+    return /\b(apartment|apartments|condo|condominium|studio|chalet|villa|hostel|homestay|guest-house|guesthouse|bnb|residence|cottage|holiday-home|vacation-home|townhouse|bungalow|loft)\b/.test(path);
+  }
+
+  function isHotelOrMotelListing(hotel) {
+    const type = String(hotel?.propertyType || '').toLowerCase();
+    if (type) {
+      if (/\b(apartments?|hostels?|holiday homes?|vacation homes?|villas?|cottages?|guest houses?|homestays?|condos?|aparthotels?|residences?|boats?|campsites?|tents?|bed and breakfasts?|bnbs?|lofts?|townhouses?|bungalows?|farm stays?|country houses?|students?|capsules?)\b/.test(type)) {
+        return false;
+      }
+      if (/\b(hotels?|motels?|inns?|resorts?|lodges?)\b/.test(type)) return true;
+    }
+    if (isLikelyNonHotelFromUrl(hotel?.url)) return false;
+    return !isLikelyNonHotelListing(hotel?.name);
+  }
+
+  function describeFilterMissMessage() {
+    const parts = [];
+    if (els.hotelsOnly?.checked) parts.push('hotels & motels only');
+    if (els.freeBreakfast?.checked) parts.push('free breakfast');
+    if (els.freeParking?.checked) parts.push('free parking');
+    if (els.freeCancellation?.checked) parts.push('free cancellation');
+    const list = parts.length ? parts.join(', ') : 'your filters';
+    return `No Booking.com listings on this page showed ${list}. Turn off a filter or try different dates.`;
+  }
+
+  function parseWorkerBuildNumber(version) {
+    const m = String(version || '').match(/booking-worker-(\d+)/i);
+    return m ? Number.parseInt(m[1], 10) : 0;
+  }
+
+  function bookingHotelsHaveFilterFields(hotels) {
+    return Array.isArray(hotels) && hotels.some((h) => h && typeof h === 'object' && ('propertyType' in h || 'freeBreakfast' in h));
+  }
+
+  async function ensureWorkerSupportsFilters() {
+    if (!hotelFiltersAreActive()) return { ok: true };
+    if (workerFilterSupportCache) return workerFilterSupportCache;
+
+    const workerBase = (HOTEL_CONFIG.bookingApiUrl || '').trim();
+    if (!workerBase) {
+      return {
+        ok: false,
+        error: 'Hotel search is not configured (bookingApiUrl missing).',
+      };
+    }
+
+    try {
+      const url = `${workerBase.replace(/\/+$/, '')}/?filterSelfTest=1`;
+      const response = await fetch(url, { cache: 'no-store' });
+      const data = await response.json();
+      const build = parseWorkerBuildNumber(data.workerVersion);
+      if (!data.filterSelfTest || build < MIN_FILTER_WORKER_BUILD || !data.allPassed) {
+        workerFilterSupportCache = {
+          ok: false,
+          error:
+            `Hotel filters need Cloudflare worker booking-worker-${MIN_FILTER_WORKER_BUILD}+ deployed. ` +
+            `Live worker reports ${data.workerVersion || 'unknown'}. Deploy cloudflare/booking-worker.js, then retry.`,
+        };
+        return workerFilterSupportCache;
+      }
+      workerFilterSupportCache = { ok: true };
+      return workerFilterSupportCache;
+    } catch {
+      return {
+        ok: false,
+        error: 'Could not reach the booking worker to verify filter support. Check your connection and try again.',
+      };
+    }
   }
 
   function applyClientHotelFilters(hotels) {
     let list = Array.isArray(hotels) ? hotels.slice() : [];
     if (els.hotelsOnly?.checked) {
-      list = list.filter((h) => !isLikelyNonHotelListing(h.name));
+      list = list.filter((h) => isHotelOrMotelListing(h));
+    }
+    if (els.freeBreakfast?.checked) {
+      list = list.filter((h) => h.freeBreakfast === true);
+    }
+    if (els.freeParking?.checked) {
+      list = list.filter((h) => h.freeParking === true);
+    }
+    if (els.freeCancellation?.checked) {
+      list = list.filter((h) => h.freeCancellation === true);
     }
     return list;
   }
@@ -4173,22 +4257,35 @@ textarea:focus, textarea:focus-visible {
         const rawHotels = Array.isArray(data.hotels)
           ? data.hotels
           : (data.hotels && typeof data.hotels === 'object' ? [data.hotels] : []);
-        const filtered = applyClientHotelFilters(rawHotels);
+        if (hotelFiltersAreActive()) {
+          const build = parseWorkerBuildNumber(data.workerVersion);
+          if (build < MIN_FILTER_WORKER_BUILD) {
+            return {
+              ok: false,
+              hotels: [],
+              error:
+                `Filters need booking-worker-${MIN_FILTER_WORKER_BUILD}+ (got ${data.workerVersion || 'unknown'}). ` +
+                'Deploy cloudflare/booking-worker.js to Cloudflare before searching.',
+            };
+          }
+          if (data.ok && rawHotels.length && !bookingHotelsHaveFilterFields(rawHotels)) {
+            return {
+              ok: false,
+              hotels: [],
+              error:
+                'Worker returned listings without filter data. Redeploy cloudflare/booking-worker.js (booking-worker-51+).',
+            };
+          }
+        }
         const errText = formatBookingSearchError(data);
         if (!data.ok) {
           if (isBookingTimeoutError(data.error, errText) && attempt < maxAttempts - 1) continue;
           return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
         }
-        if (!filtered.length) {
-          return {
-            ok: false,
-            hotels: [],
-            error: els.hotelsOnly?.checked
-              ? 'No hotels or motels matched after filtering. Turn off “Hotels & motels only” or try different dates.'
-              : 'No hotels returned for this area and dates.'
-          };
+        if (!rawHotels.length) {
+          return { ok: false, hotels: [], error: 'No hotels returned for this area and dates.' };
         }
-        return { ok: true, hotels: filtered, error: '' };
+        return { ok: true, hotels: rawHotels, error: '' };
       } catch (err) {
         const isAbort = err && err.name === 'AbortError';
         const msg = isAbort
@@ -4957,20 +5054,16 @@ out body;`;
     return `booking-${index}-${base || 'hotel'}`;
   }
 
-  async function fetchAndRankHotels(meta, geo, onProgress) {
+  function rankBookingHotels(meta, geo, rawHotels, areaSearchUrl) {
     const requested = Math.max(1, Number.parseInt(els.matchCount?.value || '3', 10));
-    const ctx = lastSearchContext;
-    if (!ctx) return { items: [], requested, verifyMode: 'none' };
+    const filtered = applyClientHotelFilters(rawHotels);
 
-    const result = await loadBookingHotels(ctx, geo);
-    const areaSearchUrl = buildBookingAreaSearchUrl(ctx, geo);
-
-    if (!result.ok || !result.hotels.length) {
+    if (!filtered.length) {
       return {
         items: [],
         requested,
         verifyMode: 'blocked',
-        inventoryError: result.error,
+        inventoryError: describeFilterMissMessage(),
         areaSearchUrl
       };
     }
@@ -4979,7 +5072,7 @@ out body;`;
     const nights = Math.max(1, Number(meta?.nights) || 1);
     const budgetCap = Number(getBudgetCapForSearch()) || 0;
 
-    const mapped = result.hotels.map((h, index) => {
+    const mapped = filtered.map((h, index) => {
       const km = Number.isFinite(Number(h.distanceKm)) ? Number(h.distanceKm) : null;
       const stayValue = Number.isFinite(Number(h.priceValue)) ? Number(h.priceValue) : null;
       const taxesValue = Number.isFinite(Number(h.taxesValue)) ? Number(h.taxesValue) : 0;
@@ -5013,7 +5106,7 @@ out body;`;
         requested,
         verifyMode: 'booking',
         budgetCap,
-        inventoryCount: result.hotels.length,
+        inventoryCount: filtered.length,
         areaSearchUrl
       };
     }
@@ -5031,7 +5124,7 @@ out body;`;
         requested,
         verifyMode: 'expanded',
         budgetCap,
-        inventoryCount: result.hotels.length,
+        inventoryCount: filtered.length,
         areaSearchUrl
       };
     }
@@ -5043,9 +5136,45 @@ out body;`;
       verifyMode: 'over-budget',
       budgetCap,
       nearbyCount: mapped.length,
-      inventoryCount: result.hotels.length,
+      inventoryCount: filtered.length,
       areaSearchUrl
     };
+  }
+
+  async function fetchAndRankHotels(meta, geo) {
+    const requested = Math.max(1, Number.parseInt(els.matchCount?.value || '3', 10));
+    const ctx = lastSearchContext;
+    if (!ctx) return { items: [], requested, verifyMode: 'none' };
+
+    const result = await loadBookingHotels(ctx, geo);
+    const areaSearchUrl = buildBookingAreaSearchUrl(ctx, geo);
+
+    if (!result.ok || !result.hotels.length) {
+      lastSearchRankState = null;
+      return {
+        items: [],
+        requested,
+        verifyMode: 'blocked',
+        inventoryError: result.error,
+        areaSearchUrl
+      };
+    }
+
+    lastSearchRankState = { meta, geo, rawHotels: result.hotels, areaSearchUrl };
+    return rankBookingHotels(meta, geo, result.hotels, areaSearchUrl);
+  }
+
+  function reapplyCachedHotelResults() {
+    if (!lastSearchRankState) return;
+    const { meta, geo, rawHotels, areaSearchUrl } = lastSearchRankState;
+    const ranked = rankBookingHotels(meta, geo, rawHotels, areaSearchUrl);
+    renderHotelResults(ranked.items, meta, geo, ranked.requested, {
+      verifyMode: ranked.verifyMode,
+      inventoryError: ranked.inventoryError,
+      areaSearchUrl: ranked.areaSearchUrl,
+      budgetCap: ranked.budgetCap,
+      nearbyCount: ranked.nearbyCount
+    }, { skipScroll: true });
   }
 
   function setEmailActionsEnabled(enabled) {
@@ -5106,7 +5235,7 @@ out body;`;
     buildEmailDraft(hotel, meta);
   }
 
-  function renderHotelResults(items, meta, geo, requestedCount, resultMeta = {}) {
+  function renderHotelResults(items, meta, geo, requestedCount, resultMeta = {}, renderOpts = {}) {
     lastResults = items;
     const radiusKm = getMaxDistanceKm();
     const requested = Math.max(1, Number.parseInt(String(requestedCount || els.matchCount?.value || '3'), 10));
@@ -5204,7 +5333,7 @@ out body;`;
       ? `No hotels under budget within ${radiusKm} km — showing the nearest ${countLabel} beyond that, sorted by distance.`
       : `Found ${countLabel} on Booking.com within ${radiusKm} km of your location, sorted by distance.`;
     setStatus(headline, 'success');
-    scrollToHotelResults();
+    if (!renderOpts.skipScroll) scrollToHotelResults();
   }
 
   async function runSearch() {
@@ -5212,11 +5341,19 @@ out body;`;
     const meta = validateSearchInputs();
     if (!meta) return;
 
+    const filterReady = await ensureWorkerSupportsFilters();
+    if (!filterReady.ok) {
+      setStatus(filterReady.error, 'error');
+      scrollToHotelResults();
+      return;
+    }
+
     els.searchBtn.disabled = true;
     hideEmailSectionCollapsible();
     // Clear any previous results/selection so the area below is empty until new results arrive.
     els.results.innerHTML = '';
     lastResults = [];
+    lastSearchRankState = null;
     selectedHotel = null;
     lastTaxMeta = null;
     if (els.selectedName) els.selectedName.value = '';
@@ -5370,6 +5507,7 @@ out body;`;
     selectedHotel = null;
     lastTaxMeta = null;
     resetHotelLocationPicker();
+    lastSearchRankState = null;
     if (els.selectedName) {
       els.selectedName.value = '';
       els.selectedName.readOnly = true;
@@ -5414,7 +5552,11 @@ out body;`;
       track?.addEventListener('mousedown', (event) => event.preventDefault());
       input.addEventListener('change', () => {
         input.blur();
-        if (selectedHotel) refreshEmailDraft();
+        if (lastSearchRankState) {
+          reapplyCachedHotelResults();
+        } else if (selectedHotel) {
+          refreshEmailDraft();
+        }
       });
     });
   }

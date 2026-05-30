@@ -1,10 +1,49 @@
 {
-  "latest": "v64",
-  "appVersion": "3.4.2",
+  "latest": "v67",
+  "appVersion": "3.4.5",
   "highlights": [
-    "Hotel Finder: Current Location dropdown — choose it to allow device location, then search."
+    "Hotel Finder: blocks search if worker 51+ not deployed when filters are on; fixes plural property types."
   ],
   "builds": {
+    "v67": {
+      "intro": "Investigator Toolbox 3.4.5 — Filter guard + plural type fix.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "With any filter on, Search refuses to run until Cloudflare worker booking-worker-51+ passes ?filterSelfTest=1 (no Scraper credits).",
+            "Fixed Hotels vs Apartments matching on Booking property types.",
+            "Deploy HTML + cloudflare/booking-worker.js together."
+          ]
+        }
+      ]
+    },
+    "v66": {
+      "intro": "Investigator Toolbox 3.4.4 — Hotel Finder filters fixed.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "All toggles now filter search results using data parsed from each Booking.com listing card.",
+            "Deploy booking-worker.js to Cloudflare (booking-worker-51) — HTML alone is not enough.",
+            "If no results match, you will see which filters excluded everything."
+          ]
+        }
+      ]
+    },
+    "v65": {
+      "intro": "Investigator Toolbox 3.4.3 — Hotel Finder UX fixes.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Choosing Current Location no longer scrolls the page.",
+            "Hotels & motels only updates results from your last search without a new ScraperAPI call.",
+            "Stronger filter for apartments and similar listings; breakfast/parking/cancellation still require checking Booking links."
+          ]
+        }
+      ]
+    },
     "v64": {
       "intro": "Investigator Toolbox 3.4.2 — Hotel Finder Current Location picker.",
       "sections": [

@@ -1428,8 +1428,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.4.5';
-  const BUNDLED_PWA_CACHE_VERSION = 'v67';
+  const BUNDLED_APP_VERSION = '3.4.6';
+  const BUNDLED_PWA_CACHE_VERSION = 'v68';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3517,102 +3517,16 @@ textarea:focus, textarea:focus-visible {
       </div>`;
   }
 
-  const HOTEL_PROGRESS_TICK_MS = 4000;
-  let hotelProgressTimer = null;
-  let hotelProgressGeneration = 0;
-
   function stopHotelSearchProgress() {
-    hotelProgressGeneration += 1;
-    if (hotelProgressTimer) {
-      clearInterval(hotelProgressTimer);
-      hotelProgressTimer = null;
-    }
-  }
-
-  function getAmenitySearchPhrase() {
-    const parts = [];
-    if (els.freeBreakfast?.checked) parts.push('free breakfast');
-    if (els.freeParking?.checked) parts.push('free parking');
-    if (els.freeCancellation?.checked) parts.push('free cancellation');
-    if (!parts.length) return '';
-    if (parts.length === 1) return parts[0];
-    if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
-    return `${parts.slice(0, -1).join(', ')}, and ${parts[parts.length - 1]}`;
-  }
-
-  function buildHotelProgressMessages(phase) {
-    const ctx = lastSearchContext || resolveHotelSearchContext();
-    const area = ctx?.label || ctx?.destination || 'your location';
-    const amenity = getAmenitySearchPhrase();
-    const matchN = Math.max(1, Number.parseInt(els.matchCount?.value || '3', 10));
-    const radiusKm = getMaxDistanceKm();
-
-    if (phase === 'geocode') {
-      return [
-        'Allow location if your browser asks…',
-        'Getting your GPS position…',
-        'Confirming area in Canada…',
-      ];
-    }
-    if (phase === 'retry') {
-      return [
-        'Booking.com needed an extra moment — one more pass…',
-        `Still searching near ${area}…`,
-        'Second try — hang tight…',
-        'Almost there on the retry…',
-      ];
-    }
-    if (phase === 'finishing') {
-      return [
-        'Sorting by distance and your nightly cap…',
-        `Picking up to ${matchN} best fit${matchN === 1 ? '' : 's'} for your dates…`,
-        'Almost done — your short list is ready…',
-        'There we go — loading your results…',
-      ];
-    }
-
-    const lines = [
-      `Searching Booking.com for hotels near ${area}…`,
-    ];
-    if (amenity) {
-      lines.push(
-        `Scanning nearby listings (${amenity} — confirm on each hotel’s Booking link)…`,
-        `Looking for up to ${matchN} options while noting ${amenity}…`
-      );
-    } else {
-      lines.push(`Pulling rates and reviews (showing up to ${matchN} matches)…`);
-    }
-    lines.push(
-      `Checking stays within ${radiusKm} km of your location…`,
-      'Crunching nightly prices where Booking shows tax…',
-      'Comparing distance, price, and review scores…',
-      'Still on it — good hotels take a few seconds to find…',
-      'Warming up the short list…',
-      'Nearly there — packaging your top picks…',
-    );
-    return lines;
+    /* Progress is a single static line — nothing to clear besides the status UI. */
   }
 
   function startHotelSearchProgress(phase) {
-    stopHotelSearchProgress();
-    const messages = buildHotelProgressMessages(phase);
-    if (!messages.length) return;
-    const gen = hotelProgressGeneration;
-    let index = 0;
-    showHotelSearchProgress(messages[0]);
-    hotelProgressTimer = setInterval(() => {
-      if (gen !== hotelProgressGeneration) return;
-      index = (index + 1) % messages.length;
-      showHotelSearchProgress(messages[index]);
-    }, HOTEL_PROGRESS_TICK_MS);
-  }
-
-  async function playHotelSearchFinishingBeat() {
-    const messages = buildHotelProgressMessages('finishing');
-    for (let i = 0; i < messages.length; i++) {
-      showHotelSearchProgress(messages[i]);
-      await new Promise((r) => setTimeout(r, i < messages.length - 1 ? 1700 : 700));
-    }
+    const labels = {
+      geocode: 'Getting your location…',
+      booking: 'Searching Booking.com… usually 15–30 seconds.',
+    };
+    showHotelSearchProgress(labels[phase] || labels.booking);
   }
 
   function setStatus(message, mode = '') {
@@ -4075,7 +3989,7 @@ textarea:focus, textarea:focus-visible {
       return 'Hotel search is out of API credits. Contact admin.';
     }
     if (/timed out|took longer than 30/i.test(s)) {
-      return 'Booking.com was slow (30s server limit). Tap Search again — the app retries once automatically.';
+      return 'Booking.com timed out (30s limit). Wait a minute, then tap Search once.';
     }
     if (/not configured/i.test(s)) {
       return s;
@@ -4234,14 +4148,9 @@ textarea:focus, textarea:focus-visible {
       /took longer than 30|timed out|took too long|timeout/i.test(String(raw || '')) ||
       /took longer than 30|timed out|took too long/i.test(String(formatted || ''));
 
-    const maxAttempts = 2;
+    const maxAttempts = 1;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      if (attempt > 0) {
-        startHotelSearchProgress('retry');
-        await new Promise((r) => setTimeout(r, 1200));
-      }
-
-      const BOOKING_SEARCH_TIMEOUT_MS = 90000;
+      const BOOKING_SEARCH_TIMEOUT_MS = 38000;
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), BOOKING_SEARCH_TIMEOUT_MS);
       try {
@@ -4279,7 +4188,6 @@ textarea:focus, textarea:focus-visible {
         }
         const errText = formatBookingSearchError(data);
         if (!data.ok) {
-          if (isBookingTimeoutError(data.error, errText) && attempt < maxAttempts - 1) continue;
           return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
         }
         if (!rawHotels.length) {
@@ -4289,17 +4197,16 @@ textarea:focus, textarea:focus-visible {
       } catch (err) {
         const isAbort = err && err.name === 'AbortError';
         const msg = isAbort
-          ? 'Booking.com search timed out after 90 seconds. Try Search again or open Booking.com manually.'
+          ? 'Booking.com search timed out (30s limit). Wait a minute, then tap Search once.'
           : String(err?.message || err);
         const friendly = friendlyBookingApiError(msg);
-        if ((isAbort || isBookingTimeoutError(msg, friendly)) && attempt < maxAttempts - 1) continue;
         return { ok: false, hotels: [], error: friendly };
       } finally {
         clearTimeout(timer);
       }
     }
 
-    return { ok: false, hotels: [], error: 'Booking.com search failed after two attempts. Tap Search again in a minute.' };
+    return { ok: false, hotels: [], error: 'Booking.com search failed. Tap Search again in a minute.' };
   }
 
   function applyHotelsComInventoryToHotel(hotel, inventoryState) {
@@ -5361,7 +5268,6 @@ out body;`;
     els.emailSubject.value = '';
     setEmailActionsEnabled(false);
     startHotelSearchProgress('booking');
-    requestAnimationFrame(() => requestAnimationFrame(scrollToHotelSearchActivity));
 
     const geo = lastSearchGeo;
     const ctx = lastSearchContext;
@@ -5374,12 +5280,7 @@ out body;`;
       meta.provinceCode = ctx.provinceCode;
       meta.areaLabel = ctx.label;
       meta.destination = ctx.destination;
-      scrollToHotelSearchActivity();
       const ranked = await fetchAndRankHotels(meta, geo);
-      stopHotelSearchProgress();
-      if (ranked.items.length > 0) {
-        await playHotelSearchFinishingBeat();
-      }
       renderHotelResults(ranked.items, meta, geo, ranked.requested, {
         verifyMode: ranked.verifyMode,
         inventoryError: ranked.inventoryError,

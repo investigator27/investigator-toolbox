@@ -1,10 +1,23 @@
 {
-  "latest": "v67",
-  "appVersion": "3.4.5",
+  "latest": "v68",
+  "appVersion": "3.4.6",
   "highlights": [
-    "Hotel Finder: blocks search if worker 51+ not deployed when filters are on; fixes plural property types."
+    "Hotel Finder: faster search UX — one attempt, no spinning “nearly there” messages."
   ],
   "builds": {
+    "v68": {
+      "intro": "Investigator Toolbox 3.4.6 — Hotel search speed UX.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "One steady status line while Booking loads (no rotating “nearly there” text).",
+            "No automatic second search on timeout — saves time and ScraperAPI credits.",
+            "Results show as soon as Booking responds."
+          ]
+        }
+      ]
+    },
     "v67": {
       "intro": "Investigator Toolbox 3.4.5 — Filter guard + plural type fix.",
       "sections": [

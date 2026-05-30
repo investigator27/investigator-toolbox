@@ -224,16 +224,21 @@
       position:absolute;
       top:2px;
       right:2px;
-      min-width:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:18px;
       height:18px;
-      padding:0 4px;
+      min-width:18px;
+      padding:0;
+      box-sizing:border-box;
       border-radius:999px;
       background:#dc2626;
       color:#fff;
       font-size:11px;
       font-weight:800;
-      line-height:18px;
-      text-align:center;
+      line-height:1;
+      font-family:var(--font-body);
       border:2px solid var(--color-surface);
       box-shadow:0 1px 3px rgb(0 0 0 / .22);
       pointer-events:none;
@@ -803,16 +808,20 @@
     }
     .settings-badge,
     .update-count-badge{
-      min-width:20px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:20px;
       height:20px;
-      padding:0 6px;
+      min-width:20px;
+      padding:0;
+      box-sizing:border-box;
       border-radius:999px;
       background:#dc2626;
       color:#fff;
       font-size:12px;
       font-weight:800;
-      line-height:20px;
-      text-align:center;
+      line-height:1;
       flex-shrink:0;
     }
     @media(prefers-reduced-motion:reduce){
@@ -1445,7 +1454,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v98';
+  const BUNDLED_PWA_CACHE_VERSION = 'v99';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

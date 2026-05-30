@@ -1,10 +1,22 @@
 {
-  "latest": "v98",
+  "latest": "v99",
   "appVersion": "3.5.4",
   "highlights": [
-    "Title-case hotel filters; larger header app title."
+    "Centered red 1 on update badge."
   ],
   "builds": {
+    "v99": {
+      "intro": "Investigator Toolbox 3.5.4 — center update badge.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Red update 1 is centered in the badge on the menu and Software Update row.",
+            "Deploy surveillance-travel-calculator.html and service-worker.js (v99)."
+          ]
+        }
+      ]
+    },
     "v98": {
       "intro": "Investigator Toolbox 3.5.4 — labels and header type.",
       "sections": [

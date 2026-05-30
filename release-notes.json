@@ -1,10 +1,23 @@
 {
-  "latest": "v73",
-  "appVersion": "3.5.1",
+  "latest": "v74",
+  "appVersion": "3.5.2",
   "highlights": [
-    "Hotel Finder: Open on Booking.com goes to the property page, not search results."
+    "Hotel Finder: blocks empty Worker searches (saves ScraperAPI credits)."
   ],
   "builds": {
+    "v74": {
+      "intro": "Investigator Toolbox 3.5.2 — reject hotel searches with no location/dates.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Worker 59 refuses searches missing GPS, destination, or dates (no ScraperAPI charge).",
+            "App always sends lat, lng, chkin, chkout on Search.",
+            "Deploy booking-worker-59 plus the three GitHub files."
+          ]
+        }
+      ]
+    },
     "v73": {
       "intro": "Investigator Toolbox 3.5.1 — fix Booking property deep links.",
       "sections": [

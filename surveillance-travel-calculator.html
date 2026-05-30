@@ -1427,8 +1427,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.5.1';
-  const BUNDLED_PWA_CACHE_VERSION = 'v73';
+  const BUNDLED_APP_VERSION = '3.5.2';
+  const BUNDLED_PWA_CACHE_VERSION = 'v74';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3563,7 +3563,10 @@ textarea:focus, textarea:focus-visible {
 
     const errText = formatBookingSearchError(data);
     if (!data.ok) {
-      return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
+      const hint = data.searchInputs && !data.searchInputs.hasGeo && !data.searchInputs.destinationUsed
+        ? ' Search was sent without location — use the app (Current Location + dates), not a bare Worker URL.'
+        : '';
+      return { ok: false, hotels: [], error: (errText || 'Booking.com search failed.') + hint };
     }
     if (!rawHotels.length) {
       return { ok: false, hotels: [], error: 'No hotels returned for this area and dates.' };
@@ -4018,11 +4021,12 @@ textarea:focus, textarea:focus-visible {
   }
 
   function getBookingApiUrl(params) {
+    const qs = params instanceof URLSearchParams ? params.toString() : String(params || '');
     const base = (HOTEL_CONFIG.bookingApiUrl || '').trim();
     if (base) {
-      return `${base.replace(/\/+$/, '')}/?${params}`;
+      return `${base.replace(/\/+$/, '')}/?${qs}`;
     }
-    return new URL(`api/booking-search?${params}`, location.href).toString();
+    return new URL(`api/booking-search?${qs}`, location.href).toString();
   }
 
   function buildClientNfltChips() {
@@ -4309,16 +4313,25 @@ textarea:focus, textarea:focus-visible {
         error: 'Hotel search is not configured. Upload the latest surveillance-travel-calculator.html to GitHub (bookingApiUrl must be set).'
       };
     }
-    // Only city/region text + coordinates — never the full surveillance street address.
-    const params = new URLSearchParams({
-      destination: ctx.destination || `${ctx.label}, Canada`,
-    });
-    if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)) {
-      params.set('lat', String(geo.lat));
-      params.set('lng', String(geo.lng));
+    if (!geo || !Number.isFinite(geo.lat) || !Number.isFinite(geo.lng)) {
+      return {
+        ok: false,
+        hotels: [],
+        error: 'GPS location missing. Open Current Location, allow access, then tap Search again.',
+      };
     }
-    if (els.checkin?.value) params.set('chkin', els.checkin.value);
-    if (els.checkout?.value) params.set('chkout', els.checkout.value);
+    if (!els.checkin?.value || !els.checkout?.value) {
+      return { ok: false, hotels: [], error: 'Set check-in and check-out dates before Search.' };
+    }
+
+    // Only city/region text + coordinates — never the full surveillance street address.
+    const destText = String(ctx.destination || ctx.label || '').trim() || 'Canada';
+    const params = new URLSearchParams();
+    params.set('destination', destText.includes('Canada') ? destText : `${destText}, Canada`);
+    params.set('lat', String(geo.lat));
+    params.set('lng', String(geo.lng));
+    params.set('chkin', els.checkin.value);
+    params.set('chkout', els.checkout.value);
     getHotelsComAmenityParams().forEach((code) => params.append('amenities', code));
 
     const controller = new AbortController();
@@ -4338,6 +4351,17 @@ textarea:focus, textarea:focus-visible {
       }
 
       const build = parseWorkerBuildNumber(data.workerVersion);
+      if (data.searchInputs && !data.pending) {
+        const si = data.searchInputs;
+        if (!si.hasGeo && !si.destinationUsed) {
+          return {
+            ok: false,
+            hotels: [],
+            error: 'Worker did not receive your location or destination. Redeploy booking-worker-59, hard-refresh the app, pick Current Location, then Search.',
+          };
+        }
+      }
+
       if (build < MIN_NFLT_FILTER_WORKER_BUILD && !data.pending && getHotelsComAmenityParams().length) {
         return {
           ok: false,

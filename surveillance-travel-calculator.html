@@ -732,12 +732,12 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.1.5';
+  let APP_VERSION = '3.1.6';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v44';
+  let PWA_CACHE_VERSION = 'v45';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
@@ -2833,8 +2833,10 @@ document.addEventListener('DOMContentLoaded', () => {
         error: 'Hotel search is not configured. Upload the latest surveillance-travel-calculator.html to GitHub (bookingApiUrl must be set).'
       };
     }
+    // Booking.com ss= works like the successful Worker test: city/area text, not full street address.
+    // Precise location comes from lat/lng (geocoded from the surveillance event).
     const params = new URLSearchParams({
-      destination: ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`
+      destination: ctx.destination || `${ctx.label}, Canada`
     });
     if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng)) {
       params.set('lat', String(geo.lat));

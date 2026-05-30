@@ -1,10 +1,23 @@
 {
-  "latest": "v108",
+  "latest": "v109",
   "appVersion": "3.5.4",
   "highlights": [
-    "Personalization: default tab, compact layout, tab labels, reduce motion, and haptics."
+    "Personalization defaults and settings back button matches close style."
   ],
   "builds": {
+    "v109": {
+      "intro": "Investigator Toolbox 3.5.4 — personalization and settings UI polish.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Default tab on open is Last Used; tab labels default to Always Show Labels.",
+            "Haptic Feedback has its own section; back button is a circle chevron matching close.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v109)."
+          ]
+        }
+      ]
+    },
     "v108": {
       "intro": "Investigator Toolbox 3.5.4 — personalization options.",
       "sections": [

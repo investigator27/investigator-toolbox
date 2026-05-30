@@ -581,16 +581,22 @@
       padding:max(env(safe-area-inset-top),var(--space-3)) var(--space-3) var(--space-2);
       min-height:3.25rem;
     }
+    .settings-back,
+    .settings-close{
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      background:var(--color-surface-2);
+      border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);
+      display:grid;
+      place-items:center;
+      color:var(--color-text-muted);
+      box-shadow:var(--shadow-sm);
+      flex-shrink:0;
+    }
     .settings-back{
+      grid-column:1;
       justify-self:start;
-      display:inline-flex;
-      align-items:center;
-      gap:var(--space-1);
-      padding:var(--space-2) var(--space-1);
-      border-radius:var(--radius-lg);
-      font-weight:600;
-      font-size:var(--text-sm);
-      color:var(--color-text);
       opacity:0;
       pointer-events:none;
       transition:opacity .2s ease;
@@ -599,19 +605,14 @@
       opacity:1;
       pointer-events:auto;
     }
-    .settings-back svg{width:20px;height:20px;flex-shrink:0}
+    .settings-back svg,
+    .settings-close svg{width:20px;height:20px}
+    .settings-back:hover,
+    .settings-close:hover{background:var(--color-surface-offset)}
     .settings-close{
       grid-column:3;
       justify-self:end;
-      width:44px;
-      height:44px;
-      border-radius:999px;
-      background:var(--color-surface-2);
-      display:grid;
-      place-items:center;
-      color:var(--color-text-muted);
     }
-    .settings-close:hover{background:var(--color-surface-offset)}
     .settings-stack{
       position:relative;
       overflow:hidden;
@@ -1205,8 +1206,7 @@
   <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settingsHeroTitle">
     <header class="settings-sheet__toolbar">
       <button type="button" class="settings-back" id="settingsBackBtn" aria-label="Back">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
-        <span>Back</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
       </button>
       <button type="button" class="settings-close" id="closeSettingsBtn" aria-label="Close settings">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1297,12 +1297,12 @@
           <h2 class="settings-section-title">Default tab on open</h2>
           <div class="settings-group" role="group" aria-label="Default tab on open">
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Calculator</span>
-              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="calculator" aria-label="Open on Calculator tab" /><span class="settings-switch__track"></span></label>
+              <span class="settings-row__label">Last Used</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="last" aria-label="Open on last used tab" /><span class="settings-switch__track"></span></label>
             </div>
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Last used</span>
-              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="last" aria-label="Open on last used tab" /><span class="settings-switch__track"></span></label>
+              <span class="settings-row__label">Calculator</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="calculator" aria-label="Open on Calculator tab" /><span class="settings-switch__track"></span></label>
             </div>
             <div class="settings-row settings-row--toggle">
               <span class="settings-row__label">Hotels</span>
@@ -1331,15 +1331,15 @@
           <h2 class="settings-section-title">Tab bar</h2>
           <div class="settings-group" role="group" aria-label="Tab bar labels">
             <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Always Show Labels</span>
+              <label class="settings-switch"><input type="checkbox" data-tab-labels-switch="always" aria-label="Always show tab labels" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
               <span class="settings-row__label">Auto</span>
               <label class="settings-switch"><input type="checkbox" data-tab-labels-switch="auto" aria-label="Hide tab labels on small screens" /><span class="settings-switch__track"></span></label>
             </div>
-            <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Always show labels</span>
-              <label class="settings-switch"><input type="checkbox" data-tab-labels-switch="always" aria-label="Always show tab labels" /><span class="settings-switch__track"></span></label>
-            </div>
           </div>
-          <h2 class="settings-section-title">Motion &amp; feedback</h2>
+          <h2 class="settings-section-title">Reduce motion</h2>
           <div class="settings-group" role="group" aria-label="Reduce motion">
             <div class="settings-row settings-row--toggle">
               <span class="settings-row__label">Off</span>
@@ -1354,9 +1354,10 @@
               <label class="settings-switch"><input type="checkbox" data-reduce-motion-switch="on" aria-label="Reduce motion on" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
+          <h2 class="settings-section-title">Haptic feedback</h2>
           <div class="settings-group" role="group" aria-label="Haptic feedback">
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Haptic feedback</span>
+              <span class="settings-row__label">On</span>
               <label class="settings-switch"><input type="checkbox" id="prefHapticSwitch" aria-label="Vibration on key actions" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
@@ -1770,7 +1771,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v108';
+  const BUNDLED_PWA_CACHE_VERSION = 'v109';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3247,7 +3248,7 @@
       const saved = localStorage.getItem(DEFAULT_TAB_PREF_KEY);
       if (saved && VALID_DEFAULT_TABS.has(saved)) return saved;
     } catch {}
-    return 'calculator';
+    return 'last';
   }
 
   function getLastTabPreference() {
@@ -3261,7 +3262,7 @@
   }
 
   function applyDefaultTabPreference(pref) {
-    const value = VALID_DEFAULT_TABS.has(pref) ? pref : 'calculator';
+    const value = VALID_DEFAULT_TABS.has(pref) ? pref : 'last';
     try { localStorage.setItem(DEFAULT_TAB_PREF_KEY, value); } catch {}
     syncDefaultTabSwitchUi(value);
   }
@@ -3301,9 +3302,10 @@
 
   function getTabLabelsPreference() {
     try {
-      return localStorage.getItem(TAB_LABELS_PREF_KEY) === 'always' ? 'always' : 'auto';
+      const saved = localStorage.getItem(TAB_LABELS_PREF_KEY);
+      if (saved === 'always' || saved === 'auto') return saved;
     } catch {}
-    return 'auto';
+    return 'always';
   }
 
   function applyTabLabelsPreference(pref) {

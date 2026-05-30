@@ -1,10 +1,23 @@
 {
-  "latest": "v63",
-  "appVersion": "3.4.1",
+  "latest": "v64",
+  "appVersion": "3.4.2",
   "highlights": [
-    "Hotel Finder: GPS only — be on site, allow location when prompted. Calculator address is not used for search."
+    "Hotel Finder: Current Location dropdown — choose it to allow device location, then search."
   ],
   "builds": {
+    "v64": {
+      "intro": "Investigator Toolbox 3.4.2 — Hotel Finder Current Location picker.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Current Location dropdown — selecting it prompts for location permission (like other apps).",
+            "Search Hotels uses the location you already allowed — no permission prompt on search.",
+            "Removed the on-site banner. Calculator address is still not used for hotel search."
+          ]
+        }
+      ]
+    },
     "v63": {
       "intro": "Investigator Toolbox 3.4.1 — Hotel Finder GPS-only fix.",
       "sections": [

@@ -874,17 +874,23 @@
       <section class="card" aria-labelledby="hotel-title">
         <div>
           <h2 id="hotel-title" class="card-title">Hotel Finder</h2>
-          <p class="card-sub">Hotels near you on site. Tap Search and allow location when asked — Calculator addresses are not used.</p>
-        </div>
-
-        <div class="install-hint hotel-location-at-event-hint" role="note">
-          <strong>On site only</strong>
-          <span>Be at the surveillance location before searching. Your browser will ask for location permission the first time. Only map coordinates and nearest city go to search — not a street address.</span>
+          <p class="card-sub">Choose your current location, set dates, then search for nearby hotels.</p>
         </div>
 
         <div class="field">
-          <span class="field-label-static">Search area</span>
-          <p class="hint hotel-search-area-preview has-value" id="hotelSearchAreaPreview">Tap Search Hotels — your browser will request location access.</p>
+          <label for="hotelLocationBtn">Current Location</label>
+          <div class="menu-wrap city-wrap">
+            <button type="button" id="hotelLocationBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
+              <span id="hotelLocationLabel">Select</span>
+            </button>
+            <div id="hotelLocationDrop" class="menu-panel city-panel" hidden role="listbox">
+              <button type="button" class="menu-item city-item" data-hotel-location="current">Current Location</button>
+            </div>
+            <select id="hotelSearchLocation" hidden aria-hidden="true">
+              <option value="">Select</option>
+              <option value="current">Current Location</option>
+            </select>
+          </div>
         </div>
 
         <div class="hotel-form-grid hotel-form-grid--dates">
@@ -920,7 +926,7 @@
         </div>
 
         <div class="field">
-          <label for="hotelMaxDistanceBtn">Max Distance From Event</label>
+          <label for="hotelMaxDistanceBtn">Max Distance From Location</label>
           <div class="menu-wrap city-wrap">
             <button type="button" id="hotelMaxDistanceBtn" class="city-btn" aria-expanded="false" aria-haspopup="listbox">
               <span id="hotelMaxDistanceLabel">25 km</span>
@@ -1269,9 +1275,8 @@
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li>Be at the surveillance location. Tap <strong>Search Hotels</strong> and <strong>allow location</strong> when your browser asks.</li>
-                <li>Set check-in and check-out dates.</li>
-                <li>Tap <strong>Search Hotels</strong> — results come from Booking.com (~30 seconds).</li>
+                <li>Open <strong>Current Location</strong> and choose <strong>Current Location</strong> — allow access when your browser or device asks.</li>
+                <li>Set check-in and check-out dates, then tap <strong>Search Hotels</strong> (~30 seconds).</li>
                 <li>Confirm breakfast, parking, and cancellation on each hotel’s Booking.com link.</li>
                 <li>Choose a hotel and send the email draft to admin.</li>
               </ol>
@@ -1423,8 +1428,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.4.1';
-  const BUNDLED_PWA_CACHE_VERSION = 'v63';
+  const BUNDLED_APP_VERSION = '3.4.2';
+  const BUNDLED_PWA_CACHE_VERSION = 'v64';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3029,9 +3034,6 @@ $('summaryNote').textContent =
       if (cityDrop) cityDrop.hidden = true;
       qsa('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
       qsa('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
-      if (tabId === 'hotels' && window.HotelFinder?.refreshSearchAreaPreview) {
-        window.HotelFinder.refreshSearchAreaPreview();
-      }
     }
 
     window.ToolboxTabs = {
@@ -3450,8 +3452,13 @@ textarea:focus, textarea:focus-visible {
 
   const $ = (id) => document.getElementById(id);
 
+  const HOTEL_LOCATION_CURRENT = 'current';
+
   const els = {
-    searchAreaPreview: $('hotelSearchAreaPreview'),
+    locationBtn: $('hotelLocationBtn'),
+    locationDrop: $('hotelLocationDrop'),
+    locationLabel: $('hotelLocationLabel'),
+    searchLocation: $('hotelSearchLocation'),
     checkin: $('hotelCheckin'),
     checkout: $('hotelCheckout'),
     matchCount: $('hotelMatchCount'),
@@ -3476,8 +3483,6 @@ textarea:focus, textarea:focus-visible {
     emailBody: $('hotelEmailBody'),
     copyBtn: $('hotelCopyEmailBtn'),
     sendBtn: $('hotelSendEmailBtn'),
-    calculatorEvent: $('event'),
-    calculatorCity: $('city'),
   };
 
   if (!els.searchBtn || !els.results) return;
@@ -3534,7 +3539,7 @@ textarea:focus, textarea:focus-visible {
 
   function buildHotelProgressMessages(phase) {
     const ctx = lastSearchContext || resolveHotelSearchContext();
-    const area = ctx?.label || ctx?.destination || 'your event area';
+    const area = ctx?.label || ctx?.destination || 'your location';
     const amenity = getAmenitySearchPhrase();
     const matchN = Math.max(1, Number.parseInt(els.matchCount?.value || '3', 10));
     const radiusKm = getMaxDistanceKm();
@@ -3575,7 +3580,7 @@ textarea:focus, textarea:focus-visible {
       lines.push(`Pulling rates and reviews (showing up to ${matchN} matches)…`);
     }
     lines.push(
-      `Checking stays within ${radiusKm} km of the event…`,
+      `Checking stays within ${radiusKm} km of your location…`,
       'Crunching nightly prices where Booking shows tax…',
       'Comparing distance, price, and review scores…',
       'Still on it — good hotels take a few seconds to find…',
@@ -3630,17 +3635,81 @@ textarea:focus, textarea:focus-visible {
     return '';
   }
 
-  function refreshSearchAreaPreview() {
-    const el = els.searchAreaPreview;
-    if (!el) return;
-    const ctx = lastSearchContext;
-    if (ctx?.label) {
-      el.textContent = `Last search: near ${ctx.label} (GPS). Tap Search again to refresh your position.`;
-      el.classList.add('has-value');
-      return;
+  function hotelLocationIsReady() {
+    return els.searchLocation?.value === HOTEL_LOCATION_CURRENT
+      && lastSearchGeo
+      && lastSearchContext
+      && Number.isFinite(lastSearchGeo.lat)
+      && Number.isFinite(lastSearchGeo.lng);
+  }
+
+  function resetHotelLocationPicker() {
+    if (els.searchLocation) els.searchLocation.value = '';
+    if (els.locationLabel) els.locationLabel.textContent = 'Select';
+    if (els.locationBtn) els.locationBtn.disabled = false;
+    lastSearchGeo = null;
+    lastSearchContext = null;
+    geocodeCache = { key: '', result: null };
+  }
+
+  async function applyCurrentLocationFromDevice() {
+    const block = getGeolocationBlockReason();
+    if (block) {
+      setStatus(block, 'error');
+      scrollToHotelResults();
+      return false;
     }
-    el.textContent = 'Tap Search Hotels — your browser will ask to use your location. Be at the surveillance site first.';
-    el.classList.add('has-value');
+
+    if (els.locationBtn) els.locationBtn.disabled = true;
+    if (els.locationLabel) els.locationLabel.textContent = 'Getting location…';
+    hideStatus();
+    startHotelSearchProgress('geocode');
+    scrollToHotelSearchActivity();
+
+    const located = await resolveSearchGeo();
+
+    stopHotelSearchProgress();
+    if (els.locationBtn) els.locationBtn.disabled = false;
+
+    if (!located.ok) {
+      resetHotelLocationPicker();
+      setStatus(located.error || 'Could not get your location.', 'error');
+      scrollToHotelResults();
+      return false;
+    }
+
+    if (els.searchLocation) els.searchLocation.value = HOTEL_LOCATION_CURRENT;
+    lastSearchGeo = located.geo;
+    lastSearchContext = located.searchCtx;
+    if (els.locationLabel) {
+      els.locationLabel.textContent = located.searchCtx.label || 'Current location';
+    }
+    hideStatus();
+    return true;
+  }
+
+  function initHotelLocationPicker() {
+    const { locationBtn, locationDrop, searchLocation, locationLabel } = els;
+    if (!locationBtn || !locationDrop || !searchLocation || !locationLabel) return;
+
+    locationBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const willOpen = locationDrop.hidden;
+      closeAllPickers(willOpen ? locationDrop : null);
+      locationDrop.hidden = !willOpen;
+      locationBtn.setAttribute('aria-expanded', String(willOpen));
+    });
+
+    locationDrop.querySelectorAll('[data-hotel-location]').forEach((item) => {
+      item.addEventListener('click', async () => {
+        locationDrop.hidden = true;
+        locationBtn.setAttribute('aria-expanded', 'false');
+        if (item.dataset.hotelLocation !== HOTEL_LOCATION_CURRENT) return;
+        await applyCurrentLocationFromDevice();
+      });
+    });
+
+    pickerRegistry.push({ panel: locationDrop, button: locationBtn });
   }
 
   function parseProvinceCode(address) {
@@ -4842,6 +4911,11 @@ out body;`;
       scrollToHotelResults();
       return null;
     }
+    if (!hotelLocationIsReady()) {
+      setStatus('Select Current Location from the list and allow location access when prompted.', 'error');
+      scrollToHotelResults();
+      return null;
+    }
     if (!els.checkin?.value || !els.checkout?.value) {
       setStatus('Choose both check-in and check-out dates.', 'error');
       scrollToHotelResults();
@@ -5149,26 +5223,20 @@ out body;`;
     els.emailBody.textContent = '';
     els.emailSubject.value = '';
     setEmailActionsEnabled(false);
-    startHotelSearchProgress('geocode');
+    startHotelSearchProgress('booking');
     requestAnimationFrame(() => requestAnimationFrame(scrollToHotelSearchActivity));
 
-    let geo = null;
+    const geo = lastSearchGeo;
+    const ctx = lastSearchContext;
     try {
-      const located = await resolveSearchGeo();
-      if (!located.ok) {
-        stopHotelSearchProgress();
-        setStatus(located.error || 'Could not determine search location.', 'error');
+      if (!geo || !ctx) {
+        setStatus('Select Current Location and allow location access before searching.', 'error');
         scrollToHotelResults();
         return;
       }
-      geo = located.geo;
-      lastSearchGeo = geo;
-      lastSearchContext = located.searchCtx;
-      meta.provinceCode = located.searchCtx.provinceCode;
-      meta.areaLabel = located.searchCtx.label;
-      meta.destination = located.searchCtx.destination;
-      refreshSearchAreaPreview();
-      startHotelSearchProgress('booking');
+      meta.provinceCode = ctx.provinceCode;
+      meta.areaLabel = ctx.label;
+      meta.destination = ctx.destination;
       scrollToHotelSearchActivity();
       const ranked = await fetchAndRankHotels(meta, geo);
       stopHotelSearchProgress();
@@ -5301,9 +5369,7 @@ out body;`;
     els.results.innerHTML = '';
     selectedHotel = null;
     lastTaxMeta = null;
-    lastSearchContext = null;
-    lastSearchGeo = null;
-    geocodeCache = { key: '', result: null };
+    resetHotelLocationPicker();
     if (els.selectedName) {
       els.selectedName.value = '';
       els.selectedName.readOnly = true;
@@ -5314,7 +5380,6 @@ out body;`;
     hideStatus();
     setEmailActionsEnabled(false);
     hideEmailSectionCollapsible();
-    refreshSearchAreaPreview();
     closeAllPickers();
     scrollHotelsTabToTop();
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
@@ -5360,6 +5425,7 @@ out body;`;
     runSearch();
   });
   bindHotelAmenityToggles();
+  initHotelLocationPicker();
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('#tab-hotels .city-wrap')) return;
@@ -5451,10 +5517,6 @@ out body;`;
 
   syncClientBilledField();
   setEmailActionsEnabled(false);
-
-  refreshSearchAreaPreview();
-
-  window.HotelFinder = { refreshSearchAreaPreview };
 })();
 </script>
 

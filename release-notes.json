@@ -1,10 +1,22 @@
 {
-  "latest": "v102",
+  "latest": "v103",
   "appVersion": "3.5.4",
   "highlights": [
-    "Toolbox branding on header and Software Update card."
+    "Stronger home screen icon badge when a software update is ready."
   ],
   "builds": {
+    "v103": {
+      "intro": "Investigator Toolbox 3.5.4 — home screen update badge.",
+      "sections": [
+        {
+          "heading": "Updates",
+          "items": [
+            "Home screen app icon badge uses navigator + service worker paths, background sync, and install detection so the red 1 appears when an update is ready (installed PWA only; iOS 16.4+ / Chrome / Edge).",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json, and manifest.webmanifest (v103)."
+          ]
+        }
+      ]
+    },
     "v102": {
       "intro": "Investigator Toolbox 3.5.4 — Toolbox on Software Update card.",
       "sections": [

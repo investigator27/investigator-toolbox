@@ -1,6 +1,6 @@
 /* sw-revision: 27 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v102';
+let activeCacheName = 'surveillance-travel-pwa-v103';
 
 const CORE_ASSETS = [
   BASE + 'surveillance-travel-calculator.html',
@@ -53,11 +53,33 @@ async function broadcastUpdate(data) {
 }
 
 async function syncSwAppBadge(count) {
-  if (typeof self.setAppBadge !== 'function') return;
+  const nav = self.navigator;
+  if (!nav || typeof nav.setAppBadge !== 'function') return;
   try {
-    if (count > 0) await self.setAppBadge(count);
-    else if (typeof self.clearAppBadge === 'function') await self.clearAppBadge();
-  } catch {}
+    if (count > 0) await nav.setAppBadge(count);
+    else if (typeof nav.clearAppBadge === 'function') await nav.clearAppBadge();
+  } catch {
+    if (count > 0) {
+      try {
+        await nav.setAppBadge();
+      } catch {}
+    }
+  }
+}
+
+async function notifyAppIconBadge(count) {
+  await syncSwAppBadge(count);
+  await broadcastUpdate({ type: 'APP_ICON_BADGE', count });
+}
+
+async function isPwaUpdateInstall() {
+  if (self.registration?.active) return true;
+  try {
+    const keys = await caches.keys();
+    return keys.some((name) => name.startsWith('surveillance-travel-pwa-') && name !== activeCacheName);
+  } catch {
+    return false;
+  }
 }
 
 async function cacheAsset(cache, asset) {
@@ -106,8 +128,8 @@ self.addEventListener('install', (event) => {
       total
     });
     await broadcastUpdate({ type: 'UPDATE_READY', version: activeCacheName });
-    if (self.registration?.active) {
-      await syncSwAppBadge(1);
+    if (await isPwaUpdateInstall()) {
+      await notifyAppIconBadge(1);
     }
   })());
 });
@@ -119,8 +141,17 @@ self.addEventListener('activate', (event) => {
     const keys = await caches.keys();
     await Promise.all(keys.filter((key) => key !== cacheName).map((key) => caches.delete(key)));
     await self.clients.claim();
-    await syncSwAppBadge(0);
+    const stillWaiting = self.registration?.waiting;
+    if (!stillWaiting) {
+      await syncSwAppBadge(0);
+    }
   })());
+});
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'toolbox-update-badge') {
+    event.waitUntil(syncSwAppBadge(1));
+  }
 });
 
 self.addEventListener('message', (event) => {

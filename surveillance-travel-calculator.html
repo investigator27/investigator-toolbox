@@ -1442,7 +1442,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v102';
+  const BUNDLED_PWA_CACHE_VERSION = 'v103';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1970,24 +1970,71 @@
     return isUpdateReadyInSession();
   }
 
+  async function postBadgeToServiceWorkers(count) {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration(BASE_PATH);
+      const targets = [reg?.active, reg?.waiting, reg?.installing, navigator.serviceWorker.controller].filter(
+        Boolean
+      );
+      const seen = new Set();
+      targets.forEach((worker) => {
+        if (seen.has(worker)) return;
+        seen.add(worker);
+        worker.postMessage({ type: 'SET_APP_BADGE', count });
+      });
+    } catch {}
+  }
+
+  async function registerUpdateBadgeBackgroundSync() {
+    if (!isUpdateMenuBadgeActive()) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && 'sync' in reg) await reg.sync.register('toolbox-update-badge');
+    } catch {}
+  }
+
   async function syncAppIconBadge(show) {
     const count = show ? 1 : 0;
+    const tasks = [];
+
     if (typeof navigator.setAppBadge === 'function') {
-      try {
-        if (count > 0) await navigator.setAppBadge(count);
-        else if (typeof navigator.clearAppBadge === 'function') await navigator.clearAppBadge();
+      tasks.push(
+        (async () => {
+          try {
+            if (count > 0) await navigator.setAppBadge(count);
+            else if (typeof navigator.clearAppBadge === 'function') await navigator.clearAppBadge();
+          } catch {
+            if (count > 0) await navigator.setAppBadge();
+          }
+        })()
+      );
+    }
+
+    tasks.push(postBadgeToServiceWorkers(count));
+    await Promise.allSettled(tasks);
+
+    if (count > 0) await registerUpdateBadgeBackgroundSync();
+  }
+
+  let appIconBadgeRefreshTimer = null;
+
+  function stopAppIconBadgeRefresh() {
+    if (appIconBadgeRefreshTimer) {
+      clearInterval(appIconBadgeRefreshTimer);
+      appIconBadgeRefreshTimer = null;
+    }
+  }
+
+  function startAppIconBadgeRefresh() {
+    stopAppIconBadgeRefresh();
+    appIconBadgeRefreshTimer = setInterval(() => {
+      if (!isUpdateMenuBadgeActive()) {
+        stopAppIconBadgeRefresh();
         return;
-      } catch {
-        /* fall through to service worker */
       }
-    }
-    const controller = navigator.serviceWorker?.controller;
-    if (!controller) return;
-    try {
-      controller.postMessage({ type: 'SET_APP_BADGE', count });
-    } catch {
-      /* Badging API unsupported */
-    }
+      void syncAppIconBadge(true);
+    }, 90000);
   }
 
   function refreshSettingsUpdateBadge() {
@@ -2008,7 +2055,9 @@
       settingsUpdateBadge.setAttribute('aria-hidden', pending ? 'false' : 'true');
       settingsUpdateBadge.setAttribute('aria-label', pending ? '1 update available' : '');
     }
-    syncAppIconBadge(pending);
+    void syncAppIconBadge(pending);
+    if (pending) startAppIconBadgeRefresh();
+    else stopAppIconBadgeRefresh();
   }
 
   function refreshSettingsVersionLabel() {
@@ -2218,14 +2267,22 @@
   }
 
   function handleServiceWorkerMessage(event) {
-    if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
     const data = event.data || {};
+    if (data.type === 'APP_ICON_BADGE') {
+      const pending = Number(data.count) > 0;
+      if (pending) markUpdateReadyForBanner();
+      void syncAppIconBadge(pending);
+      refreshSettingsUpdateBadge();
+      return;
+    }
+    if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
     if (data.type === 'UPDATE_PROGRESS') {
       handleDownloadProgress(data);
       return;
     }
     if (data.type === 'UPDATE_READY') {
       markUpdateReadyForBanner();
+      void syncAppIconBadge(true);
       finishDownloadAndShowReady(data.version);
       refreshSettingsUpdateBadge();
     }
@@ -2236,9 +2293,16 @@
     registration._updateListenersAttached = true;
 
     registration.addEventListener('updatefound', () => {
-      if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
       const sw = registration.installing;
       if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+          markUpdateReadyForBanner();
+          void syncAppIconBadge(true);
+          refreshSettingsUpdateBadge();
+        }
+      });
+      if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
       renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
       startWaitingReadyPoll();
       sw.addEventListener('statechange', () => {

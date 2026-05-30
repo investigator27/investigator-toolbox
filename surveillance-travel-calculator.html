@@ -109,7 +109,7 @@
       flex:1;
       min-height:0;
       overflow-y:auto;
-      overflow-x:hidden;
+      overflow-x:clip;
       -webkit-overflow-scrolling:touch;
       overscroll-behavior:contain;
       overflow-anchor:none;
@@ -118,7 +118,7 @@
       -ms-overflow-style:none;
     }
     .app-content::-webkit-scrollbar{display:none}
-    .tab-panel{display:grid;gap:var(--space-4);align-content:start;min-height:0}
+    .tab-panel{display:grid;gap:var(--space-4);align-content:start;min-height:0;min-width:0;max-width:100%}
     .tab-panel.hidden{display:none!important}
     .coming-soon{
       display:flex;
@@ -183,7 +183,7 @@
       box-shadow:0 0 0 1px color-mix(in srgb,var(--color-text) 12%,transparent);
       pointer-events:none;
     }
-    .card{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:var(--space-5);display:grid;gap:var(--space-4)}
+    .card{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:var(--space-5);display:grid;gap:var(--space-4);min-width:0;max-width:100%}
     .card-title{font-size:var(--text-lg);line-height:1.15}
     .card-sub{color:var(--color-text-muted);font-size:var(--text-sm)}
     .field{display:grid;gap:var(--space-2)}
@@ -226,7 +226,10 @@
       .hotel-form-grid--aligned{align-items:flex-end}
     }
     .field--paired-control .hint{display:none}
-    .hotel-amenity-toggles{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-top:var(--space-1)}
+    .hotel-amenity-toggles{display:grid;grid-template-columns:1fr;gap:var(--space-2);margin-top:var(--space-1)}
+    @media(min-width:560px){.hotel-amenity-toggles{grid-template-columns:1fr 1fr;gap:var(--space-3)}}
+    .hotel-amenity-toggles .toggle{flex-direction:column;align-items:flex-start;gap:var(--space-2);min-height:auto;padding:var(--space-3)}
+    .hotel-amenity-toggles .toggle-label{order:-1;width:100%;line-height:1.3}
     .toggle{position:relative;display:flex;align-items:center;gap:var(--space-3);min-height:52px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-lg);background:var(--color-surface-offset);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     .toggle input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
     .toggle input:focus{outline:none}
@@ -252,7 +255,9 @@
     .hotel-card{display:grid;gap:var(--space-3);padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)}
     .hotel-card[tabindex="0"]{cursor:pointer}
     .hotel-card.selected{border-color:var(--color-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 14%,transparent)}
-    .hotel-card__head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3)}
+    .hotel-card__head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);min-width:0}
+    .hotel-card__head>div:first-child{min-width:0;flex:1}
+    .hotel-card__head strong{display:block;overflow-wrap:anywhere;word-break:break-word}
     .hotel-card__rank{font-size:var(--text-xs);font-weight:700;color:var(--color-text-faint);flex-shrink:0}
     .hotel-card__badges{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-1);flex-shrink:0}
     .hotel-card__score{font-size:var(--text-xs);font-weight:700;color:#fff;background:#003b95;border-radius:6px;padding:.2rem .45rem;white-space:nowrap}
@@ -271,18 +276,18 @@
       grid-template-rows:0fr;
       overflow:hidden;
       opacity:0;
-      padding-top:0;
-      padding-bottom:0;
-      transition:grid-template-rows var(--update-banner-duration) var(--update-banner-ease),opacity var(--update-banner-duration) var(--update-banner-ease),padding var(--update-banner-duration) var(--update-banner-ease);
+      padding:0;
+      margin:0 0 var(--space-3);
+      position:sticky;
+      top:0;
+      z-index:120;
+      flex-shrink:0;
+      transition:grid-template-rows var(--update-banner-duration) var(--update-banner-ease),opacity var(--update-banner-duration) var(--update-banner-ease),margin var(--update-banner-duration) var(--update-banner-ease);
     }
     #updatePromptHost.is-visible{
       grid-template-rows:1fr;
       opacity:1;
-      padding-top:var(--space-4);
-      padding-bottom:var(--space-5);
-    }
-    .app-header:has(#updatePromptHost.is-visible){
-      padding-bottom:0;
+      margin-bottom:var(--space-4);
     }
     .update-banner{
       margin:0;
@@ -367,7 +372,6 @@
       </div>
       <button class="icon-btn" type="button" data-menu-toggle aria-label="Open settings menu"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg></button>
     </div>
-    <div id='updatePromptHost'></div>
     <div class='menu-panel hidden' id='menuPanel' role='dialog' aria-label='Settings menu'>
       <div id='menuThemeRow' class='menu-row'><button class='menu-item menu-half' id='menuLightBtn' type='button'>Light Mode</button><button class='menu-item menu-half' id='menuDarkBtn' type='button'>Dark Mode</button></div>
       <button class='menu-item' id='menuHowBtn' type='button'>How To Use</button>
@@ -378,6 +382,7 @@
   </header>
 
   <div class="app-content" id="appContent">
+    <div id="updatePromptHost"></div>
     <div class="tab-panel" id="tab-calculator" data-tab="calculator" role="tabpanel" aria-labelledby="tab-btn-calculator">
       <section class="card" aria-labelledby="form-title">
         <div><h2 id="form-title" class="card-title">Extended Travel Calculator</h2><p class="card-sub">Make your selections.</p></div>
@@ -723,7 +728,7 @@
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v39';
+  let PWA_CACHE_VERSION = 'v40';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 1000;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
@@ -800,6 +805,44 @@
 
   function clearUpdateReadyMark() {
     try { sessionStorage.removeItem('toolboxUpdateReady'); } catch {}
+  }
+
+  async function purgeStaleAppCaches(keepBuild) {
+    if (!('caches' in window)) return;
+    const keepName = keepBuild ? `surveillance-travel-pwa-${keepBuild}` : '';
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter((name) => /^surveillance-travel-pwa-v\d+$/i.test(name) && name !== keepName)
+        .map((name) => caches.delete(name))
+    );
+  }
+
+  function buildHardReloadUrl(build) {
+    const url = new URL(location.href);
+    url.searchParams.set('app', build || PWA_CACHE_VERSION);
+    return url.toString();
+  }
+
+  async function performAppHardReload(build) {
+    const targetBuild = build || PWA_CACHE_VERSION;
+    try { sessionStorage.setItem('toolboxShowUptodate', '1'); } catch {}
+    await purgeStaleAppCaches(targetBuild);
+    location.replace(buildHardReloadUrl(targetBuild));
+  }
+
+  async function ensureFreshAppShellAfterUpdate() {
+    if (DEV_MODE || !('serviceWorker' in navigator)) return;
+    let expected = '';
+    try { expected = sessionStorage.getItem('toolboxReloadBuild') || ''; } catch {}
+    if (!expected) return;
+    try { sessionStorage.removeItem('toolboxReloadBuild'); } catch {}
+    const activeBuild = parseBuildFromScriptUrl(navigator.serviceWorker.controller?.scriptURL)
+      || registeredBuild
+      || '';
+    if (activeBuild && activeBuild === expected && activeBuild === PWA_CACHE_VERSION) return;
+    try { sessionStorage.setItem('toolboxReloadBuild', PWA_CACHE_VERSION); } catch {}
+    await performAppHardReload(PWA_CACHE_VERSION);
   }
 
   function getDisplayUpdateBuild() {
@@ -1227,7 +1270,7 @@
     }
 
     renderUpdateBanner('error', {
-      statusLine: 'Could not finish the update. Tap Retry or refresh the page (Ctrl+Shift+R).'
+      statusLine: 'Could not finish the update. Tap Retry, or close the app and open it again.'
     });
   }
 
@@ -1368,18 +1411,19 @@
     updateUIState = 'installing';
     renderUpdateBanner('installing', { statusLine: 'Installing update…' });
 
+    const targetBuild = pendingUpdateBuild || PWA_CACHE_VERSION;
     let reloaded = false;
-    const reloadOnce = () => {
+    const reloadOnce = async () => {
       if (reloaded) return;
       reloaded = true;
       reloadAfterUpdate = false;
-      try { sessionStorage.setItem('toolboxShowUptodate', '1'); } catch {}
+      try { sessionStorage.setItem('toolboxReloadBuild', targetBuild); } catch {}
       const host = document.getElementById('updatePromptHost');
       if (host) {
         host.innerHTML = '';
         host.classList.remove('is-visible', 'is-hiding');
       }
-      window.location.reload();
+      await performAppHardReload(targetBuild);
     };
 
     const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -1387,13 +1431,14 @@
     const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
     const waiting = waitingSW || reg?.waiting;
     if (!waiting) {
-      await pause(1200);
-      reloadOnce();
+      await pause(400);
+      await reloadOnce();
       return;
     }
 
     waitingSW = waiting;
     const previousController = navigator.serviceWorker.controller;
+    reloadAfterUpdate = true;
 
     const activationDone = new Promise((resolve) => {
       const maxWait = setTimeout(resolve, 12000);
@@ -1426,8 +1471,8 @@
 
     await activationDone;
     renderUpdateBanner('installing', { statusLine: 'Update installed. Restarting…' });
-    await pause(5000);
-    reloadOnce();
+    await pause(800);
+    await reloadOnce();
   }
 
   function bindWaitingWorker(registration, opts = {}) {
@@ -1876,9 +1921,20 @@ $('summaryNote').textContent =
     installBtn.classList.add('hidden');
   });
 
+  function stripAppReloadQueryFromUrl() {
+    try {
+      const url = new URL(location.href);
+      if (!url.searchParams.has('app')) return;
+      url.searchParams.delete('app');
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      history.replaceState(null, '', next || url.pathname);
+    } catch {}
+  }
+
   window.addEventListener('load', async () => {
     await syncBuildLabelFromReleaseNotes();
     refreshMenuVersionLabel();
+    stripAppReloadQueryFromUrl();
 
     try {
       if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
@@ -1908,11 +1964,15 @@ $('summaryNote').textContent =
 
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloadAfterUpdate) window.location.reload();
+      if (!reloadAfterUpdate || applyingAppUpdate) return;
+      const build = pendingUpdateBuild || PWA_CACHE_VERSION;
+      try { sessionStorage.setItem('toolboxReloadBuild', build); } catch {}
+      performAppHardReload(build);
     });
 
     runUpdateFlowTask(async () => {
       const registration = await registerForCurrentBuild();
+      await ensureFreshAppShellAfterUpdate();
 
       if (suppressUpdatePromptOnLoad) {
         quietUpdateLoad = false;

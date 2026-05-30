@@ -1,12 +1,31 @@
 {
-  "latest": "v39",
+  "latest": "v40",
   "appVersion": "3.0.0",
   "highlights": [
-    "Hotel Finder now uses live Booking.com listings from the cloud — works on GitHub without running a local server.",
-    "Hotels show distance, price per night (taxes included), and review scores; results respect the ≤ $200/night budget.",
-    "New filters and max-distance control; cleaner email draft and Outlook send on phone and desktop."
+    "Hotel tab layout fixed on Android — matches calculator width; amenity toggles are easier to read on phone.",
+    "Bottom navigation stays visible during updates; the app restarts itself after you tap Update.",
+    "Hotel Finder still uses live Booking.com listings with filters, budget cap, and email draft."
   ],
   "builds": {
+    "v40": {
+      "intro": "Investigator Toolbox 3.0.0 — mobile layout and update improvements.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Hotel tab width on Android now matches the Calculator tab (no content spilling off the right edge).",
+            "Amenity filters use a compact layout on phone: label above the switch, single column; two columns on wider screens."
+          ]
+        },
+        {
+          "heading": "Updates",
+          "items": [
+            "Update banner scrolls inside the main content area so the bottom tab bar stays visible.",
+            "After you tap Update, the app clears old cached files and restarts automatically — no manual refresh needed on phone or desktop."
+          ]
+        }
+      ]
+    },
     "v39": {
       "intro": "Investigator Toolbox 3.0.0 — Hotel Finder powered by Booking.com.",
       "sections": [
@@ -36,8 +55,7 @@
           "heading": "Other",
           "items": [
             "Header subtitle updated to Resources for Investigator.",
-            "Hotels Clear Form button matches the calculator styling.",
-            "Hard refresh after update recommended (Ctrl+Shift+R) if the Hotel tab looks unchanged."
+            "Hotels Clear Form button matches the calculator styling."
           ]
         }
       ]

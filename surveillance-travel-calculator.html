@@ -1417,7 +1417,7 @@
           <h2 class="settings-section-title">Haptic feedback</h2>
           <div class="settings-group" role="group" aria-label="Haptic feedback">
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">On</span>
+              <span class="settings-row__label" data-toggle-state-label>Off</span>
               <label class="settings-switch"><input type="checkbox" id="prefHapticSwitch" aria-label="Vibration on key actions" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
@@ -1437,7 +1437,7 @@
           </section>
           <div class="settings-group" role="group" aria-label="Location access">
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Allow location</span>
+              <span class="settings-row__label" data-toggle-state-label>Off</span>
               <label class="settings-switch"><input type="checkbox" id="prefLocationSwitch" aria-label="Allow location in Toolbox" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
@@ -1461,7 +1461,7 @@
           </section>
           <div class="settings-group" role="group" aria-label="Notification access">
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Allow notifications</span>
+              <span class="settings-row__label" data-toggle-state-label>Off</span>
               <label class="settings-switch"><input type="checkbox" id="prefNotificationsSwitch" aria-label="Allow notifications in Toolbox" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
@@ -1844,7 +1844,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v111';
+  const BUNDLED_PWA_CACHE_VERSION = 'v112';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2246,11 +2246,39 @@
     return `${inApp} · ${formatSystemPermissionState(Notification.permission)}`;
   }
 
+  function syncToggleStateLabel(input) {
+    if (!input) return;
+    const label = input.closest('.settings-row--toggle')?.querySelector('[data-toggle-state-label]');
+    if (!label) return;
+    label.textContent = input.checked ? 'On' : 'Off';
+  }
+
+  function syncAllToggleStateLabels() {
+    qsa('[data-toggle-state-label]').forEach((labelEl) => {
+      const input = labelEl.closest('.settings-row--toggle')?.querySelector('input[type="checkbox"]');
+      if (input) syncToggleStateLabel(input);
+    });
+  }
+
+  function bindToggleStateLabels() {
+    if (window.__toggleStateLabelsBound) return;
+    window.__toggleStateLabelsBound = true;
+    qsa('[data-toggle-state-label]').forEach((labelEl) => {
+      const input = labelEl.closest('.settings-row--toggle')?.querySelector('input[type="checkbox"]');
+      if (!input || input.dataset.toggleStateLabelBound === '1') return;
+      input.dataset.toggleStateLabelBound = '1';
+      input.addEventListener('change', () => syncToggleStateLabel(input));
+      syncToggleStateLabel(input);
+    });
+  }
+
   async function refreshPermissionSettingsUi() {
     const locSwitch = $('prefLocationSwitch');
     const notifSwitch = $('prefNotificationsSwitch');
     if (locSwitch) locSwitch.checked = isLocationEnabledInApp();
     if (notifSwitch) notifSwitch.checked = isNotificationsEnabledInApp();
+    syncToggleStateLabel(locSwitch);
+    syncToggleStateLabel(notifSwitch);
     const locStatus = $('prefLocationStatus');
     const notifStatus = $('prefNotificationsStatus');
     if (locStatus) {
@@ -3428,6 +3456,7 @@
     try { localStorage.setItem(HAPTIC_PREF_KEY, enabled ? '1' : '0'); } catch {}
     const input = $('prefHapticSwitch');
     if (input) input.checked = enabled;
+    syncToggleStateLabel(input);
   }
 
   function toolboxHaptic(style) {
@@ -3579,6 +3608,7 @@
     settingsOverlay.setAttribute('aria-hidden', 'false');
     doc.body.style.overflow = 'hidden';
     refreshSettingsVersionLabel();
+    bindToggleStateLabels();
     bindPermissionSettings();
     syncThemeSwitchUi(getThemePreference());
     try {
@@ -4142,6 +4172,7 @@ $('summaryNote').textContent =
 
   applyTheme(getThemePreference());
   applyAllPersonalizationPrefs();
+  bindToggleStateLabels();
   bindPersonalizationSettings();
   try {
     const fontPref = localStorage.getItem('travelCalcFontSize');

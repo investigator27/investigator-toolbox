@@ -1,10 +1,22 @@
 {
-  "latest": "v111",
+  "latest": "v112",
   "appVersion": "3.5.4",
   "highlights": [
-    "Settings pages show one title card with blurb; controls use the original layout below."
+    "Binary settings toggles show On or Off next to the switch based on state."
   ],
   "builds": {
+    "v112": {
+      "intro": "Investigator Toolbox 3.5.4 — toggle On/Off labels.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Haptic, Location, and Notifications rows show On when enabled and Off when disabled.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v112)."
+          ]
+        }
+      ]
+    },
     "v111": {
       "intro": "Investigator Toolbox 3.5.4 — settings page title cards only.",
       "sections": [

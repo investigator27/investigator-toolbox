@@ -1433,7 +1433,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v81';
+  const BUNDLED_PWA_CACHE_VERSION = 'v82';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5175,13 +5175,50 @@ out body;`;
     return `booking-${index}-${base || 'hotel'}`;
   }
 
+  /** Label-only basis hint — mirrors booking-price.js inferPriceBasisFromLabel. */
+  function inferPriceBasisFromLabel(priceStr) {
+    const p = String(priceStr || '').toLowerCase();
+    if (/per\s*night|\/\s*night|nightly|avg\.?\s*per\s*night/i.test(p)) return 'per_night';
+    if (/total|for\s+\d+\s+night|entire\s+stay|full\s+stay/i.test(p)) return 'total_stay';
+    return null;
+  }
+
+  /** Multi-night search cards often show stay total, not nightly — mirrors reconcilePriceForSearchNights. */
+  function reconcileHotelPriceFields(h, nights) {
+    const n = Math.max(1, Number(nights) || 1);
+    let pricePerNight = Number.isFinite(Number(h?.pricePerNight)) ? Math.round(Number(h.pricePerNight)) : null;
+    let priceTotalStay = Number.isFinite(Number(h?.priceTotalStay)) ? Math.round(Number(h.priceTotalStay)) : null;
+    let priceBasis = h?.priceBasis || null;
+    const labelBasis = inferPriceBasisFromLabel(h?.price);
+
+    if (pricePerNight != null && priceTotalStay != null) {
+      const expected = pricePerNight * n;
+      if (Math.abs(expected - priceTotalStay) <= Math.max(2, Math.round(priceTotalStay * 0.03))) {
+        priceBasis = 'per_night';
+      } else if (pricePerNight >= priceTotalStay * 0.9 && pricePerNight <= priceTotalStay * 1.1) {
+        priceTotalStay = pricePerNight;
+        pricePerNight = null;
+        priceBasis = 'total_stay';
+      }
+    } else if (n > 1 && pricePerNight != null && priceTotalStay == null) {
+      if (labelBasis !== 'per_night' && (labelBasis === 'total_stay' || priceBasis !== 'per_night')) {
+        priceTotalStay = pricePerNight;
+        pricePerNight = null;
+        priceBasis = 'total_stay';
+      }
+    } else if (n > 1 && priceTotalStay != null && pricePerNight == null) {
+      priceBasis = 'total_stay';
+    }
+
+    return { pricePerNight, priceTotalStay, priceBasis };
+  }
+
   /** Nightly CAD incl. tax — matches cloudflare/booking-price.js computePerNightInclTax. */
   function parseStayPriceFromHotel(h, nights) {
     const n = Math.max(1, Number(nights) || 1);
     const taxesIncluded = !!h?.taxesIncluded;
     const taxesText = String(h?.taxesText || '').trim();
     const taxesExtra = taxesIncluded ? 0 : Math.max(0, Number(h?.taxesValue) || 0);
-    const basis = h?.priceBasis || null;
     const taxesAmbiguous =
       !taxesIncluded &&
       !!taxesText &&
@@ -5189,8 +5226,27 @@ out body;`;
       !(taxesExtra > 0) &&
       /\+|tax|charge|fee/i.test(taxesText);
 
-    let pricePerNight = Number.isFinite(Number(h?.pricePerNight)) ? Math.round(Number(h.pricePerNight)) : null;
-    let priceTotalStay = Number.isFinite(Number(h?.priceTotalStay)) ? Math.round(Number(h.priceTotalStay)) : null;
+    let { pricePerNight, priceTotalStay, priceBasis } = reconcileHotelPriceFields(h, n);
+
+    const cardBasis = inferPriceBasisFromLabel(h?.price);
+    const cardPm = h?.price ? String(h.price).match(/([\d][\d,]*(?:\.\d+)?)/) : null;
+    const cardAmount = cardPm ? Math.round(parseFloat(cardPm[1].replace(/,/g, ''))) : null;
+    if (cardAmount != null && Number.isFinite(cardAmount) && cardAmount > 0) {
+      const basis = cardBasis || (n > 1 ? 'total_stay' : 'per_night');
+      if (basis === 'per_night') {
+        pricePerNight = cardAmount;
+        priceTotalStay = null;
+        priceBasis = 'per_night';
+      } else {
+        priceTotalStay = cardAmount;
+        pricePerNight = null;
+        priceBasis = 'total_stay';
+      }
+      ({ pricePerNight, priceTotalStay, priceBasis } = reconcileHotelPriceFields(
+        { pricePerNight, priceTotalStay, priceBasis, price: h?.price },
+        n
+      ));
+    }
 
     if (pricePerNight == null && priceTotalStay == null) {
       let legacy = Number.isFinite(Number(h?.priceValue)) ? Math.round(Number(h.priceValue)) : null;
@@ -5199,8 +5255,14 @@ out body;`;
         if (pm) legacy = Math.round(parseFloat(pm[1].replace(/,/g, '')));
       }
       if (legacy != null) {
+        const basis =
+          priceBasis || inferPriceBasisFromLabel(h?.price) || (n > 1 ? 'total_stay' : 'per_night');
         if (basis === 'total_stay') priceTotalStay = legacy;
         else pricePerNight = legacy;
+        ({ pricePerNight, priceTotalStay, priceBasis } = reconcileHotelPriceFields(
+          { pricePerNight, priceTotalStay, priceBasis, price: h?.price },
+          n
+        ));
       }
     }
 
@@ -5315,17 +5377,6 @@ out body;`;
     const withinRadiusPriced = withinRadius.filter(hasVerifiablePrice);
     const overBudgetCount = withinRadiusPriced.filter((it) => it.perNightInclTax > budgetCap).length;
     const noPriceCount = withinRadius.length - withinRadiusPriced.length;
-    const nearbyAudit = withinRadius
-      .slice()
-      .sort((a, b) => a.distance - b.distance)
-      .map((it) => ({
-        name: it.name,
-        distance: it.distance,
-        perNightInclTax: it.perNightInclTax,
-        priceLabel: it.priceLabel,
-        taxesAmbiguous: it.taxesAmbiguous,
-        listingUrl: it.listingUrl,
-      }));
 
     return {
       items: [],
@@ -5335,7 +5386,6 @@ out body;`;
       nearbyCount: withinRadius.length,
       overBudgetCount,
       noPriceCount,
-      nearbyAudit,
       inventoryCount: filtered.length,
       areaSearchUrl
     };
@@ -5375,8 +5425,7 @@ out body;`;
       budgetCap: ranked.budgetCap,
       nearbyCount: ranked.nearbyCount,
       overBudgetCount: ranked.overBudgetCount,
-      noPriceCount: ranked.noPriceCount,
-      nearbyAudit: ranked.nearbyAudit
+      noPriceCount: ranked.noPriceCount
     }, { skipScroll: true });
   }
 
@@ -5473,30 +5522,9 @@ out body;`;
         }
         const lead =
           nearby > 0
-            ? `Found ${nearby} Canadian hotel${nearby === 1 ? '' : 's'} within ${radiusKm} km, but none ≤ ${capLabel}/night incl. tax${detail}. One Booking search was used (~25 credits). Change distance, dates, or filters, then tap Search again for a new search.`
-            : `No Canadian hotels within ${radiusKm} km for your dates and filters. One Booking search was used (~25 credits). Try a larger distance or different dates, then tap Search again.`;
+            ? `No hotels within ${radiusKm} km at ≤ ${capLabel}/night incl. tax (${nearby} found${detail}). Change dates, distance, or filters, then tap Search.`
+            : `No Canadian hotels within ${radiusKm} km for your dates and filters. Try a larger distance or different dates, then tap Search.`;
         setStatus(lead, 'error');
-        const audit = Array.isArray(resultMeta.nearbyAudit) ? resultMeta.nearbyAudit : [];
-        if (audit.length) {
-          const rows = audit.map((row) => {
-            const dist = Number.isFinite(row.distance) ? `${row.distance} km` : 'distance n/a';
-            let rate = 'rate not scraped — check on Booking.com';
-            if (row.taxesAmbiguous && row.priceLabel) rate = `${row.priceLabel} (fees not fully scraped)`;
-            else if (Number(row.perNightInclTax) > 0) rate = `${row.priceLabel || `CAD ${row.perNightInclTax}`}/night incl. tax`;
-            else if (row.priceLabel) rate = row.priceLabel;
-            const link = row.listingUrl
-              ? ` <a href="${escapeHtml(row.listingUrl)}" target="_blank" rel="noopener noreferrer">listing</a>`
-              : '';
-            return `<li><strong>${escapeHtml(row.name)}</strong> — ${escapeHtml(dist)} — ${escapeHtml(rate)}${link}</li>`;
-          }).join('');
-          const areaLink = resultMeta.areaSearchUrl
-            ? `<p class="hotel-audit-foot"><a href="${escapeHtml(resultMeta.areaSearchUrl)}" target="_blank" rel="noopener noreferrer">Open the same search on Booking.com</a> to compare rates (no extra app charge).</p>`
-            : '';
-          els.results.innerHTML =
-            `<div class="hotel-audit" role="region" aria-label="Hotels from last search">` +
-            `<p class="hotel-audit-title">Rates from this search (verify before searching again):</p>` +
-            `<ul class="hotel-audit-list">${rows}</ul>${areaLink}</div>`;
-        }
         scrollToHotelResults();
         return;
       } else if (!geo) {
@@ -5622,8 +5650,7 @@ out body;`;
         budgetCap: ranked.budgetCap,
         nearbyCount: ranked.nearbyCount,
         overBudgetCount: ranked.overBudgetCount,
-        noPriceCount: ranked.noPriceCount,
-        nearbyAudit: ranked.nearbyAudit
+        noPriceCount: ranked.noPriceCount
       });
     } catch (err) {
       stopHotelSearchProgress();

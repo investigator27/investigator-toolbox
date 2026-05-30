@@ -1,10 +1,23 @@
 {
-  "latest": "v81",
+  "latest": "v82",
   "appVersion": "3.5.4",
   "highlights": [
-    "Hotel Finder: correct all-in nightly prices and $200/night budget (all provinces)."
+    "Hotel Finder: multi-night stays use stay total ÷ nights (not full stay as nightly)."
   ],
   "builds": {
+    "v82": {
+      "intro": "Investigator Toolbox 3.5.4 — fix multi-night price and remove audit screen.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "3+ night searches: card prices treated as stay total unless labeled per night (e.g. CA$277 for 3 nights → ~92/night, not 277).",
+            "Removed the over-budget “Rates from this search” list; short status message only.",
+            "Deploy booking-worker-67 plus HTML and service-worker (v82)."
+          ]
+        }
+      ]
+    },
     "v81": {
       "intro": "Investigator Toolbox 3.5.4 — hardened filters for edge cases.",
       "sections": [

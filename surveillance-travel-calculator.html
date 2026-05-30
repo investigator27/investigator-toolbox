@@ -555,7 +555,7 @@
           <label class="toggle" for="hotelFreeCancellation"><input id="hotelFreeCancellation" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free cancellation</span></label>
           <label class="toggle" for="hotelHotelsOnly"><input id="hotelHotelsOnly" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Hotels &amp; motels only</span></label>
         </div>
-        <div class="hint">"Hotels &amp; motels only" excludes vacation rentals, chalets, apartments and B&amp;Bs (keeps hotels, motels, inns, lodges, resorts).</div>
+        <div class="hint">Breakfast, parking, and cancellation are verified on the Booking.com link. “Hotels &amp; motels only” hides suites and apartments from results after search.</div>
 
         <button class="btn btn-secondary" id="hotelClearBtn" type="button">Clear Form</button>
         <button class="btn btn-primary" id="searchHotelBtn" type="button">Search Hotels</button>
@@ -732,12 +732,12 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.1.4';
+  let APP_VERSION = '3.1.5';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v43';
+  let PWA_CACHE_VERSION = 'v44';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
@@ -2788,23 +2788,51 @@ document.addEventListener('DOMContentLoaded', () => {
   function friendlyBookingApiError(raw) {
     const s = String(raw || '').trim();
     if (!s) return '';
-    if (/protected|premium \+ javascript render|scraperapi/i.test(s)) {
-      return 'Hotel search service needs ScraperAPI premium+render (admin: check SCRAPER_API_KEY on Cloudflare and credits).';
+    if (/SCRAPER_API_KEY is not set/i.test(s)) {
+      return 'Hotel search is not configured on the server. Admin: add SCRAPER_API_KEY on the booking-lookup Worker and redeploy.';
     }
-    if (/401|403|invalid api key|missing or invalid/i.test(s)) {
-      return 'Hotel search API key is missing or invalid. Contact admin.';
+    if (/HTTP 401/i.test(s) || /API key is invalid/i.test(s)) {
+      return 'Hotel search API key is invalid. Admin: update SCRAPER_API_KEY on Cloudflare.';
     }
-    if (/credits|quota|out of credits/i.test(s)) {
+    if (/HTTP 403/i.test(s)) {
+      return 'Hotel search was forbidden by ScraperAPI. Check your plan includes premium + render.';
+    }
+    if (/out of credits|quota|exhausted/i.test(s)) {
       return 'Hotel search is out of API credits. Contact admin.';
     }
     if (/timed out|took longer than 30/i.test(s)) {
-      return 'Booking.com took too long. Try again with no amenity filters, or wait a minute and retry.';
+      return 'Booking.com took too long. Wait 30–45 seconds and try again.';
     }
-    return s.length > 160 ? `${s.slice(0, 157)}…` : s;
+    if (/not configured/i.test(s)) {
+      return s;
+    }
+    return s.length > 220 ? `${s.slice(0, 217)}…` : s;
+  }
+
+  function isLikelyNonHotelListing(name) {
+    const n = String(name || '').toLowerCase();
+    return /\b(apartment|suite|bedroom|chalet|cottage|villa|entire|studio|hostel)\b/i.test(n)
+      || /\d\s*bedroom/i.test(n);
+  }
+
+  function applyClientHotelFilters(hotels) {
+    let list = Array.isArray(hotels) ? hotels.slice() : [];
+    if (els.hotelsOnly?.checked) {
+      list = list.filter((h) => !isLikelyNonHotelListing(h.name));
+    }
+    return list;
   }
 
   async function loadBookingHotels(ctx, geo) {
     if (!ctx) return { ok: false, hotels: [], error: 'missing-context' };
+    const workerBase = (HOTEL_CONFIG.bookingApiUrl || '').trim();
+    if (!workerBase) {
+      return {
+        ok: false,
+        hotels: [],
+        error: 'Hotel search is not configured. Upload the latest surveillance-travel-calculator.html to GitHub (bookingApiUrl must be set).'
+      };
+    }
     const params = new URLSearchParams({
       destination: ctx.searchAddress || ctx.destination || `${ctx.label}, Canada`
     });
@@ -2814,7 +2842,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (els.checkin?.value) params.set('chkin', els.checkin.value);
     if (els.checkout?.value) params.set('chkout', els.checkout.value);
-    getHotelsComAmenityParams().forEach((code) => params.append('amenities', code));
+    // Do not send amenity codes to the Worker — Booking nflt URLs often fail on ScraperAPI
+    // while the same search without filters works. Breakfast/parking/cancellation: verify on
+    // the Booking.com link. "Hotels & motels only" is applied below after results return.
 
     const BOOKING_SEARCH_TIMEOUT_MS = 90000;
     const controller = new AbortController();
@@ -2833,11 +2863,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const rawHotels = Array.isArray(data.hotels)
         ? data.hotels
         : (data.hotels && typeof data.hotels === 'object' ? [data.hotels] : []);
-      return {
-        ok: !!data.ok,
-        hotels: rawHotels,
-        error: friendlyBookingApiError(data.error || '')
-      };
+      const filtered = applyClientHotelFilters(rawHotels);
+      const errText = friendlyBookingApiError(data.error || '');
+      if (!data.ok) {
+        return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
+      }
+      if (!filtered.length) {
+        return {
+          ok: false,
+          hotels: [],
+          error: els.hotelsOnly?.checked
+            ? 'No hotels or motels matched after filtering. Turn off “Hotels & motels only” or try different dates.'
+            : 'No hotels returned for this area and dates.'
+        };
+      }
+      return { ok: true, hotels: filtered, error: '' };
     } catch (err) {
       const msg = (err && err.name === 'AbortError')
         ? 'Booking.com search timed out after 90 seconds. Try again, turn off amenity filters, or open Booking.com manually.'

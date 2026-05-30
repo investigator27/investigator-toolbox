@@ -1,12 +1,25 @@
 {
-  "latest": "v43",
-  "appVersion": "3.1.4",
+  "latest": "v44",
+  "appVersion": "3.1.5",
   "highlights": [
-    "“Up to date” banner dismisses in about 5–6 seconds (slow slide up).",
-    "Hotel search uses ScraperAPI premium + render to fix Booking.com “Protected” errors.",
-    "Clearer hotel search error messages for investigators."
+    "Hotel Finder now uses the same Booking.com request that works in the Worker test (fixes false ScraperAPI errors in the app).",
+    "“Up to date” banner dismisses in about 5–6 seconds.",
+    "Hotels & motels only filter applied on results after search."
   ],
   "builds": {
+    "v44": {
+      "intro": "Investigator Toolbox 3.1.5 — Hotel Finder app matches working Worker search.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "App no longer sends Booking.com amenity URL filters to the server (those caused ScraperAPI failures while the direct Worker test worked).",
+            "Search should match your successful Worker test: Armstrong Inn and nearby hotels.",
+            "Hotels & motels only filters out suites/apartments from results; breakfast/parking/cancellation — confirm on the Booking.com link."
+          ]
+        }
+      ]
+    },
     "v43": {
       "intro": "Investigator Toolbox 3.1.4 — update banner timing and Booking.com search fix.",
       "sections": [

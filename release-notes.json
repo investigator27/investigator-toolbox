@@ -1,10 +1,25 @@
 {
-  "latest": "v107",
+  "latest": "v108",
   "appVersion": "3.5.4",
   "highlights": [
-    "Settings pages show matching icons; Location and Notifications are separate."
+    "Personalization: default tab, compact layout, tab labels, reduce motion, and haptics."
   ],
   "builds": {
+    "v108": {
+      "intro": "Investigator Toolbox 3.5.4 — personalization options.",
+      "sections": [
+        {
+          "heading": "Personalization",
+          "items": [
+            "Default tab on open: Calculator, Last used, Hotels, Requests, or Camera.",
+            "Layout: Comfortable or Compact spacing.",
+            "Tab bar: Auto (icons only on narrow screens) or Always show labels.",
+            "Reduce motion: Off, System, or On; optional haptic feedback on key actions.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v108)."
+          ]
+        }
+      ]
+    },
     "v107": {
       "intro": "Investigator Toolbox 3.5.4 — settings UI polish.",
       "sections": [

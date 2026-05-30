@@ -101,6 +101,44 @@
       --text-base:clamp(1.125rem,1.05rem + 0.3vw,1.25rem);
       --text-lg:clamp(1.25rem,1.1rem + 0.5vw,1.625rem);
     }
+    html[data-layout="compact"]{
+      --space-3:0.6rem;
+      --space-4:0.85rem;
+      --space-5:1rem;
+      --space-6:1.25rem;
+      --tab-bar-inner-pad:0.45rem;
+    }
+    html[data-layout="compact"] .tab-bar-item{min-height:2.85rem;gap:0.1rem}
+    html[data-layout="compact"] .card{padding:var(--space-4);gap:var(--space-3)}
+    html[data-layout="compact"] .btn{min-height:48px;padding:0.8rem 0.95rem}
+    html[data-layout="compact"] .field input,
+    html[data-layout="compact"] .field select,
+    html[data-layout="compact"] .field textarea{min-height:46px;padding:0.75rem 0.9rem}
+    html[data-layout="compact"] .metric{padding:var(--space-3)}
+    html[data-layout="compact"] .icon-btn{width:40px;height:40px}
+    @media (max-width:400px){
+      html:not([data-tab-labels="always"]) .tab-bar-item > span{
+        position:absolute;
+        width:1px;
+        height:1px;
+        padding:0;
+        margin:-1px;
+        overflow:hidden;
+        clip:rect(0,0,0,0);
+        white-space:nowrap;
+        border:0;
+      }
+    }
+    html[data-reduce-motion="on"] *,
+    html[data-reduce-motion="on"] *::before,
+    html[data-reduce-motion="on"] *::after{
+      scroll-behavior:auto!important;
+      transition-duration:0s!important;
+      transition-delay:0s!important;
+      animation-duration:0s!important;
+      animation-delay:0s!important;
+    }
+    html[data-reduce-motion="on"] .btn:active{transform:none!important}
     button,input,select,textarea{font:inherit;color:inherit}
     button{border:none;background:none;cursor:pointer}
     a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
@@ -1256,6 +1294,72 @@
               <label class="settings-switch"><input type="checkbox" data-font-switch="large" aria-label="Large font size" /><span class="settings-switch__track"></span></label>
             </div>
           </div>
+          <h2 class="settings-section-title">Default tab on open</h2>
+          <div class="settings-group" role="group" aria-label="Default tab on open">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Calculator</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="calculator" aria-label="Open on Calculator tab" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Last used</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="last" aria-label="Open on last used tab" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Hotels</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="hotels" aria-label="Open on Hotels tab" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Requests</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="requests" aria-label="Open on Requests tab" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Camera</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="camera" aria-label="Open on Camera tab" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
+          <h2 class="settings-section-title">Layout</h2>
+          <div class="settings-group" role="group" aria-label="Layout density">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Comfortable</span>
+              <label class="settings-switch"><input type="checkbox" data-layout-switch="comfortable" aria-label="Comfortable spacing" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Compact</span>
+              <label class="settings-switch"><input type="checkbox" data-layout-switch="compact" aria-label="Compact spacing" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
+          <h2 class="settings-section-title">Tab bar</h2>
+          <div class="settings-group" role="group" aria-label="Tab bar labels">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Auto</span>
+              <label class="settings-switch"><input type="checkbox" data-tab-labels-switch="auto" aria-label="Hide tab labels on small screens" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Always show labels</span>
+              <label class="settings-switch"><input type="checkbox" data-tab-labels-switch="always" aria-label="Always show tab labels" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
+          <h2 class="settings-section-title">Motion &amp; feedback</h2>
+          <div class="settings-group" role="group" aria-label="Reduce motion">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Off</span>
+              <label class="settings-switch"><input type="checkbox" data-reduce-motion-switch="off" aria-label="Animations on" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">System</span>
+              <label class="settings-switch"><input type="checkbox" data-reduce-motion-switch="system" aria-label="Follow system reduce motion" /><span class="settings-switch__track"></span></label>
+            </div>
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">On</span>
+              <label class="settings-switch"><input type="checkbox" data-reduce-motion-switch="on" aria-label="Reduce motion on" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
+          <div class="settings-group" role="group" aria-label="Haptic feedback">
+            <div class="settings-row settings-row--toggle">
+              <span class="settings-row__label">Haptic feedback</span>
+              <label class="settings-switch"><input type="checkbox" id="prefHapticSwitch" aria-label="Vibration on key actions" /><span class="settings-switch__track"></span></label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1666,7 +1770,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v107';
+  const BUNDLED_PWA_CACHE_VERSION = 'v108';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1676,6 +1780,12 @@
   let remoteLatestBuild = '';
   const DEVELOPER_PASSWORD = 'dev1-toolb0x';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
+  const DEFAULT_TAB_PREF_KEY = 'toolboxDefaultTab';
+  const LAST_TAB_PREF_KEY = 'toolboxLastTab';
+  const HAPTIC_PREF_KEY = 'toolboxHaptic';
+  const REDUCE_MOTION_PREF_KEY = 'toolboxReduceMotion';
+  const LAYOUT_PREF_KEY = 'toolboxLayout';
+  const TAB_LABELS_PREF_KEY = 'toolboxTabLabels';
   const LOCATION_PREF_KEY = 'toolboxLocationEnabled';
   const NOTIFICATIONS_PREF_KEY = 'toolboxNotificationsEnabled';
   const DEV_UNLOCK_KEY = 'toolboxDevUnlocked';
@@ -3130,6 +3240,200 @@
     });
   }
 
+  const VALID_DEFAULT_TABS = new Set(['calculator', 'last', 'hotels', 'requests', 'camera']);
+
+  function getDefaultTabPreference() {
+    try {
+      const saved = localStorage.getItem(DEFAULT_TAB_PREF_KEY);
+      if (saved && VALID_DEFAULT_TABS.has(saved)) return saved;
+    } catch {}
+    return 'calculator';
+  }
+
+  function getLastTabPreference() {
+    try {
+      const saved = localStorage.getItem(LAST_TAB_PREF_KEY);
+      if (saved && saved !== 'last' && ['calculator', 'hotels', 'requests', 'camera'].includes(saved)) {
+        return saved;
+      }
+    } catch {}
+    return 'calculator';
+  }
+
+  function applyDefaultTabPreference(pref) {
+    const value = VALID_DEFAULT_TABS.has(pref) ? pref : 'calculator';
+    try { localStorage.setItem(DEFAULT_TAB_PREF_KEY, value); } catch {}
+    syncDefaultTabSwitchUi(value);
+  }
+
+  function syncDefaultTabSwitchUi(pref) {
+    qsa('[data-default-tab-switch]').forEach((input) => {
+      input.checked = input.dataset.defaultTabSwitch === pref;
+    });
+  }
+
+  function resolveInitialTabId() {
+    const pref = getDefaultTabPreference();
+    if (pref === 'last') return getLastTabPreference();
+    return pref;
+  }
+
+  function getLayoutPreference() {
+    try {
+      return localStorage.getItem(LAYOUT_PREF_KEY) === 'compact' ? 'compact' : 'comfortable';
+    } catch {}
+    return 'comfortable';
+  }
+
+  function applyLayoutPreference(pref) {
+    const value = pref === 'compact' ? 'compact' : 'comfortable';
+    if (value === 'compact') root.setAttribute('data-layout', 'compact');
+    else root.removeAttribute('data-layout');
+    try { localStorage.setItem(LAYOUT_PREF_KEY, value); } catch {}
+    syncLayoutSwitchUi(value);
+  }
+
+  function syncLayoutSwitchUi(pref) {
+    qsa('[data-layout-switch]').forEach((input) => {
+      input.checked = input.dataset.layoutSwitch === pref;
+    });
+  }
+
+  function getTabLabelsPreference() {
+    try {
+      return localStorage.getItem(TAB_LABELS_PREF_KEY) === 'always' ? 'always' : 'auto';
+    } catch {}
+    return 'auto';
+  }
+
+  function applyTabLabelsPreference(pref) {
+    const value = pref === 'always' ? 'always' : 'auto';
+    if (value === 'always') root.setAttribute('data-tab-labels', 'always');
+    else root.removeAttribute('data-tab-labels');
+    try { localStorage.setItem(TAB_LABELS_PREF_KEY, value); } catch {}
+    syncTabLabelsSwitchUi(value);
+  }
+
+  function syncTabLabelsSwitchUi(pref) {
+    qsa('[data-tab-labels-switch]').forEach((input) => {
+      input.checked = input.dataset.tabLabelsSwitch === pref;
+    });
+  }
+
+  function getReduceMotionPreference() {
+    try {
+      const saved = localStorage.getItem(REDUCE_MOTION_PREF_KEY);
+      if (saved === 'on' || saved === 'off' || saved === 'system') return saved;
+    } catch {}
+    return 'system';
+  }
+
+  function applyReduceMotionPreference(pref) {
+    const value = pref === 'on' || pref === 'off' ? pref : 'system';
+    if (value === 'on') root.setAttribute('data-reduce-motion', 'on');
+    else root.removeAttribute('data-reduce-motion');
+    try { localStorage.setItem(REDUCE_MOTION_PREF_KEY, value); } catch {}
+    syncReduceMotionSwitchUi(value);
+  }
+
+  function syncReduceMotionSwitchUi(pref) {
+    qsa('[data-reduce-motion-switch]').forEach((input) => {
+      input.checked = input.dataset.reduceMotionSwitch === pref;
+    });
+  }
+
+  function isHapticEnabled() {
+    try {
+      return localStorage.getItem(HAPTIC_PREF_KEY) === '1';
+    } catch {}
+    return false;
+  }
+
+  function applyHapticPreference(enabled) {
+    try { localStorage.setItem(HAPTIC_PREF_KEY, enabled ? '1' : '0'); } catch {}
+    const input = $('prefHapticSwitch');
+    if (input) input.checked = enabled;
+  }
+
+  function toolboxHaptic(style) {
+    if (!isHapticEnabled() || typeof navigator.vibrate !== 'function') return;
+    const patterns = {
+      light: 12,
+      medium: [14, 42, 14],
+      success: [10, 55, 10],
+    };
+    try {
+      navigator.vibrate(patterns[style] || patterns.light);
+    } catch {}
+  }
+
+  function rememberLastTab(tabId) {
+    if (!tabId || tabId === 'last') return;
+    try { localStorage.setItem(LAST_TAB_PREF_KEY, tabId); } catch {}
+  }
+
+  function applyAllPersonalizationPrefs() {
+    applyLayoutPreference(getLayoutPreference());
+    applyTabLabelsPreference(getTabLabelsPreference());
+    applyReduceMotionPreference(getReduceMotionPreference());
+    applyHapticPreference(isHapticEnabled());
+    syncDefaultTabSwitchUi(getDefaultTabPreference());
+  }
+
+  function bindPersonalizationSettings() {
+    if (window.__personalizationSettingsBound) return;
+    window.__personalizationSettingsBound = true;
+
+    qsa('[data-default-tab-switch]').forEach((input) => {
+      input.addEventListener('change', () => {
+        if (!input.checked) {
+          input.checked = true;
+          return;
+        }
+        applyDefaultTabPreference(input.dataset.defaultTabSwitch || 'calculator');
+        toolboxHaptic('light');
+      });
+    });
+
+    qsa('[data-layout-switch]').forEach((input) => {
+      input.addEventListener('change', () => {
+        if (!input.checked) {
+          input.checked = true;
+          return;
+        }
+        applyLayoutPreference(input.dataset.layoutSwitch || 'comfortable');
+        toolboxHaptic('light');
+      });
+    });
+
+    qsa('[data-tab-labels-switch]').forEach((input) => {
+      input.addEventListener('change', () => {
+        if (!input.checked) {
+          input.checked = true;
+          return;
+        }
+        applyTabLabelsPreference(input.dataset.tabLabelsSwitch || 'auto');
+        toolboxHaptic('light');
+      });
+    });
+
+    qsa('[data-reduce-motion-switch]').forEach((input) => {
+      input.addEventListener('change', () => {
+        if (!input.checked) {
+          input.checked = true;
+          return;
+        }
+        applyReduceMotionPreference(input.dataset.reduceMotionSwitch || 'system');
+        toolboxHaptic('light');
+      });
+    });
+
+    $('prefHapticSwitch')?.addEventListener('change', (event) => {
+      applyHapticPreference(event.target.checked);
+      if (event.target.checked) toolboxHaptic('medium');
+    });
+  }
+
   function paintSettingsScreens() {
     if (!settingsStack) return;
     const activeId = settingsNavStack[settingsNavStack.length - 1] || 'root';
@@ -3159,6 +3463,10 @@
       else if (updateUIState === 'ready' && waitingSW) renderSoftwareUpdateUi('ready');
       else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();
+    }
+    if (screenId === 'personalization') {
+      bindPersonalizationSettings();
+      applyAllPersonalizationPrefs();
     }
     if (screenId === 'location-settings' || screenId === 'notifications-settings') {
       bindPermissionSettings();
@@ -3758,6 +4066,8 @@ $('summaryNote').textContent =
   }
 
   applyTheme(getThemePreference());
+  applyAllPersonalizationPrefs();
+  bindPersonalizationSettings();
   try {
     const fontPref = localStorage.getItem('travelCalcFontSize');
     applyFontSize(fontPref === 'large' ? 'large' : 'normal');
@@ -3780,7 +4090,10 @@ $('summaryNote').textContent =
   });
 
   qsa('.segment').forEach((btn) => {
-    btn.addEventListener('click', () => setTrip(btn.dataset.trip || 'oneway'));
+    btn.addEventListener('click', () => {
+      setTrip(btn.dataset.trip || 'oneway');
+      toolboxHaptic('light');
+    });
   });
 
   openSettingsBtn?.addEventListener('click', () => {
@@ -3863,8 +4176,14 @@ $('summaryNote').textContent =
     if (event.target === updateDetailsModal) closeUpdateDetailsModal();
   });
 
-  mapsBtn?.addEventListener('click', launchMaps);
-  calculateBtn?.addEventListener('click', calculate);
+  mapsBtn?.addEventListener('click', () => {
+    toolboxHaptic('light');
+    launchMaps();
+  });
+  calculateBtn?.addEventListener('click', () => {
+    calculate();
+    toolboxHaptic('success');
+  });
   clearBtn?.addEventListener('click', clearForm);
 
   [eventInput, hoursInput, minutesInput, distanceInput].forEach((input) => {
@@ -3933,6 +4252,8 @@ $('summaryNote').textContent =
 
     function switchTab(tabId) {
       if (!isTabEnabled(tabId)) return;
+      rememberLastTab(tabId);
+      toolboxHaptic('light');
       tabPanels.forEach((panel) => {
         const isActive = panel.dataset.tab === tabId;
         panel.classList.toggle('hidden', !isActive);
@@ -3999,8 +4320,12 @@ $('summaryNote').textContent =
     });
 
     applyTabBarState();
-    switchTab('calculator');
+    let initialTab = resolveInitialTabId();
+    if (!isTabEnabled(initialTab)) initialTab = 'calculator';
+    switchTab(initialTab);
   }
+
+  window.toolboxHaptic = toolboxHaptic;
 
   fetchRemoteTabPolicy().finally(() => initTabBar());
   bindViewportHeightSync();
@@ -6896,6 +7221,7 @@ out body;`;
   }
 
   async function runSearch() {
+    window.toolboxHaptic?.('light');
     hideStatus();
     if (!hotelLocationIsReady()) {
       const located = await applyCurrentLocationFromDevice();

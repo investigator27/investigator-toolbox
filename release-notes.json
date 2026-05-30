@@ -1,10 +1,22 @@
 {
-  "latest": "v114",
+  "latest": "v115",
   "appVersion": "3.5.4",
   "highlights": [
-    "Settings sub-pages use back only (no X); Guides match the intro card design."
+    "Settings uses a left back chevron everywhere; the X close button is removed."
   ],
   "builds": {
+    "v115": {
+      "intro": "Investigator Toolbox 3.5.4 — settings back button on all screens.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Toolbox Settings and all sub-pages use the left chevron; root tap closes settings, sub-pages go back.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v115)."
+          ]
+        }
+      ]
+    },
     "v114": {
       "intro": "Investigator Toolbox 3.5.4 — settings navigation and guides UI.",
       "sections": [

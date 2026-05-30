@@ -575,14 +575,12 @@
     }
     .settings-overlay.is-open .settings-sheet{transform:translateY(0)}
     .settings-sheet__toolbar{
-      display:grid;
-      grid-template-columns:minmax(44px,1fr) auto minmax(44px,1fr);
+      display:flex;
       align-items:center;
       padding:max(env(safe-area-inset-top),var(--space-3)) var(--space-3) var(--space-2);
       min-height:3.25rem;
     }
-    .settings-back,
-    .settings-close{
+    .settings-back{
       width:44px;
       height:44px;
       border-radius:999px;
@@ -594,33 +592,11 @@
       box-shadow:var(--shadow-sm);
       flex-shrink:0;
     }
-    .settings-back{
-      grid-column:1;
-      justify-self:start;
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .2s ease;
-    }
-    .settings-overlay.is-subpage .settings-back{
-      opacity:1;
-      pointer-events:auto;
-    }
-    .settings-overlay.is-subpage .settings-close{
-      opacity:0;
-      pointer-events:none;
-      visibility:hidden;
-    }
     .settings-overlay.is-subpage .settings-sheet__toolbar{
       padding-bottom:var(--space-5);
     }
-    .settings-back svg,
-    .settings-close svg{width:20px;height:20px}
-    .settings-back:hover,
-    .settings-close:hover{background:var(--color-surface-offset)}
-    .settings-close{
-      grid-column:3;
-      justify-self:end;
-    }
+    .settings-back svg{width:20px;height:20px}
+    .settings-back:hover{background:var(--color-surface-offset)}
     .settings-stack{
       position:relative;
       overflow:hidden;
@@ -1265,11 +1241,8 @@
 <div class="settings-overlay hidden" id="settingsOverlay" aria-hidden="true">
   <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settingsHeroTitle">
     <header class="settings-sheet__toolbar">
-      <button type="button" class="settings-back" id="settingsBackBtn" aria-label="Back">
+      <button type="button" class="settings-back" id="settingsBackBtn" aria-label="Close settings">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
-      </button>
-      <button type="button" class="settings-close" id="closeSettingsBtn" aria-label="Close settings">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </header>
     <div class="settings-stack" id="settingsStack">
@@ -1905,7 +1878,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v114';
+  const BUNDLED_PWA_CACHE_VERSION = 'v115';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1935,7 +1908,6 @@
   const settingsOverlay = $('settingsOverlay');
   const settingsStack = $('settingsStack');
   const settingsBackBtn = $('settingsBackBtn');
-  const closeSettingsBtn = $('closeSettingsBtn');
   const settingsUpdateBadge = $('settingsUpdateBadge');
   let settingsNavStack = ['root'];
   const settingsVersionLine = $('settingsVersionLine');
@@ -3616,6 +3588,7 @@
     const updateFlow = settingsNavStack.includes('updates') || settingsNavStack.includes('update-whats-new');
     settingsStack.classList.toggle('settings-stack--update-flow', updateFlow);
     settingsOverlay?.classList.toggle('is-subpage', isSub);
+    if (settingsBackBtn) settingsBackBtn.setAttribute('aria-label', isSub ? 'Back' : 'Close settings');
     qsa('.settings-screen', settingsStack).forEach((screen) => {
       const id = screen.dataset.screen || '';
       const isActive = id === activeId;
@@ -4276,8 +4249,10 @@ $('summaryNote').textContent =
   openSettingsBtn?.addEventListener('click', () => {
     openSettings('root');
   });
-  closeSettingsBtn?.addEventListener('click', closeSettings);
-  settingsBackBtn?.addEventListener('click', popSettingsScreen);
+  settingsBackBtn?.addEventListener('click', () => {
+    if (settingsNavStack.length <= 1) closeSettings();
+    else popSettingsScreen();
+  });
   settingsStack?.addEventListener('click', (event) => {
     const pushBtn = event.target.closest('[data-settings-push]');
     if (!pushBtn) return;

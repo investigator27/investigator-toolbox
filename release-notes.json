@@ -1,10 +1,23 @@
 {
-  "latest": "v104",
+  "latest": "v105",
   "appVersion": "3.5.4",
   "highlights": [
-    "Developer Tools dashboard for deploy checks, PWA diagnostics, and worker health."
+    "Home screen update indicator uses notifications on Android and permission-aware badging elsewhere."
   ],
   "builds": {
+    "v105": {
+      "intro": "Investigator Toolbox 3.5.4 — home screen update badge fix.",
+      "sections": [
+        {
+          "heading": "Updates",
+          "items": [
+            "When an update is ready: Android shows icon badge via a Toolbox update notification (allow Notifications); iPhone/Windows use Badging API with number 1 when installed and notifications allowed.",
+            "Tapping the update notification opens Software Update. Developer Tools shows badge platform hints and last attempt.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v105)."
+          ]
+        }
+      ]
+    },
     "v104": {
       "intro": "Investigator Toolbox 3.5.4 — Developer Tools dashboard.",
       "sections": [

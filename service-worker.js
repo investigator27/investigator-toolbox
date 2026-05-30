@@ -1,6 +1,6 @@
 /* sw-revision: 27 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v104';
+let activeCacheName = 'surveillance-travel-pwa-v105';
 
 const CORE_ASSETS = [
   BASE + 'surveillance-travel-calculator.html',
@@ -67,9 +67,38 @@ async function syncSwAppBadge(count) {
   }
 }
 
+const UPDATE_NOTIFICATION_TAG = 'toolbox-update-ready';
+
+async function closeSwUpdateNotifications() {
+  try {
+    const notes = await self.registration.getNotifications({ tag: UPDATE_NOTIFICATION_TAG });
+    notes.forEach((n) => n.close());
+  } catch {}
+}
+
+async function showSwUpdateReadyNotification() {
+  if (!self.registration?.showNotification) return;
+  try {
+    await self.registration.showNotification('Toolbox update ready', {
+      body: 'Open Toolbox → Settings → Software Update to install.',
+      tag: UPDATE_NOTIFICATION_TAG,
+      renotify: false,
+      icon: BASE + 'assets/icon-192.png',
+      badge: BASE + 'assets/icon-192.png',
+      data: { screen: 'updates' },
+    });
+  } catch {}
+}
+
 async function notifyAppIconBadge(count) {
   await syncSwAppBadge(count);
   await broadcastUpdate({ type: 'APP_ICON_BADGE', count });
+  if (count > 0) {
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (!clients.length) await showSwUpdateReadyNotification();
+  } else {
+    await closeSwUpdateNotifications();
+  }
 }
 
 async function isPwaUpdateInstall() {
@@ -144,14 +173,35 @@ self.addEventListener('activate', (event) => {
     const stillWaiting = self.registration?.waiting;
     if (!stillWaiting) {
       await syncSwAppBadge(0);
+      await closeSwUpdateNotifications();
     }
   })());
 });
 
 self.addEventListener('sync', (event) => {
   if (event.tag === 'toolbox-update-badge') {
-    event.waitUntil(syncSwAppBadge(1));
+    event.waitUntil((async () => {
+      await syncSwAppBadge(1);
+      await showSwUpdateReadyNotification();
+    })());
   }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = BASE + 'surveillance-travel-calculator.html';
+  event.waitUntil(
+    (async () => {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      if (clients.length) {
+        await clients[0].focus();
+        clients[0].postMessage({ type: 'OPEN_SETTINGS_UPDATES' });
+        return;
+      }
+      const opened = await self.clients.openWindow(target);
+      if (opened) opened.postMessage({ type: 'OPEN_SETTINGS_UPDATES' });
+    })()
+  );
 });
 
 self.addEventListener('message', (event) => {
@@ -161,7 +211,15 @@ self.addEventListener('message', (event) => {
     return;
   }
   if (data.type === 'SET_APP_BADGE') {
-    event.waitUntil(syncSwAppBadge(Number(data.count) || 0));
+    event.waitUntil((async () => {
+      const count = Number(data.count) || 0;
+      await syncSwAppBadge(count);
+      if (count > 0) await showSwUpdateReadyNotification();
+      else await closeSwUpdateNotifications();
+    })());
+  }
+  if (data.type === 'CLEAR_UPDATE_NOTIFICATIONS') {
+    event.waitUntil(closeSwUpdateNotifications());
   }
 });
 

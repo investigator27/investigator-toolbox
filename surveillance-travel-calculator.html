@@ -1550,7 +1550,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v104';
+  const BUNDLED_PWA_CACHE_VERSION = 'v105';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1893,8 +1893,11 @@
     PWA_CACHE_VERSION = resolveTargetBuild();
   }
 
+  const UPDATE_NOTIFICATION_TAG = 'toolbox-update-ready';
+
   function markUpdateReadyForBanner() {
     try { sessionStorage.setItem('toolboxUpdateReady', '1'); } catch {}
+    void syncAppIconBadge(true);
   }
 
   function shouldAutoPromptUpdate() {
@@ -1902,7 +1905,84 @@
   }
 
   function clearUpdateReadyMark() {
-    try { sessionStorage.removeItem('toolboxUpdateReady'); } catch {}
+    try {
+      sessionStorage.removeItem('toolboxUpdateReady');
+      sessionStorage.removeItem('toolboxUpdateNotificationShown');
+    } catch {}
+    void syncAppIconBadge(false);
+  }
+
+  function isAndroidDevice() {
+    return /Android/i.test(navigator.userAgent);
+  }
+
+  function isAppleMobileDevice() {
+    const platform = navigator.userAgentData?.platform || navigator.platform || '';
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      || /^iP/.test(platform)
+      || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function recordBadgeAttempt(result) {
+    try {
+      sessionStorage.setItem('toolboxBadgeLastResult', JSON.stringify({ ...result, at: new Date().toISOString() }));
+    } catch {}
+  }
+
+  function getBadgeSupportSummary() {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches;
+    const lines = [];
+    if (!standalone) lines.push('Install the app to Home Screen / app list first.');
+    if (isAndroidDevice()) lines.push('Android: icon badge needs an unread notification (not Badging API).');
+    if (isAppleMobileDevice()) lines.push('iPhone/iPad: allow Notifications for Safari/Toolbox; badge uses number 1.');
+    if (typeof navigator.setAppBadge !== 'function') lines.push('Badging API not exposed in this browser.');
+    if ('Notification' in window && Notification.permission === 'denied') {
+      lines.push('Notifications blocked — enable in system settings to get home screen badge.');
+    }
+    if (!lines.length) lines.push('Badging API available; use Test badge below on installed PWA.');
+    return lines.join(' ');
+  }
+
+  async function closeUpdateReadyNotifications() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration(BASE_PATH);
+      const notes = await reg?.getNotifications?.({ tag: UPDATE_NOTIFICATION_TAG }) || [];
+      notes.forEach((n) => n.close());
+      reg?.active?.postMessage?.({ type: 'CLEAR_UPDATE_NOTIFICATIONS' });
+    } catch {}
+  }
+
+  async function showUpdateReadyNotification() {
+    try {
+      if (sessionStorage.getItem('toolboxUpdateNotificationShown') === '1') return false;
+    } catch {}
+    if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification('Toolbox update ready', {
+        body: 'Open Toolbox → Settings → Software Update to install.',
+        tag: UPDATE_NOTIFICATION_TAG,
+        renotify: false,
+        icon: `${BASE_PATH}assets/icon-192.png`,
+        badge: `${BASE_PATH}assets/icon-192.png`,
+        data: { screen: 'updates' },
+      });
+      try { sessionStorage.setItem('toolboxUpdateNotificationShown', '1'); } catch {}
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function ensureNotificationPermissionForBadge() {
+    if (!('Notification' in window)) return Notification?.permission || 'unsupported';
+    if (Notification.permission !== 'default') return Notification.permission;
+    try {
+      if (sessionStorage.getItem('toolboxBadgePermissionAsked') === '1') return Notification.permission;
+      sessionStorage.setItem('toolboxBadgePermissionAsked', '1');
+    } catch {}
+    return Notification.requestPermission();
   }
 
   function finishAppUpdateReload() {
@@ -2104,25 +2184,52 @@
 
   async function syncAppIconBadge(show) {
     const count = show ? 1 : 0;
-    const tasks = [];
 
-    if (typeof navigator.setAppBadge === 'function') {
-      tasks.push(
-        (async () => {
-          try {
-            if (count > 0) await navigator.setAppBadge(count);
-            else if (typeof navigator.clearAppBadge === 'function') await navigator.clearAppBadge();
-          } catch {
-            if (count > 0) await navigator.setAppBadge();
-          }
-        })()
-      );
+    if (!count) {
+      await closeUpdateReadyNotifications();
+      const tasks = [];
+      if (typeof navigator.clearAppBadge === 'function') {
+        tasks.push(navigator.clearAppBadge().catch(() => {}));
+      }
+      tasks.push(postBadgeToServiceWorkers(0));
+      await Promise.allSettled(tasks);
+      recordBadgeAttempt({ action: 'clear' });
+      return;
     }
 
-    tasks.push(postBadgeToServiceWorkers(count));
-    await Promise.allSettled(tasks);
+    const result = {
+      standalone: window.matchMedia('(display-mode: standalone)').matches,
+      platform: isAndroidDevice() ? 'android' : isAppleMobileDevice() ? 'apple' : 'desktop/other',
+      methods: [],
+    };
 
-    if (count > 0) await registerUpdateBadgeBackgroundSync();
+    const notifPerm = await ensureNotificationPermissionForBadge();
+    result.notificationPermission = notifPerm;
+
+    if (typeof navigator.setAppBadge === 'function') {
+      try {
+        await navigator.setAppBadge(1);
+        result.methods.push('setAppBadge(1):ok');
+      } catch (err) {
+        result.methods.push(`setAppBadge:${err?.name || err?.message || 'failed'}`);
+      }
+    } else {
+      result.methods.push('setAppBadge:unsupported');
+    }
+
+    await postBadgeToServiceWorkers(1);
+
+    if (isAndroidDevice()) {
+      const shown = await showUpdateReadyNotification();
+      result.methods.push(shown ? 'android-notification:shown' : `android-notification:${notifPerm}`);
+    } else if (notifPerm === 'granted' && (isAppleMobileDevice() || !result.methods.includes('setAppBadge(1):ok'))) {
+      const shown = await showUpdateReadyNotification();
+      if (shown) result.methods.push('notification:shown');
+    }
+
+    recordBadgeAttempt(result);
+    await registerUpdateBadgeBackgroundSync();
+    return result;
   }
 
   let appIconBadgeRefreshTimer = null;
@@ -2376,9 +2483,15 @@
 
   function handleServiceWorkerMessage(event) {
     const data = event.data || {};
+    if (data.type === 'OPEN_SETTINGS_UPDATES') {
+      openSettings('updates');
+      return;
+    }
     if (data.type === 'APP_ICON_BADGE') {
       const pending = Number(data.count) > 0;
-      if (pending) markUpdateReadyForBanner();
+      if (pending) {
+        try { sessionStorage.setItem('toolboxUpdateReady', '1'); } catch {}
+      }
       void syncAppIconBadge(pending);
       refreshSettingsUpdateBadge();
       return;
@@ -3033,7 +3146,21 @@
         ok: typeof navigator.setAppBadge === 'function',
         warn: typeof navigator.setAppBadge !== 'function',
       },
+      {
+        label: 'Notifications',
+        value: 'Notification' in window ? Notification.permission : 'N/A',
+        ok: 'Notification' in window && Notification.permission === 'granted',
+        warn: 'Notification' in window && Notification.permission === 'denied',
+      },
+      { label: 'Badge hint', value: getBadgeSupportSummary() },
     ];
+    try {
+      const raw = sessionStorage.getItem('toolboxBadgeLastResult');
+      if (raw) {
+        const last = JSON.parse(raw);
+        rows.push({ label: 'Last badge attempt', value: (last.methods || []).join(', ') || last.action || '—' });
+      }
+    } catch {}
     if (!('serviceWorker' in navigator)) {
       rows.push({ label: 'Service worker', value: 'Not available', warn: true });
       renderDevStatusPanel(el, rows);
@@ -3184,6 +3311,9 @@
       'toolboxReloadBuild',
       'toolboxQuietLoad',
       'toolboxDevLastHotelSearch',
+      'toolboxUpdateNotificationShown',
+      'toolboxBadgePermissionAsked',
+      'toolboxBadgeLastResult',
     ];
     keys.forEach((key) => {
       try {
@@ -3212,8 +3342,18 @@
       runUpdateCheckFlow();
       setTimeout(() => refreshDeveloperPwaStatus(), 2000);
     });
-    $('developerTestBadgeBtn')?.addEventListener('click', () => syncAppIconBadge(true));
-    $('developerClearBadgeBtn')?.addEventListener('click', () => syncAppIconBadge(false));
+    $('developerTestBadgeBtn')?.addEventListener('click', async () => {
+      try { sessionStorage.removeItem('toolboxUpdateNotificationShown'); } catch {}
+      const result = await syncAppIconBadge(true);
+      await refreshDeveloperPwaStatus();
+      const summary = getBadgeSupportSummary();
+      const methods = result?.methods?.join(', ') || 'cleared';
+      alert(`Badge test finished.\n\n${summary}\n\nResult: ${methods}\n\nOn Android, check for a notification — that drives the icon dot.`);
+    });
+    $('developerClearBadgeBtn')?.addEventListener('click', async () => {
+      await syncAppIconBadge(false);
+      await refreshDeveloperPwaStatus();
+    });
     $('developerUnregisterSwBtn')?.addEventListener('click', async () => {
       if (!confirm('Unregister the service worker on this device? The app will reload without offline cache until you visit again.')) return;
       await clearServiceWorkersForDev();

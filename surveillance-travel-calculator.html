@@ -275,10 +275,7 @@
       .hotel-form-grid--aligned{align-items:flex-end}
     }
     .field--paired-control .hint{display:none}
-    .hotel-amenity-toggles{display:grid;grid-template-columns:1fr;gap:var(--space-2);margin-top:var(--space-1)}
-    @media(min-width:560px){.hotel-amenity-toggles{grid-template-columns:1fr 1fr;gap:var(--space-3)}}
-    .hotel-amenity-toggles .toggle{flex-direction:column;align-items:flex-start;gap:var(--space-2);min-height:auto;padding:var(--space-3)}
-    .hotel-amenity-toggles .toggle-label{order:-1;width:100%;line-height:1.3}
+    .hotel-amenity-toggles{margin-top:var(--space-1)}
     .toggle{position:relative;display:flex;align-items:center;gap:var(--space-3);min-height:52px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-lg);background:var(--color-surface-offset);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     .toggle input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
     .toggle input:focus{outline:none}
@@ -952,11 +949,23 @@
           </div>
         </div>
 
-        <div class="hotel-amenity-toggles" role="group" aria-label="Required amenities">
-          <label class="toggle" for="hotelFreeBreakfast"><input id="hotelFreeBreakfast" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free breakfast</span></label>
-          <label class="toggle" for="hotelFreeParking"><input id="hotelFreeParking" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free parking</span></label>
-          <label class="toggle" for="hotelFreeCancellation"><input id="hotelFreeCancellation" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Free cancellation</span></label>
-          <label class="toggle" for="hotelHotelsOnly"><input id="hotelHotelsOnly" type="checkbox" /><span class="toggle-slider" aria-hidden="true"></span><span class="toggle-label">Hotels &amp; motels only</span></label>
+        <div class="settings-group hotel-amenity-toggles" role="group" aria-label="Required amenities">
+          <div class="settings-row settings-row--toggle">
+            <span class="settings-row__label">Free breakfast</span>
+            <label class="settings-switch"><input id="hotelFreeBreakfast" type="checkbox" aria-label="Free breakfast" /><span class="settings-switch__track"></span></label>
+          </div>
+          <div class="settings-row settings-row--toggle">
+            <span class="settings-row__label">Free parking</span>
+            <label class="settings-switch"><input id="hotelFreeParking" type="checkbox" aria-label="Free parking" /><span class="settings-switch__track"></span></label>
+          </div>
+          <div class="settings-row settings-row--toggle">
+            <span class="settings-row__label">Free cancellation</span>
+            <label class="settings-switch"><input id="hotelFreeCancellation" type="checkbox" aria-label="Free cancellation" /><span class="settings-switch__track"></span></label>
+          </div>
+          <div class="settings-row settings-row--toggle">
+            <span class="settings-row__label">Hotels &amp; motels only</span>
+            <label class="settings-switch"><input id="hotelHotelsOnly" type="checkbox" aria-label="Hotels and motels only" /><span class="settings-switch__track"></span></label>
+          </div>
         </div>
         <div class="hint">Breakfast, parking, and cancellation are verified on the Booking.com link. “Hotels &amp; motels only” hides suites and apartments from results after search.</div>
 
@@ -1307,16 +1316,79 @@
           </div>
           <div id="developerPanel" class="hidden">
             <div class="settings-group">
-              <div class="settings-body-text">
-                <p><strong>Lock tabs for everyone:</strong> On GitHub, open <strong>tab-policy.json</strong> (same folder as the app). Set a tab to <strong>false</strong> to lock it. Save the file.</p>
-                <p>Phones load that file when they open the app. Calculator is always on.</p>
-                <p id="developerPolicyStatus" style="margin-top:var(--space-3)">—</p>
-              </div>
+              <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-menu">
+                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>
+                <span class="settings-row__label">Developer Notes</span>
+                <span class="settings-row__chevron" aria-hidden="true">›</span>
+              </button>
             </div>
             <div class="settings-group">
               <div class="settings-field-block settings-field-block--action">
                 <button type="button" class="btn btn-secondary" id="developerLockBtn">Lock</button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-menu" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Developer Notes</h1>
+          <div class="settings-group">
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-tabs">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+              <span class="settings-row__label">Tab policy</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-github">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+              <span class="settings-row__label">Deploy to GitHub</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-updates">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
+              <span class="settings-row__label">App updates</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-tabs" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Tab policy</h1>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Company-wide tab access is defined in <strong>tab-policy.json</strong> on GitHub. Set <strong>false</strong> to lock a tab; <strong>true</strong> to allow. Calculator is always on.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-github" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Deploy to GitHub</h1>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Upload to your GitHub Pages folder (<strong id="developerDeployPath">…</strong>):</p>
+              <ul class="settings-file-list">
+                <li>surveillance-travel-calculator.html</li>
+                <li>service-worker.js</li>
+                <li>release-notes.json</li>
+                <li>tab-policy.json</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-updates" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">App updates</h1>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Build on this device: <strong id="developerGuideVersion">…</strong></p>
+              <p>Investigators: <strong>Toolbox Settings</strong> → <strong>Software Update</strong> → <strong>Check for updates</strong>.</p>
             </div>
           </div>
         </div>
@@ -2516,6 +2588,12 @@
       else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();
     }
+    if (
+      screenId === 'developer-notes-github'
+      || screenId === 'developer-notes-updates'
+    ) {
+      refreshDeveloperGuideLabels();
+    }
   }
 
   function popSettingsScreen() {
@@ -2615,7 +2693,6 @@
     try { localStorage.setItem(TAB_VISIBILITY_KEY, JSON.stringify(parsed.map)); } catch {}
     window.ToolboxTabs?.applyVisibility?.(parsed.map);
     window.dispatchEvent(new CustomEvent('toolbox-tab-visibility', { detail: parsed.map }));
-    refreshDeveloperPolicyStatus();
     return true;
   }
 
@@ -2630,12 +2707,14 @@
     return false;
   }
 
-  function refreshDeveloperPolicyStatus() {
-    const el = $('developerPolicyStatus');
-    if (!el) return;
-    const map = remoteTabPolicyMap || loadTabVisibility();
-    const status = (on) => (on ? 'Allowed' : 'Locked');
-    el.textContent = `On this phone right now: Hotels ${status(map.hotels !== false)}, Requests ${status(map.requests !== false)}, Camera ${status(map.camera !== false)}`;
+  function refreshDeveloperGuideLabels() {
+    const pathEl = $('developerDeployPath');
+    if (pathEl) {
+      const path = (BASE_PATH || '/').replace(/\/$/, '') || '/';
+      pathEl.textContent = path === '/' ? '(site root)' : path;
+    }
+    const verEl = $('developerGuideVersion');
+    if (verEl) verEl.textContent = `${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
   }
 
   function isDeveloperUnlocked() {
@@ -2652,9 +2731,7 @@
     gate?.classList.toggle('hidden', unlocked);
     panel?.classList.toggle('hidden', !unlocked);
     if (!unlocked && $('developerPassword')) $('developerPassword').value = '';
-    if (unlocked) {
-      fetchRemoteTabPolicy().then(() => refreshDeveloperPolicyStatus());
-    }
+    if (unlocked) refreshDeveloperGuideLabels();
   }
 
   function setTrip(nextTrip) {
@@ -5204,11 +5281,12 @@ out body;`;
   });
 
   function bindHotelAmenityToggles() {
-    document.querySelectorAll('#tab-hotels .toggle').forEach((toggle) => {
-      const input = toggle.querySelector('input[type="checkbox"]');
+    document.querySelectorAll('#tab-hotels .settings-row--toggle').forEach((row) => {
+      const input = row.querySelector('input[type="checkbox"]');
       if (!input || input.dataset.bound === '1') return;
       input.dataset.bound = '1';
-      toggle.addEventListener('mousedown', (event) => event.preventDefault());
+      const track = row.querySelector('.settings-switch');
+      track?.addEventListener('mousedown', (event) => event.preventDefault());
       input.addEventListener('change', () => {
         input.blur();
         if (selectedHotel) refreshEmailDraft();

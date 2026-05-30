@@ -1,5 +1,5 @@
 {
-  "hotels": true,
-  "requests": true,
-  "camera": true
+  "hotels": false,
+  "requests": false,
+  "camera": false
 }

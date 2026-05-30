@@ -1413,7 +1413,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v92';
+  const BUNDLED_PWA_CACHE_VERSION = 'v93';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5551,8 +5551,12 @@ out body;`;
       : '';
   }
 
+  function escapeAttrSelector(value) {
+    return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
   function ensureViewedBadgeOnCard(hotelId) {
-    const card = els.results?.querySelector(`.hotel-card[data-hotel-id="${CSS.escape(hotelId)}"]`);
+    const card = els.results?.querySelector(`.hotel-card[data-hotel-id="${escapeAttrSelector(hotelId)}"]`);
     if (!card) return;
     const badges = card.querySelector('.hotel-card__badges');
     if (!badges || badges.querySelector('.hotel-card__viewed')) return;
@@ -6209,4 +6213,9 @@ out body;`;
   hideEmailSectionCollapsible();
 
   syncClientBilledField();
-  setEmail
+  setEmailActionsEnabled(false);
+})();
+</script>
+
+</body>
+</html>

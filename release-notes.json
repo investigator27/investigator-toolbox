@@ -1,10 +1,22 @@
 {
-  "latest": "v92",
+  "latest": "v93",
   "appVersion": "3.5.4",
   "highlights": [
-    "Hotel Finder: up to 10 results, Viewed badge, cleaner hotel cards."
+    "Hotel Finder: fix location dropdown and Hotel tab after truncated file."
   ],
   "builds": {
+    "v93": {
+      "intro": "Investigator Toolbox 3.5.4 — restore Hotel tab JavaScript.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Fixed Current Location dropdown and Search — hotel script file ending had been cut off.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v93)."
+          ]
+        }
+      ]
+    },
     "v92": {
       "intro": "Investigator Toolbox 3.5.4 — cleaner hotel result cards.",
       "sections": [

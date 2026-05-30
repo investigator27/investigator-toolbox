@@ -1,12 +1,25 @@
 {
-  "latest": "v45",
-  "appVersion": "3.1.6",
+  "latest": "v46",
+  "appVersion": "3.1.7",
   "highlights": [
-    "Hotel Finder sends city + map coordinates (same as the Worker test that returned 25 hotels).",
-    "Worker ignores amenity URL filters that caused ScraperAPI Protected errors.",
-    "Deploy v45 app + redeploy booking-worker on Cloudflare."
+    "Hotel errors show Cloudflare workerVersion so you can tell deploy vs ScraperAPI credits.",
+    "Worker retries once on Protected; ?preview=1 shows Booking URL without using credits.",
+    "Deploy v46 app + booking-worker-46 on Cloudflare."
   ],
   "builds": {
+    "v46": {
+      "intro": "Investigator Toolbox 3.1.7 — Clearer Hotel Finder errors and Worker diagnostics.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Failed searches report workerVersion (booking-worker-46) or tell you to redeploy Cloudflare.",
+            "Protected errors explain premium render credits; parking/breakfast are not sent to Booking.",
+            "Worker ?health=1 and ?preview=1 help verify deploy without a full search."
+          ]
+        }
+      ]
+    },
     "v45": {
       "intro": "Investigator Toolbox 3.1.6 — Hotel search matches working Worker test.",
       "sections": [

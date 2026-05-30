@@ -732,12 +732,12 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.1.6';
+  let APP_VERSION = '3.1.7';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v45';
+  let PWA_CACHE_VERSION = 'v46';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
@@ -2809,6 +2809,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return s.length > 220 ? `${s.slice(0, 217)}…` : s;
   }
 
+  function formatBookingSearchError(data) {
+    const base = friendlyBookingApiError(data?.error || '');
+    const wv = String(data?.workerVersion || '').trim();
+    if (!wv) {
+      return (
+        'Cloudflare Worker is outdated (no workerVersion in response). ' +
+        'Redeploy cloudflare/booking-worker.js on Cloudflare, then hard-refresh the app (footer should show v3.1.7).'
+      );
+    }
+    const expected = 'booking-worker-46';
+    if (wv !== expected && /protected|premium\+render|ScraperAPI blocked/i.test(base)) {
+      return `${base} (deployed: ${wv}; need ${expected} on Cloudflare)`;
+    }
+    if (/protected|ScraperAPI blocked/i.test(base)) {
+      const status = data?.scraperStatus != null ? ` HTTP ${data.scraperStatus}` : '';
+      return `${base}${status}. Parking/breakfast filters are not sent to Booking — this is a ScraperAPI/plan issue, not amenities.`;
+    }
+    return base ? `${base} (${wv})` : `Booking.com search failed (${wv}).`;
+  }
+
   function isLikelyNonHotelListing(name) {
     const n = String(name || '').toLowerCase();
     return /\b(apartment|suite|bedroom|chalet|cottage|villa|entire|studio|hostel)\b/i.test(n)
@@ -2866,7 +2886,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ? data.hotels
         : (data.hotels && typeof data.hotels === 'object' ? [data.hotels] : []);
       const filtered = applyClientHotelFilters(rawHotels);
-      const errText = friendlyBookingApiError(data.error || '');
+      const errText = formatBookingSearchError(data);
       if (!data.ok) {
         return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
       }

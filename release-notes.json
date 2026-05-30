@@ -1,10 +1,22 @@
 {
-  "latest": "v115",
+  "latest": "v116",
   "appVersion": "3.5.4",
   "highlights": [
-    "Settings uses a left back chevron everywhere; the X close button is removed."
+    "Light theme has stronger contrast in settings — cards and sections stand out more."
   ],
   "builds": {
+    "v116": {
+      "intro": "Investigator Toolbox 3.5.4 — light theme settings contrast.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Light mode: whiter cards on a slightly deeper background, clearer borders and row dividers.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v116)."
+          ]
+        }
+      ]
+    },
     "v115": {
       "intro": "Investigator Toolbox 3.5.4 — settings back button on all screens.",
       "sections": [

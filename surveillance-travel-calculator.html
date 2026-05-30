@@ -56,12 +56,12 @@
       --text-lg:clamp(1.125rem,1rem + 0.75vw,1.5rem);
       --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
       --space-1:0.25rem;--space-2:0.5rem;--space-3:0.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;
-      --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;--color-surface-offset:#f3f0ec;--color-divider:#dcd9d5;--color-border:#d4d1ca;
+      --color-bg:#f2f0eb;--color-surface:#ffffff;--color-surface-2:#f5f3ee;--color-surface-offset:#ebe8e2;--color-divider:#ddd8d0;--color-border:#c8c3ba;
       --color-text:#28251d;--color-text-muted:#64635e;--color-text-faint:#94928c;--color-text-inverse:#f9f8f4;
       --color-primary:#f7f6f2;--color-primary-hover:#0c4e54;--color-primary-highlight:#d9ecea;
       --color-success:#437a22;--color-error:#a12c7b;
       --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.875rem;--radius-xl:1rem;--radius-full:9999px;
-      --shadow-sm:0 1px 2px rgb(25 23 18/.06);--shadow-md:0 8px 22px rgb(25 23 18/.08);
+      --shadow-sm:0 1px 3px rgb(25 23 18/.09);--shadow-md:0 8px 22px rgb(25 23 18/.1);
       --font-body:'Satoshi',Inter,sans-serif;--transition:180ms cubic-bezier(0.16,1,0.3,1);
       --update-banner-duration:2.4s;
       --update-banner-ease:cubic-bezier(0.16,1,0.3,1);
@@ -701,13 +701,17 @@
     .settings-page-intro{
       background:var(--color-surface);
       border-radius:var(--radius-xl);
-      border:1px solid color-mix(in srgb,var(--color-text) 6%,transparent);
+      border:1px solid var(--color-border);
       margin:0 0 var(--space-5);
       box-shadow:var(--shadow-sm);
+    }
+    [data-theme="light"] .settings-page-intro{
+      box-shadow:0 1px 3px rgb(25 23 18/.08),0 0 0 1px rgb(25 23 18/.04);
     }
     [data-theme="dark"] .settings-page-intro{
       background:var(--color-surface-2);
       border-color:color-mix(in srgb,var(--color-text) 10%,transparent);
+      box-shadow:none;
     }
     .settings-page-intro__inner{
       display:flex;
@@ -756,16 +760,22 @@
       text-transform:uppercase;
       letter-spacing:.05em;
     }
+    [data-theme="light"] .settings-section-title{color:var(--color-text-muted)}
     .settings-section-title:not(:first-child){margin-top:var(--space-5)}
     .settings-group{
       background:var(--color-surface);
       border-radius:var(--radius-xl);
-      border:1px solid color-mix(in srgb,var(--color-text) 6%,transparent);
+      border:1px solid var(--color-border);
       overflow:hidden;
+      box-shadow:var(--shadow-sm);
+    }
+    [data-theme="light"] .settings-group{
+      box-shadow:0 1px 3px rgb(25 23 18/.08),0 0 0 1px rgb(25 23 18/.04);
     }
     [data-theme="dark"] .settings-group{
       background:var(--color-surface-2);
       border-color:color-mix(in srgb,var(--color-text) 10%,transparent);
+      box-shadow:none;
     }
     .settings-row{
       display:flex;
@@ -777,8 +787,9 @@
       text-align:left;
       background:transparent;
       color:var(--color-text);
-      border-bottom:1px solid color-mix(in srgb,var(--color-text) 6%,transparent);
+      border-bottom:1px solid var(--color-divider);
     }
+    [data-theme="light"] .settings-row{border-bottom-color:var(--color-divider)}
     .settings-group .settings-row:last-child{border-bottom:none}
     .settings-row--nav{cursor:pointer}
     .settings-row--nav:active{background:var(--color-surface-offset)}
@@ -891,6 +902,13 @@
       font-size:var(--text-sm);
       line-height:1.5;
     }
+    [data-theme="light"] .dev-status-panel,
+    [data-theme="light"] .dev-pre{
+      background:var(--color-surface);
+      border-color:var(--color-border);
+      box-shadow:var(--shadow-sm);
+    }
+    [data-theme="light"] .dev-status-row + .dev-status-row{border-top-color:var(--color-divider)}
     .dev-status-row{
       display:flex;
       justify-content:space-between;
@@ -1878,7 +1896,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v115';
+  const BUNDLED_PWA_CACHE_VERSION = 'v116';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

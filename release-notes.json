@@ -1,10 +1,23 @@
 {
-  "latest": "v109",
+  "latest": "v110",
   "appVersion": "3.5.4",
   "highlights": [
-    "Personalization defaults and settings back button matches close style."
+    "Settings sections use iOS-style feature cards with icons and short descriptions."
   ],
   "builds": {
+    "v110": {
+      "intro": "Investigator Toolbox 3.5.4 — iOS-style settings feature cards.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Personalization, Location, Notifications, and Software Update each use a rounded card with icon, title, and blurb.",
+            "Extra space below the back button on sub-pages.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v110)."
+          ]
+        }
+      ]
+    },
     "v109": {
       "intro": "Investigator Toolbox 3.5.4 — personalization and settings UI polish.",
       "sections": [

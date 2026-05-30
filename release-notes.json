@@ -1,10 +1,22 @@
 {
-  "latest": "v100",
+  "latest": "v101",
   "appVersion": "3.5.4",
   "highlights": [
-    "Home screen app icon shows red 1 when an update is ready; menu badge 1 is centered."
+    "Header title shortened to Toolbox."
   ],
   "builds": {
+    "v101": {
+      "intro": "Investigator Toolbox 3.5.4 — header title.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Top bar header title is now Toolbox (was Investigator Toolbox).",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v101)."
+          ]
+        }
+      ]
+    },
     "v100": {
       "intro": "Investigator Toolbox 3.5.4 — update badges on menu and home screen icon.",
       "sections": [

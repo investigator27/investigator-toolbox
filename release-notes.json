@@ -1,12 +1,23 @@
 {
-  "latest": "v54",
-  "appVersion": "3.3.2",
+  "latest": "v55",
+  "appVersion": "3.3.3",
   "highlights": [
-    "Apple-style Software Update screen in Settings with Update Now, progress bar, and up-to-date view.",
-    "More Details slides to What's New; smooth progress animation during install.",
-    "Upload v54 to GitHub."
+    "Mobile layout: tab bar stays fully visible; icons centered; header blends with background.",
+    "Upload v55 to GitHub."
   ],
   "builds": {
+    "v55": {
+      "intro": "Investigator Toolbox 3.3.3 — Mobile tab bar and header polish.",
+      "sections": [
+        {
+          "heading": "Layout",
+          "items": [
+            "Tab bar uses small viewport height so it is not clipped on Android after updates.",
+            "Tab icons are vertically centered; header and tab bar borders removed for a seamless look."
+          ]
+        }
+      ]
+    },
     "v54": {
       "intro": "Investigator Toolbox 3.3.2 — Apple-style software update UI.",
       "sections": [

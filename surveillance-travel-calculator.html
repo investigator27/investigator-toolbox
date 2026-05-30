@@ -1433,7 +1433,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v82';
+  const BUNDLED_PWA_CACHE_VERSION = 'v83';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5106,7 +5106,8 @@ out body;`;
     const start = parseDateValue(checkin);
     const end = parseDateValue(checkout);
     if (!start || !end || end <= start) return null;
-    return Math.round((end - start) / (1000 * 60 * 60 * 24));
+    const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
+    return nights > 0 ? nights : null;
   }
 
   function getActiveMeta() {
@@ -5227,6 +5228,16 @@ out body;`;
       /\+|tax|charge|fee/i.test(taxesText);
 
     let { pricePerNight, priceTotalStay, priceBasis } = reconcileHotelPriceFields(h, n);
+
+    const taxAmt = Math.max(0, Number(h?.taxesValue) || 0);
+    if (
+      taxAmt > 0 &&
+      pricePerNight != null &&
+      pricePerNight <= taxAmt + 5 &&
+      priceTotalStay == null
+    ) {
+      pricePerNight = null;
+    }
 
     const cardBasis = inferPriceBasisFromLabel(h?.price);
     const cardPm = h?.price ? String(h.price).match(/([\d][\d,]*(?:\.\d+)?)/) : null;

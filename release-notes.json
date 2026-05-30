@@ -1,10 +1,23 @@
 {
-  "latest": "v82",
+  "latest": "v83",
   "appVersion": "3.5.4",
   "highlights": [
-    "Hotel Finder: multi-night stays use stay total ÷ nights (not full stay as nightly)."
+    "Hotel Finder: accurate nightly price (room + tax) and $200/night filter."
   ],
   "builds": {
+    "v83": {
+      "intro": "Investigator Toolbox 3.5.4 — fix nightly price and budget filter.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "2-night example: CAD 398 + 52 tax → 225/night incl. tax (not 25–27 from tax-only or wrong nights).",
+            "Over $200/night incl. tax: hotel hidden, not listed.",
+            "Deploy booking-worker-68 plus HTML, service-worker, and release-notes (v83)."
+          ]
+        }
+      ]
+    },
     "v82": {
       "intro": "Investigator Toolbox 3.5.4 — fix multi-night price and remove audit screen.",
       "sections": [
@@ -13,7 +26,7 @@
           "items": [
             "3+ night searches: card prices treated as stay total unless labeled per night (e.g. CA$277 for 3 nights → ~92/night, not 277).",
             "Removed the over-budget “Rates from this search” list; short status message only.",
-            "Deploy booking-worker-67 plus HTML and service-worker (v82)."
+            "Deploy booking-worker-68 plus HTML and service-worker (v82)."
           ]
         }
       ]

@@ -1,12 +1,24 @@
 {
-  "latest": "v50",
-  "appVersion": "3.2.1",
+  "latest": "v51",
+  "appVersion": "3.2.2",
   "highlights": [
-    "Fix bottom tab bar missing on desktop and mobile (layout pinned to viewport).",
-    "Update banner transitions smoothed (installing → up to date).",
-    "Upload v50 app to GitHub; Worker unchanged if already on booking-worker-48."
+    "Tab bar matches app width on desktop (680px column), not full browser width.",
+    "Layout: centered flex column — header, scrollable content, tab bar.",
+    "Upload v51 to GitHub."
   ],
   "builds": {
+    "v51": {
+      "intro": "Investigator Toolbox 3.2.2 — Tab bar width and layout.",
+      "sections": [
+        {
+          "heading": "Layout",
+          "items": [
+            "Bottom tabs stay inside the same 680px-wide app column as the rest of the UI on desktop.",
+            "Phone/PWA: header + scroll area + tab bar in one flex column (no viewport-wide tab bar)."
+          ]
+        }
+      ]
+    },
     "v50": {
       "intro": "Investigator Toolbox 3.2.1 — Tab bar layout fix.",
       "sections": [

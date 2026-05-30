@@ -86,7 +86,6 @@
       height:100%;
       min-height:100vh;
       min-height:100dvh;
-      min-height:100svh;
       min-height:-webkit-fill-available;
       overflow:hidden;
       background:var(--color-bg);
@@ -95,8 +94,7 @@
     }
     html{background:var(--color-bg)}
     body{
-      position:fixed;
-      inset:0;
+      margin:0;
       overscroll-behavior:none;
     }
     button,input,select,textarea{font:inherit;color:inherit}
@@ -104,17 +102,18 @@
     a,button,input,select,textarea{transition:background var(--transition),border-color var(--transition),color var(--transition),box-shadow var(--transition)}
     :focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
     .app-shell{
-      position:relative;
       display:flex;
       flex-direction:column;
       width:100%;
       max-width:680px;
       height:100%;
-      min-height:0;
+      min-height:100vh;
+      min-height:100dvh;
+      min-height:-webkit-fill-available;
       margin:0 auto;
+      min-width:0;
       background:var(--color-bg);
       overflow:hidden;
-      isolation:isolate;
     }
     .app-header{
       flex-shrink:0;
@@ -132,7 +131,7 @@
       overscroll-behavior:contain;
       overflow-anchor:none;
       padding:var(--space-4);
-      padding-bottom:calc(var(--tab-bar-height) + var(--tab-bar-safe-bottom) + var(--space-6));
+      padding-bottom:var(--space-5);
       scrollbar-width:none;
       -ms-overflow-style:none;
     }
@@ -150,23 +149,17 @@
       text-align:center;
     }
     .tab-bar{
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      z-index:250;
-      flex-shrink:0;
+      flex:0 0 auto;
+      z-index:200;
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:var(--space-1);
+      width:100%;
       background:var(--color-surface);
       border-top:1px solid var(--color-border);
       padding:var(--space-2) var(--space-2) calc(var(--tab-bar-safe-bottom) + var(--space-2));
       min-height:calc(var(--tab-bar-height) + var(--tab-bar-safe-bottom));
       box-shadow:0 -2px 12px rgb(25 23 18/.06);
-      visibility:visible;
-      opacity:1;
-      pointer-events:auto;
     }
     [data-theme="dark"] .tab-bar{box-shadow:0 -2px 12px rgb(0 0 0/.25)}
     .tab-bar-item{
@@ -798,12 +791,12 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.2.1';
+  let APP_VERSION = '3.2.2';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v50';
+  let PWA_CACHE_VERSION = 'v51';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;

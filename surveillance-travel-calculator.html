@@ -198,11 +198,15 @@
     [data-theme="light"] .tab-bar-item.active{color:var(--color-text)}
     [data-theme="dark"] .tab-bar-item.active{color:var(--color-text)}
     .tab-bar-item--disabled{
-      opacity:.38;
+      opacity:.32;
+      filter:grayscale(1);
       pointer-events:none!important;
       cursor:not-allowed;
       -webkit-tap-highlight-color:transparent;
+      user-select:none;
     }
+    .tab-bar-item--disabled svg{opacity:.55}
+    .tab-bar-item--disabled span{opacity:.65;text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--color-text-muted) 70%,transparent)}
     .tab-bar-item--disabled.active{
       background:transparent;
       color:var(--color-text-muted);
@@ -1281,12 +1285,8 @@
           <h1 class="settings-screen-title">Developer</h1>
           <div id="developerGate">
             <div class="settings-group">
-              <div class="settings-body-text">
-                <p>Unlock to <strong>lock tabs on a device</strong> or read <strong>how to publish updates</strong> to GitHub and install them on phones. This area is password-protected.</p>
-              </div>
-            </div>
-            <div class="settings-group">
               <div class="settings-field-block">
+                <p class="hint" style="margin:0">Enter the password to access Developer Tools</p>
                 <div class="field">
                   <label for="developerPassword">Password</label>
                   <input id="developerPassword" type="password" autocomplete="off" />
@@ -1297,65 +1297,128 @@
             </div>
           </div>
           <div id="developerPanel" class="hidden">
-            <p class="settings-section-title">1 — Lock tabs on this phone or tablet</p>
+            <p class="hint" style="padding:0 var(--space-4) var(--space-2);margin:0">Disabled tabs stay visible but cannot be opened. Calculator cannot be disabled.</p>
+            <h2 class="settings-section-title">Tabs</h2>
             <div class="settings-group">
-              <div class="settings-body-text">
-                <p><strong>ON</strong> = tab works. <strong>OFF</strong> = tab is locked (grey, cannot open). Calculator is always on.</p>
-                <ol class="steps-list">
-                  <li>Turn <strong>OFF</strong> any “Allow access” switch you want locked.</li>
-                  <li>Confirm locked tabs look faded and do not open.</li>
-                  <li>Tap <strong>Lock developer panel</strong> when finished.</li>
-                </ol>
-                <p>Locks save in this browser only. Uninstalling the app or clearing site data removes locks. Each device must be set up separately.</p>
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Hotels tab</span>
+                <label class="settings-switch"><input type="checkbox" id="devTabHotels" checked aria-label="Enable Hotels tab" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Hotels — allow access</span>
-                <label class="settings-switch"><input type="checkbox" id="devTabHotels" checked aria-label="Allow Hotels tab" /><span class="settings-switch__track"></span></label>
+                <span class="settings-row__label">Requests tab</span>
+                <label class="settings-switch"><input type="checkbox" id="devTabRequests" checked aria-label="Enable Requests tab" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Requests — allow access</span>
-                <label class="settings-switch"><input type="checkbox" id="devTabRequests" checked aria-label="Allow Requests tab" /><span class="settings-switch__track"></span></label>
-              </div>
-              <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Camera — allow access</span>
-                <label class="settings-switch"><input type="checkbox" id="devTabCamera" checked aria-label="Allow Camera tab" /><span class="settings-switch__track"></span></label>
+                <span class="settings-row__label">Camera tab</span>
+                <label class="settings-switch"><input type="checkbox" id="devTabCamera" checked aria-label="Enable Camera tab" /><span class="settings-switch__track"></span></label>
               </div>
             </div>
-
-            <p class="settings-section-title">2 — Push a new version to GitHub</p>
+            <h2 class="settings-section-title">Reference</h2>
             <div class="settings-group">
-              <div class="settings-body-text">
-                <p>After you change the app on your computer, upload these <strong>three files</strong> to the same folder GitHub Pages uses (site path: <strong id="developerDeployPath">…</strong>):</p>
-                <ul class="settings-file-list">
-                  <li>surveillance-travel-calculator.html</li>
-                  <li>service-worker.js</li>
-                  <li>release-notes.json</li>
-                </ul>
-                <ol class="steps-list">
-                  <li>In each file, bump the version (e.g. <strong>3.3.5</strong>) and build (e.g. <strong>v57</strong>) so they all match.</li>
-                  <li>Commit and push to GitHub (or upload via the GitHub website).</li>
-                  <li>Wait 1–2 minutes for GitHub Pages to finish deploying.</li>
-                </ol>
-                <p>Hotel search uses Cloudflare separately — only redeploy <strong>booking-worker.js</strong> if you changed hotel search on the worker.</p>
-              </div>
+              <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-menu">
+                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>
+                <span class="settings-row__label">Developer Notes</span>
+                <span class="settings-row__chevron" aria-hidden="true">›</span>
+              </button>
             </div>
-
-            <p class="settings-section-title">3 — Install the update on a phone</p>
-            <div class="settings-group">
-              <div class="settings-body-text">
-                <p>Installed build on this device: <strong id="developerGuideVersion">…</strong></p>
-                <ol class="steps-list">
-                  <li>Open the app (home screen icon or Chrome).</li>
-                  <li><strong>Toolbox Settings</strong> → <strong>Software Update</strong> → <strong>Check for updates</strong>.</li>
-                  <li>If an update appears, tap <strong>Update Now</strong> and wait for the reload.</li>
-                  <li>If it still says up to date but behavior is old: close every tab for the site, reopen, or remove the home-screen app and open the site in Chrome once, then check again.</li>
-                </ol>
-                <p>Tab locks from step 1 are <em>not</em> included in a GitHub update — set locks again on each device after install if needed.</p>
-              </div>
-            </div>
-
             <div class="settings-actions">
-              <button type="button" class="btn btn-secondary" id="developerLockBtn">Lock developer panel</button>
+              <button type="button" class="btn btn-secondary" id="developerLockBtn">Lock</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-menu" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Developer Notes</h1>
+          <div class="settings-group">
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-tabs">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+              <span class="settings-row__label">Tab locks</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-github">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+              <span class="settings-row__label">Publish to GitHub</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="developer-notes-updates">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
+              <span class="settings-row__label">Updates on devices</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-tabs" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Tab locks</h1>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Each switch controls whether a tab can be opened on <strong>this device</strong>. Calculator is always available.</p>
+              <ol class="steps-list">
+                <li>Turn a tab switch <strong>off</strong> to disable it (tab stays visible but cannot be opened).</li>
+                <li>Turn a switch <strong>on</strong> to allow access again.</li>
+                <li>Tap <strong>Lock</strong> on the Developer screen when you are done.</li>
+              </ol>
+              <p>Settings are saved in this browser. Uninstalling the app or clearing site data removes locks. Set up each phone or tablet separately.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-github" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Publish to GitHub</h1>
+          <h2 class="settings-section-title">Files to upload</h2>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Upload these files to your GitHub Pages folder (<strong id="developerDeployPath">…</strong>):</p>
+              <ul class="settings-file-list">
+                <li>surveillance-travel-calculator.html</li>
+                <li>service-worker.js</li>
+                <li>release-notes.json</li>
+              </ul>
+            </div>
+          </div>
+          <h2 class="settings-section-title">Steps</h2>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <ol class="steps-list">
+                  <li>Bump the version number and build in all three files so they match (e.g. <strong>3.3.6</strong> and <strong>v58</strong>).</li>
+                <li>Commit and push to GitHub, or upload the files in the browser.</li>
+                <li>Wait 1–2 minutes for GitHub Pages to deploy.</li>
+              </ol>
+              <p>Hotel search uses Cloudflare separately — redeploy <strong>booking-worker.js</strong> only if you changed the worker.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="developer-notes-updates" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-screen-title">Updates on devices</h1>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Build on this device: <strong id="developerGuideVersion">…</strong></p>
+            </div>
+          </div>
+          <h2 class="settings-section-title">On a phone or tablet</h2>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <ol class="steps-list">
+                <li>Open the app from the home screen or Chrome.</li>
+                <li><strong>Toolbox Settings</strong> → <strong>Software Update</strong> → <strong>Check for updates</strong>.</li>
+                <li>If shown, tap <strong>Update Now</strong> and wait for the reload.</li>
+                <li>If it says up to date but behavior is old: close all tabs for the site, reopen, or reinstall from Chrome once, then check again.</li>
+              </ol>
+            </div>
+          </div>
+          <h2 class="settings-section-title">After an update</h2>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p>Tab locks are not sent with a GitHub update. Re-apply locks on each device in <strong>Developer</strong> if needed.</p>
             </div>
           </div>
         </div>
@@ -1399,12 +1462,15 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.3.5';
+  const BUNDLED_APP_VERSION = '3.3.6';
+  const BUNDLED_PWA_CACHE_VERSION = 'v58';
+  let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v57';
+  let PWA_CACHE_VERSION = BUNDLED_PWA_CACHE_VERSION;
+  let remoteLatestBuild = '';
   const DEVELOPER_PASSWORD = 'dev1-toolb0x';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
   const DEV_UNLOCK_KEY = 'toolboxDevUnlocked';
@@ -1712,6 +1778,33 @@
     }
   }
 
+  function parseBuildNumber(build) {
+    const match = String(build || '').match(/v?(\d+)/i);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  function isBuildNewer(candidate, baseline) {
+    if (!candidate || !baseline) return !!candidate && !baseline;
+    return parseBuildNumber(candidate) > parseBuildNumber(baseline);
+  }
+
+  function getActiveSwBuild(reg) {
+    return parseBuildFromScriptUrl(reg?.active?.scriptURL)
+      || parseBuildFromScriptUrl(navigator.serviceWorker?.controller?.scriptURL)
+      || '';
+  }
+
+  function resolveTargetBuild() {
+    const bundled = BUNDLED_PWA_CACHE_VERSION;
+    const remote = remoteLatestBuild || '';
+    if (remote && isBuildNewer(remote, bundled)) return remote;
+    return bundled;
+  }
+
+  function syncTargetBuildFromBundledAndRemote() {
+    PWA_CACHE_VERSION = resolveTargetBuild();
+  }
+
   function markUpdateReadyForBanner() {
     try { sessionStorage.setItem('toolboxUpdateReady', '1'); } catch {}
   }
@@ -1759,7 +1852,9 @@
 
   function getDisplayUpdateBuild() {
     if (pendingUpdateBuild) return pendingUpdateBuild;
-    return PWA_CACHE_VERSION;
+    const active = getActiveSwBuild(swRegistration);
+    if (active) return active;
+    return resolveTargetBuild();
   }
 
   function formatAppVersionLabel() {
@@ -1809,8 +1904,8 @@
       });
       if (!response.ok) return;
       const data = await response.json();
-      if (data.latest) PWA_CACHE_VERSION = data.latest;
-      if (data.appVersion) APP_VERSION = data.appVersion;
+      if (data.latest) remoteLatestBuild = data.latest;
+      syncTargetBuildFromBundledAndRemote();
       refreshAllVersionDisplays();
     } catch {
     } finally {
@@ -2038,8 +2133,9 @@
       }
     }
 
-    const activeBuild = parseBuildFromScriptUrl(reg?.active?.scriptURL);
-    if (activeBuild && activeBuild === PWA_CACHE_VERSION) {
+    const activeBuild = getActiveSwBuild(reg);
+    const targetBuild = resolveTargetBuild();
+    if (activeBuild && !isBuildNewer(targetBuild, activeBuild)) {
       waitingSW = null;
       clearUpdateReadyMark();
       refreshSettingsVersionLabel();
@@ -2139,10 +2235,12 @@
 
   async function registerForCurrentBuild() {
     await syncBuildLabelFromReleaseNotes();
-    const swUrl = `${BASE_PATH}service-worker.js?build=${encodeURIComponent(PWA_CACHE_VERSION)}`;
+    syncTargetBuildFromBundledAndRemote();
+    const targetBuild = resolveTargetBuild();
+    const swUrl = `${BASE_PATH}service-worker.js?build=${encodeURIComponent(targetBuild)}`;
     let registration = await navigator.serviceWorker.getRegistration(BASE_PATH);
 
-    const buildChanged = registration && registeredBuild && registeredBuild !== PWA_CACHE_VERSION;
+    const buildChanged = registration && registeredBuild && registeredBuild !== targetBuild;
     const midDownload = registration && (registration.installing || registration.waiting);
 
     if (buildChanged && !midDownload) {
@@ -2163,10 +2261,24 @@
       await registration.update();
     }
 
-    registeredBuild = PWA_CACHE_VERSION;
+    registeredBuild = targetBuild;
     swRegistration = registration;
     attachRegistrationListeners(registration);
     return registration;
+  }
+
+  async function probeForRemoteUpdate(registration) {
+    if (!registration) return false;
+    const activeBuild = getActiveSwBuild(registration);
+    const targetBuild = resolveTargetBuild();
+    if (!activeBuild || !isBuildNewer(targetBuild, activeBuild)) return false;
+    try {
+      if (!registration.installing && !registration.waiting) {
+        await registration.update();
+      }
+      await waitForServiceWorkerSettle(registration, 20000);
+    } catch {}
+    return bindWaitingWorker(registration, { showBanner: false });
   }
 
   async function applyAppUpdate() {
@@ -2245,10 +2357,15 @@
 
   function bindWaitingWorker(registration, opts = {}) {
     if (!registration?.waiting) return false;
+    const waitingBuild = parseBuildFromScriptUrl(registration.waiting.scriptURL);
+    const activeBuild = getActiveSwBuild(registration);
+    if (activeBuild && waitingBuild && !isBuildNewer(waitingBuild, activeBuild)) {
+      return false;
+    }
     waitingSW = registration.waiting;
-    pendingUpdateBuild = parseBuildFromScriptUrl(waitingSW.scriptURL)
+    pendingUpdateBuild = waitingBuild
       || parseBuildFromCacheName(pendingUpdateBuild)
-      || PWA_CACHE_VERSION;
+      || resolveTargetBuild();
     const showBanner = !quietUpdateLoad && (opts.showBanner ?? shouldAutoPromptUpdate());
     if (showBanner) {
       markUpdateReadyForBanner();
@@ -2330,9 +2447,18 @@
           return 'pending';
         }
         if (opts.showCheckingUi !== false) {
+          reportLiveProgress('checking', 85, 'Checking server for a newer build…');
+        }
+        if (await probeForRemoteUpdate(registration)) {
+          return bindWaitingWorker(registration, { showBanner: true }) ? 'available' : 'pending';
+        }
+        if (opts.showCheckingUi !== false) {
           reportLiveProgress('checking', 100, 'Check complete.');
         }
         if (bindWaitingWorker(registration, { showBanner: true })) return 'available';
+        const activeBuild = getActiveSwBuild(registration);
+        const targetBuild = resolveTargetBuild();
+        if (activeBuild && isBuildNewer(targetBuild, activeBuild)) return 'pending';
         return 'current';
       } catch (err) {
         const registration = await navigator.serviceWorker.getRegistration(BASE_PATH);
@@ -2492,6 +2618,13 @@
       else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();
     }
+    if (
+      screenId === 'developer-notes-menu'
+      || screenId === 'developer-notes-github'
+      || screenId === 'developer-notes-updates'
+    ) {
+      refreshDeveloperGuideLabels();
+    }
   }
 
   function popSettingsScreen() {
@@ -2601,7 +2734,10 @@
     gate?.classList.toggle('hidden', unlocked);
     panel?.classList.toggle('hidden', !unlocked);
     if (!unlocked && $('developerPassword')) $('developerPassword').value = '';
-    if (unlocked) refreshDeveloperGuideLabels();
+    if (unlocked) {
+      refreshDeveloperGuideLabels();
+      window.ToolboxTabs?.applyVisibility?.(loadTabVisibility());
+    }
   }
 
   function refreshDeveloperGuideLabels() {
@@ -2897,6 +3033,13 @@ $('summaryNote').textContent =
     }
 
     function applyTabBarState() {
+      tabPanels.forEach((panel) => {
+        const tabId = panel.dataset.tab;
+        if (!tabId || tabId === 'calculator') return;
+        if (!isTabEnabled(tabId) && !panel.classList.contains('hidden')) {
+          panel.classList.add('hidden');
+        }
+      });
       tabButtons.forEach((btn) => {
         const tabId = btn.dataset.tab;
         if (!tabId || tabId === 'calculator') {
@@ -2913,6 +3056,8 @@ $('summaryNote').textContent =
         } else {
           btn.setAttribute('aria-disabled', 'true');
           btn.setAttribute('tabindex', '-1');
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
         }
       });
     }
@@ -2954,11 +3099,28 @@ $('summaryNote').textContent =
     };
 
     tabButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
+      const blockDisabled = (event) => {
+        if (!btn.classList.contains('tab-bar-item--disabled')) return;
+        event.preventDefault();
+        event.stopPropagation();
+      };
+      btn.addEventListener('pointerdown', blockDisabled, { capture: true });
+      btn.addEventListener('click', (event) => {
         const tabId = btn.dataset.tab;
-        if (!tabId || btn.classList.contains('tab-bar-item--disabled')) return;
+        if (!tabId || btn.classList.contains('tab-bar-item--disabled')) {
+          event.preventDefault();
+          return;
+        }
         switchTab(tabId);
       });
+    });
+
+    window.addEventListener('pageshow', () => {
+      tabVisibilityState = loadTabVisibility();
+      applyTabBarState();
+      const active = qs('.tab-bar-item.active');
+      const activeId = active?.dataset.tab;
+      if (activeId && !isTabEnabled(activeId)) switchTab('calculator');
     });
 
     window.addEventListener('toolbox-tab-visibility', (event) => {

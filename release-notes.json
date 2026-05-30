@@ -1,12 +1,24 @@
 {
-  "latest": "v57",
-  "appVersion": "3.3.5",
+  "latest": "v58",
+  "appVersion": "3.3.6",
   "highlights": [
-    "Settings screen titles match Toolbox Settings size.",
-    "Developer tab locks apply immediately and persist on this device.",
-    "Upload v57 to GitHub."
+    "Update check compares server build to installed build (fixes false up to date).",
+    "Locked tabs look clearly disabled and cannot be opened.",
+    "Upload v58 to GitHub."
   ],
   "builds": {
+    "v58": {
+      "intro": "Investigator Toolbox 3.3.6 — Update detection and tab lock fixes.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Software Update detects when release-notes.json is newer than the installed build.",
+            "Tab locks grey out tabs, block taps, and return you to Calculator if a locked tab was open."
+          ]
+        }
+      ]
+    },
     "v57": {
       "intro": "Investigator Toolbox 3.3.5 — Settings titles and tab locks.",
       "sections": [

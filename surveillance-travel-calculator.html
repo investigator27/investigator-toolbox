@@ -219,6 +219,12 @@
     .status{font-size:var(--text-sm);padding:0.9rem 1rem;border-radius:var(--radius-lg);background:var(--color-surface-offset);color:var(--color-text-muted);display:none}
     .status.show{display:block}.status.error{background:color-mix(in srgb,var(--color-error) 10%,var(--color-surface));color:var(--color-error)}.status.success{background:color-mix(in srgb,var(--color-success) 12%,var(--color-surface));color:var(--color-success)}
     .status.searching{background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface-offset));color:var(--color-text);display:grid;gap:var(--space-3)}
+    .hotel-access-gate{margin:var(--space-4) 0;padding:var(--space-4);border-radius:var(--radius-lg);background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface-2));border:1px solid color-mix(in srgb,var(--color-primary) 22%,transparent)}
+    .hotel-access-gate.hidden{display:none!important}
+    .hotel-access-gate__title{margin:0 0 var(--space-2);font-size:var(--text-md)}
+    .hotel-access-gate__row{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;margin-top:var(--space-3)}
+    .hotel-access-gate__row input{flex:1;min-width:12rem}
+    .hotel-access-content--locked{opacity:.45;pointer-events:none;user-select:none}
     .hotel-search-status__text{line-height:1.45;color:var(--color-text-muted)}
     .hotel-search-progress{margin-top:var(--space-1)}
     .metric-grid{display:grid;gap:var(--space-3)}.top-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.bottom-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -473,6 +479,18 @@
           <p class="card-sub">Live Booking.com hotels near the event, sorted by distance.</p>
         </div>
 
+        <div id="hotelAccessGate" class="hotel-access-gate hidden" role="region" aria-labelledby="hotelAccessGateTitle">
+          <h3 id="hotelAccessGateTitle" class="hotel-access-gate__title">Team access required</h3>
+          <p class="hint">Hotel search uses paid API credits. Enter the access code your admin shared (not the public GitHub link alone).</p>
+          <div class="hotel-access-gate__row">
+            <input id="hotelAccessInput" type="password" autocomplete="off" placeholder="Access code" aria-label="Hotel Finder access code" />
+            <button type="button" class="btn btn-primary" id="hotelAccessUnlockBtn">Unlock</button>
+          </div>
+          <p class="hint hidden" id="hotelAccessError" role="alert"></p>
+        </div>
+
+        <div id="hotelAccessContent" class="hotel-access-content">
+
         <div class="field">
           <label for="hotelEventSourceBtn">Surveillance Event Source</label>
           <div class="menu-wrap city-wrap">
@@ -625,6 +643,8 @@
           <button class="btn btn-secondary" id="hotelCopyEmailBtn" type="button" disabled>Copy Draft</button>
           <button class="btn btn-primary" id="hotelSendEmailBtn" type="button" disabled>Send Email</button>
         </div>
+
+        </div>
       </section>
     </div>
 
@@ -732,12 +752,12 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.1.9';
+  let APP_VERSION = '3.2.0';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v48';
+  let PWA_CACHE_VERSION = 'v49';
   const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
@@ -2279,8 +2299,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cityDrop) cityDrop.hidden = true;
     document.querySelectorAll('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
     document.querySelectorAll('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
-    if (tabId === 'hotels' && window.HotelFinder?.refreshResolvedAddress) {
-      window.HotelFinder.refreshResolvedAddress();
+    if (tabId === 'hotels') {
+      if (window.HotelFinder?.refreshResolvedAddress) window.HotelFinder.refreshResolvedAddress();
+      if (window.HotelFinder?.refreshAccessGate) window.HotelFinder.refreshAccessGate();
     }
   }
 
@@ -2369,10 +2390,19 @@ document.addEventListener('DOMContentLoaded', () => {
     sendBtn: $('hotelSendEmailBtn'),
     calculatorEvent: $('event'),
     calculatorCity: $('city'),
-    searchArea: $('hotelSearchArea')
+    searchArea: $('hotelSearchArea'),
+    accessGate: $('hotelAccessGate'),
+    accessContent: $('hotelAccessContent'),
+    accessInput: $('hotelAccessInput'),
+    accessUnlockBtn: $('hotelAccessUnlockBtn'),
+    accessError: $('hotelAccessError')
   };
 
   if (!els.searchBtn || !els.results) return;
+
+  const HOTEL_ACCESS_STORAGE_KEY = 'itbBookingAccessToken';
+  let hotelAccessRequired = null;
+  let hotelAccessUnlocked = true;
 
   let selectedHotel = null;
   let lastResults = [];
@@ -2850,6 +2880,134 @@ document.addEventListener('DOMContentLoaded', () => {
     return new URL(`api/booking-search?${params}`, location.href).toString();
   }
 
+  function getStoredBookingAccess() {
+    try {
+      return String(sessionStorage.getItem(HOTEL_ACCESS_STORAGE_KEY) || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  function storeBookingAccess(token) {
+    try {
+      sessionStorage.setItem(HOTEL_ACCESS_STORAGE_KEY, String(token || '').trim());
+    } catch {}
+  }
+
+  function clearStoredBookingAccess() {
+    try {
+      sessionStorage.removeItem(HOTEL_ACCESS_STORAGE_KEY);
+    } catch {}
+  }
+
+  function getBookingAccessHeaders() {
+    const token = getStoredBookingAccess();
+    return token ? { 'X-Booking-Access': token } : {};
+  }
+
+  function getBookingWorkerBase() {
+    return (HOTEL_CONFIG.bookingApiUrl || '').trim().replace(/\/+$/, '');
+  }
+
+  function setHotelAccessLocked(locked) {
+    hotelAccessUnlocked = !locked;
+    els.accessGate?.classList.toggle('hidden', !locked);
+    els.accessContent?.classList.toggle('hotel-access-content--locked', locked);
+    if (els.searchBtn && locked) els.searchBtn.disabled = true;
+  }
+
+  function showHotelAccessError(message) {
+    if (!els.accessError) return;
+    const text = String(message || '').trim();
+    els.accessError.textContent = text;
+    els.accessError.classList.toggle('hidden', !text);
+  }
+
+  async function refreshHotelAccessGate() {
+    const base = getBookingWorkerBase();
+    if (!base) {
+      hotelAccessRequired = false;
+      setHotelAccessLocked(false);
+      return;
+    }
+    try {
+      const response = await fetch(`${base}/?health=1`, {
+        cache: 'no-store',
+        headers: getBookingAccessHeaders()
+      });
+      const data = await response.json();
+      hotelAccessRequired = !!data.bookingAccessRequired;
+      if (!hotelAccessRequired) {
+        showHotelAccessError('');
+        setHotelAccessLocked(false);
+        return;
+      }
+      if (data.bookingAccessOk) {
+        showHotelAccessError('');
+        setHotelAccessLocked(false);
+        return;
+      }
+      const token = getStoredBookingAccess();
+      if (token) {
+        const authResp = await fetch(`${base}/?authCheck=1`, {
+          cache: 'no-store',
+          headers: getBookingAccessHeaders()
+        });
+        const authData = await authResp.json();
+        if (authData.authorized) {
+          showHotelAccessError('');
+          setHotelAccessLocked(false);
+          return;
+        }
+        clearStoredBookingAccess();
+      }
+      showHotelAccessError('');
+      setHotelAccessLocked(true);
+    } catch {
+      if (hotelAccessRequired) {
+        setHotelAccessLocked(true);
+        showHotelAccessError('Could not verify access. Check your connection and try again.');
+      } else {
+        setHotelAccessLocked(false);
+      }
+    }
+  }
+
+  async function unlockHotelAccessFromInput() {
+    const token = (els.accessInput?.value || '').trim();
+    if (!token) {
+      showHotelAccessError('Enter the team access code.');
+      return;
+    }
+    const base = getBookingWorkerBase();
+    if (!base) {
+      showHotelAccessError('Hotel search is not configured.');
+      return;
+    }
+    storeBookingAccess(token);
+    showHotelAccessError('');
+    try {
+      const response = await fetch(`${base}/?authCheck=1`, {
+        cache: 'no-store',
+        headers: getBookingAccessHeaders()
+      });
+      const data = await response.json();
+      if (data.authorized) {
+        if (els.accessInput) els.accessInput.value = '';
+        setHotelAccessLocked(false);
+        showHotelAccessError('');
+        return;
+      }
+      clearStoredBookingAccess();
+      showHotelAccessError('That access code was not accepted. Check with your admin.');
+      setHotelAccessLocked(true);
+    } catch {
+      clearStoredBookingAccess();
+      showHotelAccessError('Could not verify the code. Try again.');
+      setHotelAccessLocked(true);
+    }
+  }
+
   function buildBookingAreaSearchUrl(ctx, geo) {
     if (!ctx) return '';
     const u = new URL('https://www.booking.com/searchresults.html');
@@ -2909,14 +3067,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatBookingSearchError(data) {
     const base = friendlyBookingApiError(data?.error || '');
+    if (data?.authRequired) {
+      setHotelAccessLocked(true);
+      return 'Team access code required. Unlock Hotel Finder at the top of this tab.';
+    }
+    if (data?.rateLimited) {
+      return base || 'Daily search limit reached for this network. Try again tomorrow.';
+    }
     const wv = String(data?.workerVersion || '').trim();
     if (!wv) {
       return (
         'Cloudflare Worker is outdated (no workerVersion in response). ' +
-        'Redeploy cloudflare/booking-worker.js on Cloudflare, then hard-refresh the app (footer should show v3.1.8).'
+        'Redeploy cloudflare/booking-worker.js on Cloudflare, then hard-refresh the app (footer should show v3.2.0).'
       );
     }
-    const expected = 'booking-worker-47';
+    const expected = 'booking-worker-48';
     if (wv !== expected && /protected|premium\+render|ScraperAPI blocked/i.test(base)) {
       return `${base} (deployed: ${wv}; need ${expected} on Cloudflare)`;
     }
@@ -2981,7 +3146,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), BOOKING_SEARCH_TIMEOUT_MS);
       try {
-        const response = await fetch(getBookingApiUrl(params), { cache: 'no-store', signal: controller.signal });
+        const response = await fetch(getBookingApiUrl(params), {
+          cache: 'no-store',
+          signal: controller.signal,
+          headers: getBookingAccessHeaders()
+        });
         if (response.status === 404) {
           return { ok: false, hotels: [], error: 'Local search API not found. Stop the server (Ctrl+C), run Start Local Server.bat again, then hard refresh (Ctrl+Shift+R).' };
         }
@@ -3932,6 +4101,12 @@ out body;`;
   }
 
   async function runSearch() {
+    if (!hotelAccessUnlocked) {
+      setStatus('Enter the team access code to unlock Hotel Finder.', 'error');
+      els.accessGate?.classList.remove('hidden');
+      scrollStatusIntoView();
+      return;
+    }
     const meta = validateSearchInputs();
     if (!meta) return;
 
@@ -4274,7 +4449,17 @@ out body;`;
   setEmailActionsEnabled(false);
 
   refreshSearchAreaPreview();
-  window.HotelFinder = { refreshResolvedAddress, refreshSearchAreaPreview };
+  els.accessUnlockBtn?.addEventListener('click', () => { unlockHotelAccessFromInput(); });
+  els.accessInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      unlockHotelAccessFromInput();
+    }
+  });
+
+  refreshHotelAccessGate();
+
+  window.HotelFinder = { refreshResolvedAddress, refreshSearchAreaPreview, refreshAccessGate: refreshHotelAccessGate };
 })();
 </script>
 

@@ -1,12 +1,25 @@
 {
-  "latest": "v48",
-  "appVersion": "3.1.9",
+  "latest": "v49",
+  "appVersion": "3.2.0",
   "highlights": [
-    "Hotel search shows rotating status messages (area, amenities, almost done).",
-    "Match count (1/3/5/8) does not change ScraperAPI cost — one scrape per search.",
-    "Upload v48 to GitHub; Worker unchanged if already on booking-worker-47."
+    "Hotel Finder team access code — Worker blocks searches without your secret token.",
+    "Optional daily search cap per IP on the Worker (BOOKING_DAILY_LIMIT_PER_IP).",
+    "Deploy booking-worker-48 on Cloudflare + v49 app on GitHub."
   ],
   "builds": {
+    "v49": {
+      "intro": "Investigator Toolbox 3.2.0 — Hotel Finder access lock.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Unlock panel on Hotel tab; code verified by Cloudflare Worker (not stored in GitHub).",
+            "Set BOOKING_ACCESS_TOKEN on the booking-lookup Worker; share code with your team only.",
+            "Optional BOOKING_DAILY_LIMIT_PER_IP to cap searches per network per day."
+          ]
+        }
+      ]
+    },
     "v48": {
       "intro": "Investigator Toolbox 3.1.9 — Hotel Finder search status messages.",
       "sections": [

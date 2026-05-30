@@ -1,12 +1,25 @@
 {
-  "latest": "v53",
-  "appVersion": "3.3.1",
+  "latest": "v54",
+  "appVersion": "3.3.2",
   "highlights": [
-    "ChatGPT-style Settings: full app sheet slides up with bubbled sections and drill-down pages.",
-    "Personalization: theme and font size with toggle switches; Back animates pages in/out.",
-    "Upload v53 to GitHub."
+    "Apple-style Software Update screen in Settings with Update Now, progress bar, and up-to-date view.",
+    "More Details slides to What's New; smooth progress animation during install.",
+    "Upload v54 to GitHub."
   ],
   "builds": {
+    "v54": {
+      "intro": "Investigator Toolbox 3.3.2 — Apple-style software update UI.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Software Update matches iOS layout: app icon, version, summary, Update Now.",
+            "Progress bar animates gradually during download and install.",
+            "Toolbox is up to date screen with More Details → Version Details slide-in."
+          ]
+        }
+      ]
+    },
     "v53": {
       "intro": "Investigator Toolbox 3.3.1 — Settings redesign.",
       "sections": [

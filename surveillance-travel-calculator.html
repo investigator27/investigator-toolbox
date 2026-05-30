@@ -296,105 +296,176 @@
     .email-preview{white-space:pre-wrap;background:var(--color-surface-offset);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);font-size:var(--text-sm);line-height:1.55;max-height:280px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
     .email-preview::-webkit-scrollbar{display:none}
     .card--disabled{opacity:0.55;pointer-events:none}
-    #settingsUpdateHost{
-      display:grid;
-      gap:var(--space-3);
-      min-height:0;
-    }
-    #settingsUpdateHost:empty{display:none}
-    #settingsUpdateHost.is-hiding .update-banner{
-      opacity:0;
-      transform:translateY(-0.35rem);
-      transition:opacity var(--update-banner-duration) var(--update-banner-ease),transform var(--update-banner-duration) var(--update-banner-ease);
-    }
-    .update-banner{
-      margin:0;
-      padding:var(--space-3) var(--space-4) var(--space-4);
-      background:color-mix(in srgb,var(--color-primary-highlight) 55%,var(--color-surface));
-      color:var(--color-text);
-      border:1px solid color-mix(in srgb,var(--color-primary) 35%,var(--color-border));
+    .sw-update{display:grid;gap:var(--space-5);min-height:12rem}
+    .sw-update-panel{display:grid;gap:var(--space-4)}
+    .sw-update-panel.hidden{display:none!important}
+    .sw-update-card{
+      background:var(--color-surface);
       border-radius:var(--radius-xl);
-      box-shadow:var(--shadow-md);
-      display:grid;
-      gap:var(--space-3);
-      min-height:0;
-      overflow:hidden;
-      transform:translateY(-0.5rem);
-      transition:transform var(--update-banner-duration) var(--update-banner-ease);
-    }
-    #settingsUpdateHost .update-banner{transform:translateY(0)}
-    .update-banner.is-swapping .update-banner__body,
-    .update-banner.is-swapping .update-banner__progress-slot,
-    .update-banner.is-swapping .update-banner__actions{opacity:.4}
-    .update-banner__body,
-    .update-banner__progress-slot,
-    .update-banner__actions{
-      transition:opacity .35s var(--update-banner-ease);
-    }
-    .update-banner__top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)}
-    .update-banner__progress-slot{
-      display:grid;
-      gap:var(--space-1);
-      max-height:3.5rem;
-      overflow:hidden;
-      transition:max-height var(--update-banner-duration) var(--update-banner-ease),opacity .35s var(--update-banner-ease),margin var(--update-banner-duration) var(--update-banner-ease);
-    }
-    .update-banner__progress-slot.is-collapsed{
-      max-height:0;
-      opacity:0;
-      margin:0;
-      pointer-events:none;
-    }
-    .update-banner__body{flex:1;min-width:0;display:grid;gap:var(--space-2)}
-    .update-banner__title{font-weight:700;font-size:var(--text-sm);margin:0;line-height:1.35}
-    .update-banner__text{font-size:var(--text-xs);color:var(--color-text-muted);margin:0;line-height:1.45}
-    .update-banner__status{
-      font-size:var(--text-xs);
-      color:var(--color-text-muted);
-      line-height:1.45;
-      margin:0;
-    }
-    .update-progress{
-      height:8px;
-      border-radius:var(--radius-full);
-      background:var(--color-border);
-      border:1px solid color-mix(in srgb,var(--color-text) 18%,var(--color-border));
+      border:1px solid color-mix(in srgb,var(--color-text) 6%,transparent);
       overflow:hidden;
     }
-    .update-progress__bar{
+    [data-theme="dark"] .sw-update-card{
+      background:var(--color-surface-2);
+      border-color:color-mix(in srgb,var(--color-text) 10%,transparent);
+    }
+    .sw-update-card__progress{
+      padding:var(--space-3) var(--space-4) 0;
+    }
+    .sw-update-card__progress.hidden{display:none}
+    .sw-update-progress{
+      height:4px;
+      border-radius:999px;
+      background:color-mix(in srgb,var(--color-text) 12%,var(--color-border));
+      overflow:hidden;
+    }
+    .sw-update-progress__bar{
       display:block;
       height:100%;
       width:0%;
       border-radius:inherit;
-      background:var(--color-primary-hover);
-      transition:width 0.2s linear;
+      background:var(--color-primary);
+      transition:width .12s linear;
     }
-    .update-banner--ready .update-progress__bar{background:var(--color-success)}
-    .update-banner--uptodate{border-color:color-mix(in srgb,var(--color-success) 40%,var(--color-border))}
-    .update-progress.is-indeterminate .update-progress__bar{
-      width:40%!important;
-      background:var(--color-primary-hover);
-      animation:update-indeterminate 1.1s ease-in-out infinite;
+    .sw-update-card__body{padding:var(--space-4)}
+    .sw-update-card__head{
+      display:flex;
+      align-items:center;
+      gap:var(--space-3);
+      margin-bottom:var(--space-3);
     }
-    @keyframes update-indeterminate{
-      0%{transform:translateX(-120%)}
-      100%{transform:translateX(320%)}
+    .sw-update-card__icon{
+      width:60px;
+      height:60px;
+      border-radius:14px;
+      flex-shrink:0;
     }
-    .update-progress__percent{
-      font-size:var(--text-xs);
+    .sw-update-card__title{
+      font-size:var(--text-lg);
       font-weight:700;
-      color:var(--color-text);
+      line-height:1.25;
+      margin:0;
+    }
+    .sw-update-card__meta{
+      font-size:var(--text-sm);
+      color:var(--color-text-muted);
       margin-top:var(--space-1);
     }
-    .update-banner__actions{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap}
-    .update-banner .btn{width:auto;min-height:44px;padding:0 var(--space-4);flex-shrink:0}
-    #updateDetailsModal .modal-head{margin-bottom:var(--space-2)}
-    #updateDetailsModal .modal-head h2{margin:0;line-height:1.3}
-    #updateDetailsIntro{margin:0 0 var(--space-4);line-height:1.45}
-    #updateDetailsModal .update-notes-section h3{
+    .sw-update-card__summary{
+      margin:0 0 var(--space-4);
+      font-size:var(--text-sm);
+      line-height:1.55;
+      color:var(--color-text);
+    }
+    .sw-update-card__status{
+      margin:0 0 var(--space-3);
+      font-size:var(--text-sm);
+      color:var(--color-text-muted);
+      min-height:1.25rem;
+    }
+    .sw-update-btn{
+      width:100%;
+      min-height:50px;
+      border-radius:var(--radius-full);
+      background:var(--color-primary);
+      color:var(--color-text-inverse);
+      font-weight:600;
+      font-size:var(--text-base);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:var(--space-2);
+    }
+    .sw-update-btn:disabled{opacity:.65;cursor:default}
+    .sw-update-btn:not(:disabled):active{background:var(--color-primary-hover)}
+    .sw-update-btn__spinner{
+      width:18px;
+      height:18px;
+      border:2px solid color-mix(in srgb,#fff 35%,transparent);
+      border-top-color:#fff;
+      border-radius:50%;
+      animation:sw-spin .8s linear infinite;
+    }
+    @keyframes sw-spin{to{transform:rotate(360deg)}}
+    .sw-update-checking{
+      display:grid;
+      justify-items:center;
+      gap:var(--space-3);
+      padding:var(--space-8) var(--space-4);
+      color:var(--color-text-muted);
+      font-size:var(--text-sm);
+    }
+    .sw-update-checking__spinner{
+      width:28px;
+      height:28px;
+      border:3px solid var(--color-border);
+      border-top-color:var(--color-primary);
+      border-radius:50%;
+      animation:sw-spin .9s linear infinite;
+    }
+    .sw-update-uptodate{
+      display:grid;
+      justify-items:center;
+      text-align:center;
+      padding:var(--space-8) var(--space-4) var(--space-4);
+      gap:var(--space-2);
+    }
+    .sw-update-uptodate__icon{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      background:color-mix(in srgb,var(--color-text-muted) 22%,transparent);
+      display:grid;
+      place-items:center;
+      margin-bottom:var(--space-2);
+    }
+    .sw-update-uptodate__icon svg{width:28px;height:28px;color:var(--color-text-muted)}
+    .sw-update-uptodate__title{
+      margin:0;
+      font-size:var(--text-xl);
+      font-weight:700;
+      letter-spacing:-.02em;
+    }
+    .sw-update-uptodate__version{
+      margin:0;
+      font-size:var(--text-base);
+      color:var(--color-text-muted);
+    }
+    .sw-update-link{
+      margin-top:var(--space-4);
+      padding:var(--space-2) var(--space-3);
+      font-size:var(--text-base);
+      font-weight:600;
+      color:var(--color-primary);
+      background:transparent;
+    }
+    .sw-update-error{
+      text-align:center;
+      padding:var(--space-6) var(--space-4);
+      color:var(--color-text-muted);
+      font-size:var(--text-sm);
+      line-height:1.5;
+    }
+    .sw-update-recheck{
+      width:100%;
+      margin-top:var(--space-2);
+      min-height:44px;
+      font-weight:600;
+      font-size:var(--text-sm);
+      color:var(--color-primary);
+      background:transparent;
+    }
+    .sw-whatsnew-card{padding:var(--space-4)}
+    .sw-whatsnew-card .update-notes-section h3{
       font-size:var(--text-base);
       font-weight:700;
       margin:0 0 var(--space-2);
+    }
+    .sw-whatsnew-intro{
+      margin:0 0 var(--space-4);
+      font-size:var(--text-sm);
+      line-height:1.55;
+      color:var(--color-text-muted);
     }
     .update-notes{margin:0;padding-left:1.25rem;display:grid;gap:var(--space-2)}
     .update-notes li{font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-1)}
@@ -519,13 +590,6 @@
       font-size:var(--text-lg);
       font-weight:700;
       color:var(--color-text);
-    }
-    .settings-root-title{
-      margin:0 0 var(--space-4);
-      padding-left:var(--space-1);
-      font-size:var(--text-2xl,1.5rem);
-      font-weight:700;
-      letter-spacing:-.03em;
     }
     .settings-page-title{
       margin:0 0 var(--space-5);
@@ -964,7 +1028,6 @@
             <div class="logo logo-icon settings-hero__logo" aria-hidden="true"></div>
             <p class="settings-hero__title" id="settingsHeroTitle">Toolbox Settings</p>
           </div>
-          <h1 class="settings-root-title">Settings</h1>
           <h2 class="settings-section-title">App Settings</h2>
           <div class="settings-group">
             <button type="button" class="settings-row settings-row--nav" data-settings-push="personalization">
@@ -1033,17 +1096,58 @@
       <div class="settings-screen" data-screen="updates" aria-hidden="true">
         <div class="settings-scroll">
           <h1 class="settings-page-title">Software Update</h1>
-          <div class="settings-group">
-            <div class="settings-row settings-row--static">
-              <span class="settings-row__label">Version</span>
-              <span class="settings-row__meta" id="settingsVersionLine">—</span>
+          <div id="swUpdateRoot" class="sw-update" aria-live="polite">
+            <div class="sw-update-checking hidden" id="swUpdateChecking">
+              <span class="sw-update-checking__spinner" aria-hidden="true"></span>
+              <span id="swUpdateCheckingLabel">Checking for updates…</span>
+            </div>
+            <div class="sw-update-panel hidden" id="swUpdateCardPanel">
+              <div class="sw-update-card">
+                <div class="sw-update-card__progress hidden" id="swUpdateProgressWrap">
+                  <div class="sw-update-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <span class="sw-update-progress__bar" id="swUpdateProgressBar"></span>
+                  </div>
+                </div>
+                <div class="sw-update-card__body">
+                  <div class="sw-update-card__head">
+                    <div class="logo logo-icon sw-update-card__icon" aria-hidden="true"></div>
+                    <div>
+                      <h2 class="sw-update-card__title" id="swUpdateTitle">Investigator Toolbox</h2>
+                      <div class="sw-update-card__meta" id="swUpdateMeta">—</div>
+                    </div>
+                  </div>
+                  <p class="sw-update-card__summary" id="swUpdateSummary"></p>
+                  <p class="sw-update-card__status hidden" id="swUpdateStatusLine"></p>
+                  <button type="button" class="sw-update-btn" id="swUpdateNowBtn">Update Now</button>
+                </div>
+              </div>
+            </div>
+            <div class="sw-update-uptodate hidden" id="swUpdateUptodate">
+              <div class="sw-update-uptodate__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <h2 class="sw-update-uptodate__title">Toolbox is up to date</h2>
+              <p class="sw-update-uptodate__version" id="swUpdateUptodateVersion">—</p>
+              <button type="button" class="sw-update-link" id="swUpdateMoreDetails">More Details</button>
+            </div>
+            <div class="sw-update-error hidden" id="swUpdateError">
+              <p id="swUpdateErrorText">Could not check for updates.</p>
+              <button type="button" class="sw-update-recheck" id="swUpdateRetryBtn">Try Again</button>
             </div>
           </div>
-          <div id="settingsUpdateHost" class="settings-update-host"></div>
-          <div class="settings-actions">
-            <button type="button" class="btn btn-primary" id="settingsCheckUpdateBtn" style="width:100%">Check for updates</button>
+          <button type="button" class="sw-update-recheck hidden" id="settingsCheckUpdateBtn">Check Again</button>
+          <span class="hidden" id="settingsVersionLine" aria-hidden="true"></span>
+          <button type="button" class="btn btn-secondary hidden" id="settingsPwaTestBtn" style="margin-top:var(--space-3)">Test update flow (local)</button>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="update-whats-new" aria-hidden="true">
+        <div class="settings-scroll">
+          <h1 class="settings-page-title">Version Details</h1>
+          <div class="settings-group sw-whatsnew-card">
+            <p class="sw-whatsnew-intro" id="updateWhatsNewIntro"></p>
+            <div id="updateWhatsNewBody"></div>
           </div>
-          <button type="button" class="btn btn-secondary hidden" id="settingsPwaTestBtn" style="margin:var(--space-3) var(--space-4) 0">Test update flow (local)</button>
         </div>
       </div>
 
@@ -1212,12 +1316,12 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  let APP_VERSION = '3.3.1';
+  let APP_VERSION = '3.3.2';
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
     || /[?&]pwa=1(?:&|$)/.test(location.search);
   const DEV_MODE = IS_LOCAL_DEV && !PWA_TEST_MODE;
-  let PWA_CACHE_VERSION = 'v53';
+  let PWA_CACHE_VERSION = 'v54';
   const DEVELOPER_PASSWORD = 'intrepid-toolbox';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
   const DEV_UNLOCK_KEY = 'toolboxDevUnlocked';
@@ -1263,9 +1367,239 @@
   let suppressUpdatePromptOnLoad = false;
   let quietUpdateLoad = false;
   let applyingAppUpdate = false;
+  let displayProgress = 0;
+  let targetProgress = 0;
+  let progressRaf = null;
+  let swUpdateActionsBound = false;
 
-  function getUpdateBannerHost() {
-    return document.getElementById('settingsUpdateHost');
+  const swUpdateChecking = $('swUpdateChecking');
+  const swUpdateCardPanel = $('swUpdateCardPanel');
+  const swUpdateUptodate = $('swUpdateUptodate');
+  const swUpdateError = $('swUpdateError');
+  const swUpdateProgressWrap = $('swUpdateProgressWrap');
+  const swUpdateProgressBar = $('swUpdateProgressBar');
+  const swUpdateTitle = $('swUpdateTitle');
+  const swUpdateMeta = $('swUpdateMeta');
+  const swUpdateSummary = $('swUpdateSummary');
+  const swUpdateStatusLine = $('swUpdateStatusLine');
+  const swUpdateNowBtn = $('swUpdateNowBtn');
+  const swUpdateUptodateVersion = $('swUpdateUptodateVersion');
+  const swUpdateMoreDetails = $('swUpdateMoreDetails');
+  const swUpdateRetryBtn = $('swUpdateRetryBtn');
+  const swUpdateErrorText = $('swUpdateErrorText');
+  const updateWhatsNewIntro = $('updateWhatsNewIntro');
+  const updateWhatsNewBody = $('updateWhatsNewBody');
+
+  function paintSwProgressBar(pct) {
+    const rounded = Math.round(Math.max(0, Math.min(100, pct)));
+    if (swUpdateProgressBar) swUpdateProgressBar.style.width = `${rounded}%`;
+    const track = swUpdateProgressWrap?.querySelector('[role="progressbar"]');
+    if (track) track.setAttribute('aria-valuenow', String(rounded));
+  }
+
+  function setUpdateTargetProgress(pct) {
+    targetProgress = Math.max(targetProgress, Math.min(100, pct));
+    if (progressRaf) return;
+    const step = () => {
+      const gap = targetProgress - displayProgress;
+      if (Math.abs(gap) < 0.35) {
+        displayProgress = targetProgress;
+        paintSwProgressBar(displayProgress);
+        progressRaf = null;
+        return;
+      }
+      displayProgress += Math.max(0.25, gap * 0.07);
+      paintSwProgressBar(displayProgress);
+      progressRaf = requestAnimationFrame(step);
+    };
+    progressRaf = requestAnimationFrame(step);
+  }
+
+  function resetDisplayProgress() {
+    if (progressRaf) cancelAnimationFrame(progressRaf);
+    progressRaf = null;
+    displayProgress = 0;
+    targetProgress = 0;
+    paintSwProgressBar(0);
+  }
+
+  function animateProgressTo(target, minDurationMs) {
+    return new Promise((resolve) => {
+      if (progressRaf) cancelAnimationFrame(progressRaf);
+      const start = displayProgress;
+      const startTime = performance.now();
+      const tick = (now) => {
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / minDurationMs);
+        const eased = 1 - (1 - t) * (1 - t);
+        displayProgress = start + (target - start) * eased;
+        paintSwProgressBar(displayProgress);
+        if (t < 1) {
+          progressRaf = requestAnimationFrame(tick);
+          return;
+        }
+        displayProgress = target;
+        targetProgress = target;
+        paintSwProgressBar(displayProgress);
+        progressRaf = null;
+        resolve();
+      };
+      progressRaf = requestAnimationFrame(tick);
+    });
+  }
+
+  function setSwUpdateButtonMode(mode) {
+    if (!swUpdateNowBtn) return;
+    if (mode === 'busy') {
+      swUpdateNowBtn.disabled = true;
+      swUpdateNowBtn.innerHTML = '<span class="sw-update-btn__spinner" aria-hidden="true"></span><span>Updating…</span>';
+      return;
+    }
+    if (mode === 'installing') {
+      swUpdateNowBtn.disabled = true;
+      swUpdateNowBtn.innerHTML = '<span class="sw-update-btn__spinner" aria-hidden="true"></span><span>Installing…</span>';
+      return;
+    }
+    swUpdateNowBtn.disabled = false;
+    swUpdateNowBtn.textContent = 'Update Now';
+  }
+
+  function showSwUpdatePanels(mode) {
+    swUpdateChecking?.classList.toggle('hidden', mode !== 'checking');
+    swUpdateCardPanel?.classList.toggle('hidden', mode !== 'card');
+    swUpdateUptodate?.classList.toggle('hidden', mode !== 'uptodate');
+    swUpdateError?.classList.toggle('hidden', mode !== 'error');
+    settingsCheckUpdateBtn?.classList.toggle('hidden', mode === 'checking' || mode === 'card');
+  }
+
+  async function getUpdateCardVersionLabel(build) {
+    const manifest = await loadReleaseNotesManifest();
+    const notes = manifest?.builds?.[build];
+    if (notes?.intro) {
+      const match = String(notes.intro).match(/(\d+\.\d+\.\d+)/);
+      if (match) return match[1];
+    }
+    if (pendingUpdateBuild && manifest?.appVersion) return manifest.appVersion;
+    return APP_VERSION;
+  }
+
+  async function getUpdateCardSummary(build) {
+    const notes = normalizeReleaseNotesForDisplay(await resolveReleaseNotesForBuild(build));
+    const items = notes.sections?.[0]?.items;
+    if (Array.isArray(items) && items.length) {
+      return items.slice(0, 2).join(' ');
+    }
+    return notes.intro || 'Includes improvements and fixes for investigators in the field.';
+  }
+
+  async function refreshSwUpdateCardCopy(state) {
+    const build = getDisplayUpdateBuild();
+    const versionNum = await getUpdateCardVersionLabel(build);
+    if (swUpdateTitle) swUpdateTitle.textContent = `Investigator Toolbox ${versionNum}`;
+    if (swUpdateMeta) {
+      swUpdateMeta.textContent = state === 'ready'
+        ? `Build ${build} · Ready to install`
+        : `Build ${build}`;
+    }
+    if (swUpdateSummary) {
+      swUpdateSummary.textContent = await getUpdateCardSummary(build);
+    }
+  }
+
+  async function renderSoftwareUpdateUi(state, opts = {}) {
+    if (typeof opts.progress === 'number') updateProgressValue = opts.progress;
+    updateUIState = state;
+    refreshSettingsUpdateBadge();
+
+    if (state === 'checking') {
+      showSwUpdatePanels('checking');
+      if ($('swUpdateCheckingLabel')) {
+        $('swUpdateCheckingLabel').textContent = opts.statusLine || 'Checking for updates…';
+      }
+      return;
+    }
+
+    if (state === 'uptodate') {
+      showSwUpdatePanels('uptodate');
+      if (swUpdateUptodateVersion) {
+        swUpdateUptodateVersion.textContent = `${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
+      }
+      return;
+    }
+
+    if (state === 'error') {
+      showSwUpdatePanels('error');
+      if (swUpdateErrorText) {
+        swUpdateErrorText.textContent = opts.statusLine || 'Could not check for updates. Try again.';
+      }
+      return;
+    }
+
+    showSwUpdatePanels('card');
+    const showProgress = state === 'downloading' || state === 'installing';
+    swUpdateProgressWrap?.classList.toggle('hidden', !showProgress);
+    swUpdateStatusLine?.classList.toggle('hidden', !opts.statusLine);
+    if (swUpdateStatusLine && opts.statusLine) swUpdateStatusLine.textContent = opts.statusLine;
+
+    if (state === 'ready') {
+      resetDisplayProgress();
+      setSwUpdateButtonMode('idle');
+      await refreshSwUpdateCardCopy('ready');
+      return;
+    }
+
+    if (state === 'downloading') {
+      swUpdateProgressWrap?.classList.remove('hidden');
+      setSwUpdateButtonMode('busy');
+      await refreshSwUpdateCardCopy('downloading');
+      const pct = Math.max(displayProgress, updateProgressValue || 8);
+      setUpdateTargetProgress(Math.max(pct, 12));
+      return;
+    }
+
+    if (state === 'installing') {
+      swUpdateProgressWrap?.classList.remove('hidden');
+      setSwUpdateButtonMode('installing');
+      await refreshSwUpdateCardCopy('installing');
+      setUpdateTargetProgress(Math.max(displayProgress, 88));
+      return;
+    }
+  }
+
+  function bindSoftwareUpdateActions() {
+    if (swUpdateActionsBound) return;
+    swUpdateActionsBound = true;
+    swUpdateNowBtn?.addEventListener('click', () => applyAppUpdate());
+    swUpdateRetryBtn?.addEventListener('click', () => runUpdateCheckFlow());
+    settingsCheckUpdateBtn?.addEventListener('click', () => {
+      if (DEV_MODE) {
+        reloadLatestDev();
+        return;
+      }
+      runUpdateCheckFlow();
+    });
+    swUpdateMoreDetails?.addEventListener('click', () => openUpdateWhatsNewScreen());
+  }
+
+  function closeUpdateDetailsModal() {
+    if (!updateDetailsModal) return;
+    updateDetailsModal.classList.add('hidden');
+    updateDetailsModal.setAttribute('aria-hidden', 'true');
+  }
+
+  async function openUpdateWhatsNewScreen() {
+    cachedReleaseNotesManifest = null;
+    const build = PWA_CACHE_VERSION;
+    if (updateWhatsNewIntro) updateWhatsNewIntro.textContent = 'Loading…';
+    if (updateWhatsNewBody) updateWhatsNewBody.innerHTML = '';
+    pushSettingsScreen('update-whats-new');
+    const notes = normalizeReleaseNotesForDisplay(await resolveReleaseNotesForBuild(build));
+    if (updateWhatsNewIntro) updateWhatsNewIntro.textContent = notes.intro;
+    if (updateWhatsNewBody) updateWhatsNewBody.innerHTML = renderReleaseNotesHtml(notes);
+  }
+
+  async function openUpdateDetails() {
+    await openUpdateWhatsNewScreen();
   }
 
   function runUpdateFlowTask(task) {
@@ -1314,11 +1648,7 @@
       sessionStorage.removeItem('toolboxShowUptodate');
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
-    const host = getUpdateBannerHost();
-    if (host) {
-      host.innerHTML = '';
-      host.classList.remove('is-visible', 'is-hiding');
-    }
+    resetDisplayProgress();
     window.location.reload();
   }
 
@@ -1445,25 +1775,6 @@
     `).join('');
   }
 
-  async function openUpdateDetails() {
-    if (!updateDetailsModal) return;
-    cachedReleaseNotesManifest = null;
-    const build = getDisplayUpdateBuild();
-    if (updateDetailsIntro) {
-      updateDetailsIntro.textContent = 'Loading update details…';
-    }
-    if (updateDetailsBody) {
-      updateDetailsBody.innerHTML = '<p style="font-size:var(--text-sm);color:var(--color-text-muted)">Loading…</p>';
-    }
-    updateDetailsModal.classList.remove('hidden');
-    updateDetailsModal.setAttribute('aria-hidden', 'false');
-    const notes = normalizeReleaseNotesForDisplay(await resolveReleaseNotesForBuild(build));
-    if (updateDetailsIntro) {
-      updateDetailsIntro.textContent = notes.intro;
-    }
-    if (updateDetailsBody) updateDetailsBody.innerHTML = renderReleaseNotesHtml(notes);
-  }
-
   function isUpdateMenuBadgeActive() {
     if (updateUIState === 'installing' || updateUIState === 'uptodate') return false;
     if (updateUIState === 'ready' || updateUIState === 'downloading') return true;
@@ -1510,200 +1821,18 @@
     settingsVersionLine.textContent = `${formatAppVersionLabel()} · build ${getDisplayUpdateBuild()}${suffix}`;
   }
 
-  function closeUpdateDetailsModal() {
-    if (!updateDetailsModal) return;
-    updateDetailsModal.classList.add('hidden');
-    updateDetailsModal.setAttribute('aria-hidden', 'true');
-  }
-
   function reportLiveProgress(state, progress, statusLine) {
     if (updateUIState === 'ready' || updateUIState === 'uptodate' || updateUIState === 'installing') return;
     if (state === 'checking' && updateUIState === 'downloading') return;
-    updateUIState = state;
     updateProgressValue = Math.max(0, Math.min(100, progress));
-    renderUpdateBanner(state, { progress: updateProgressValue, statusLine });
-  }
-
-  function bindUpdateBannerActions() {
-    const host = getUpdateBannerHost();
-    if (!host || host._updateActionsBound) return;
-    host._updateActionsBound = true;
-    host.addEventListener('click', (event) => {
-      const id = event.target?.id;
-      if (id === 'updateNowBtn') applyAppUpdate();
-      else if (id === 'updateDetailsBtn') openUpdateDetails();
-      else if (id === 'updateRetryBtn') runUpdateCheckFlow();
-    });
-  }
-
-  function getUpdateBannerConfig(state, opts = {}) {
-    if (typeof opts.progress === 'number') updateProgressValue = opts.progress;
-    const copy = {
-      checking: {
-        title: 'Checking for updates',
-        status: opts.statusLine || 'Connecting to the update server…',
-        showProgress: true,
-        progress: Math.max(0, Math.min(100, updateProgressValue || 0)),
-        indeterminate: false,
-        showUpdate: false,
-        showDetails: false,
-        showRetry: false,
-        bannerClass: ''
-      },
-      downloading: {
-        title: 'Downloading update',
-        status: opts.statusLine || 'Please wait…',
-        showProgress: true,
-        progress: Math.max(0, Math.min(100, updateProgressValue || 0)),
-        indeterminate: false,
-        showUpdate: false,
-        showDetails: false,
-        showRetry: false,
-        bannerClass: ''
-      },
-      ready: {
-        title: `Update available · ${formatAppVersionLabel()}`,
-        status: opts.statusLine || `Build ${getDisplayUpdateBuild()} is ready. Tap Update to install.`,
-        showProgress: false,
-        progress: 0,
-        indeterminate: false,
-        showUpdate: true,
-        showDetails: false,
-        showRetry: false,
-        bannerClass: 'update-banner--ready'
-      },
-      installing: {
-        title: 'Installing update',
-        status: opts.statusLine || 'Restarting the app…',
-        showProgress: false,
-        progress: 0,
-        indeterminate: false,
-        showUpdate: false,
-        showDetails: false,
-        showRetry: false,
-        bannerClass: ''
-      },
-      uptodate: {
-        title: `${formatAppVersionLabel()} · up to date`,
-        status: opts.statusLine || getFriendlyUptodateStatus(),
-        showProgress: false,
-        progress: 0,
-        indeterminate: false,
-        showUpdate: false,
-        showDetails: true,
-        showRetry: false,
-        bannerClass: 'update-banner--uptodate'
-      },
-      error: {
-        title: 'Update check failed',
-        status: opts.statusLine || 'The download was interrupted. Wait a moment, then tap Retry.',
-        showProgress: false,
-        showUpdate: false,
-        showDetails: false,
-        showRetry: true,
-        bannerClass: ''
-      }
-    };
-    return copy[state] || copy.ready;
-  }
-
-  function ensureUpdateBannerShell(host) {
-    let banner = host.querySelector('.update-banner');
-    if (banner) return banner;
-    host.innerHTML = `<div class="update-banner" data-update-state="" role="status" aria-live="polite">
-      <div class="update-banner__top">
-        <div class="update-banner__body">
-          <div class="update-banner__title"></div>
-          <p class="update-banner__status"></p>
-        </div>
-      </div>
-      <div class="update-banner__progress-slot is-collapsed"></div>
-      <div class="update-banner__actions"></div>
-    </div>`;
-    bindUpdateBannerActions();
-    return host.querySelector('.update-banner');
-  }
-
-  function paintUpdateBanner(banner, cfg) {
-    const titleEl = banner.querySelector('.update-banner__title');
-    const statusEl = banner.querySelector('.update-banner__status');
-    const progressSlot = banner.querySelector('.update-banner__progress-slot');
-    const actionsEl = banner.querySelector('.update-banner__actions');
-    if (titleEl) titleEl.textContent = cfg.title;
-    if (statusEl) statusEl.textContent = cfg.status;
-
-    banner.className = `update-banner ${cfg.bannerClass || ''}`.trim();
-    banner.dataset.updateState = updateUIState;
-
-    if (progressSlot) {
-      const progress = typeof cfg.progress === 'number' ? cfg.progress : updateProgressValue;
-      const progressPct = Math.round(progress);
-      if (cfg.showProgress) {
-        progressSlot.classList.remove('is-collapsed');
-        const existingBar = progressSlot.querySelector('.update-progress__bar');
-        if (existingBar && !cfg.indeterminate && banner.dataset.updateState === updateUIState) {
-          existingBar.style.width = `${progressPct}%`;
-          const pctEl = progressSlot.querySelector('.update-progress__percent');
-          if (pctEl) pctEl.textContent = `${progressPct}%`;
-          const track = progressSlot.querySelector('.update-progress');
-          if (track) track.setAttribute('aria-valuenow', String(progressPct));
-        } else {
-          progressSlot.innerHTML = `<div class="update-progress${cfg.indeterminate ? ' is-indeterminate' : ''}" role="progressbar" aria-valuenow="${progressPct}" aria-valuemin="0" aria-valuemax="100">
-              <span class="update-progress__bar" style="width:${cfg.indeterminate ? '40' : progressPct}%"></span>
-            </div>
-            ${cfg.indeterminate ? '' : `<div class="update-progress__percent">${progressPct}%</div>`}`;
-        }
-      } else {
-        progressSlot.classList.add('is-collapsed');
-        progressSlot.innerHTML = '';
-      }
-    }
-
-    if (actionsEl) {
-      const bits = [];
-      if (cfg.showUpdate) bits.push('<button id="updateNowBtn" class="btn btn-primary" type="button">Update</button>');
-      if (cfg.showRetry) bits.push('<button id="updateRetryBtn" class="btn btn-primary" type="button">Retry</button>');
-      if (cfg.showDetails) bits.push('<button id="updateDetailsBtn" class="btn btn-secondary" type="button">Details</button>');
-      actionsEl.innerHTML = bits.join('');
-    }
-  }
-
-  function revealUpdatePromptHost(host, { animateIn }) {
-    host.classList.remove('is-hiding');
-    if (animateIn && !host.classList.contains('is-visible')) {
-      host.classList.remove('is-visible');
-      void host.offsetHeight;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => host.classList.add('is-visible'));
-      });
-    } else {
-      host.classList.add('is-visible');
-    }
-  }
-
-  function swapUpdateBannerContent(banner, cfg) {
-    const sameState = banner.dataset.updateState === updateUIState;
-    if (sameState) {
-      paintUpdateBanner(banner, cfg);
-      return;
-    }
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion) {
-      paintUpdateBanner(banner, cfg);
-      return;
-    }
-    banner.classList.add('is-swapping');
-    window.setTimeout(() => {
-      paintUpdateBanner(banner, cfg);
-      requestAnimationFrame(() => banner.classList.remove('is-swapping'));
-    }, 160);
+    renderSoftwareUpdateUi(state, { progress: updateProgressValue, statusLine });
   }
 
   function showUpdateReadyBanner() {
     stopWaitingReadyPoll();
     updateProgressValue = 100;
-    updateUIState = 'ready';
-    renderUpdateBanner('ready');
+    resetDisplayProgress();
+    renderSoftwareUpdateUi('ready');
     refreshSettingsVersionLabel();
   }
 
@@ -1711,45 +1840,22 @@
     stopWaitingReadyPoll();
     waitingSW = null;
     pendingUpdateBuild = '';
-    updateUIState = 'uptodate';
-    renderUpdateBanner('uptodate', opts);
+    resetDisplayProgress();
+    renderSoftwareUpdateUi('uptodate', opts);
     refreshSettingsVersionLabel();
-    if (opts.autoHide !== false) {
-      if (updateBannerHideTimer) clearTimeout(updateBannerHideTimer);
-      const hideMs = typeof opts.autoHideMs === 'number' ? opts.autoHideMs : UPDATE_BANNER_AUTODISMISS_MS;
-      updateBannerHideTimer = setTimeout(hideUpdateBanner, hideMs);
-    }
   }
 
   function renderUpdateBanner(state, opts = {}) {
-    const host = getUpdateBannerHost();
-    if (!host) return;
-    if (updateBannerHideTimer) {
-      clearTimeout(updateBannerHideTimer);
-      updateBannerHideTimer = null;
-    }
-
-    const wasVisible = host.classList.contains('is-visible');
-    const hadBanner = !!host.querySelector('.update-banner');
-    const animateIn = !wasVisible;
-    updateUIState = state;
-    const cfg = getUpdateBannerConfig(state, opts);
-
-    const banner = ensureUpdateBannerShell(host);
-    if (!banner) return;
-
-    if (wasVisible && hadBanner) {
-      swapUpdateBannerContent(banner, cfg);
-    } else {
-      paintUpdateBanner(banner, cfg);
-    }
-
-    revealUpdatePromptHost(host, { animateIn });
-    refreshSettingsUpdateBadge();
+    renderSoftwareUpdateUi(state, opts);
   }
 
   function showUpdateBanner(mode = 'ready') {
-    renderUpdateBanner(mode === 'available' ? 'ready' : mode);
+    renderSoftwareUpdateUi(mode === 'available' ? 'ready' : mode);
+  }
+
+  function hideUpdateBanner() {
+    if (updateUIState === 'uptodate' || updateUIState === 'ready') return;
+    updateUIState = 'idle';
   }
 
   function stopWaitingReadyPoll() {
@@ -1873,6 +1979,7 @@
     if (allFilesDone) {
       updateProgressValue = 100;
       pendingUpdateBuild = parseBuildFromCacheName(data.version) || pendingUpdateBuild || PWA_CACHE_VERSION;
+      setUpdateTargetProgress(96);
       startWaitingReadyPoll();
       scheduleDownloadStallRecovery();
       promoteDownloadToReady();
@@ -1881,7 +1988,12 @@
 
     updateProgressValue = pct;
     lastDownloadProgressAt = Date.now();
-    renderUpdateBanner('downloading', { progress: pct, statusLine: label || 'Downloading update files…' });
+    const eased = Math.min(96, Math.max(displayProgress + 2, pct * 0.92));
+    renderSoftwareUpdateUi('downloading', {
+      progress: eased,
+      statusLine: label || 'Downloading update…'
+    });
+    setUpdateTargetProgress(eased);
 
     if ((total > 0 && done >= total - 1) || pct >= 85) {
       startWaitingReadyPoll();
@@ -1955,53 +2067,35 @@
     return registration;
   }
 
-  function hideUpdateBanner() {
-    const host = getUpdateBannerHost();
-    if (!host || !host.querySelector('.update-banner')) return;
-    if (updateBannerHideTimer) clearTimeout(updateBannerHideTimer);
-
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion) {
-      host.innerHTML = '';
-      host.classList.remove('is-visible', 'is-hiding');
-      updateUIState = 'idle';
-      return;
-    }
-
-    host.classList.add('is-hiding');
-    host.classList.remove('is-visible');
-    updateBannerHideTimer = setTimeout(() => {
-      host.innerHTML = '';
-      host.classList.remove('is-visible', 'is-hiding');
-      host._updateActionsBound = false;
-      updateBannerHideTimer = null;
-      if (updateUIState === 'uptodate') updateUIState = 'idle';
-    }, UPDATE_BANNER_HIDE_MS);
-  }
-
   async function applyAppUpdate() {
     if (applyingAppUpdate) return;
     applyingAppUpdate = true;
     stopWaitingReadyPoll();
     clearUpdateReadyMark();
     refreshSettingsUpdateBadge();
-    updateUIState = 'installing';
-    renderUpdateBanner('installing', { statusLine: 'Installing update…' });
+    swUpdateProgressWrap?.classList.remove('hidden');
+    displayProgress = Math.max(displayProgress, 12);
+    paintSwProgressBar(displayProgress);
+    await renderSoftwareUpdateUi('downloading', { statusLine: 'Downloading update…' });
+    setUpdateTargetProgress(42);
+    await new Promise((r) => setTimeout(r, 500));
+    await renderSoftwareUpdateUi('installing', { statusLine: 'Installing update…' });
+    setUpdateTargetProgress(Math.max(displayProgress, 72));
 
     let reloaded = false;
-    const reloadOnce = () => {
+    const reloadOnce = async () => {
       if (reloaded) return;
       reloaded = true;
       reloadAfterUpdate = false;
+      await animateProgressTo(100, 1400);
+      await new Promise((r) => setTimeout(r, 400));
       finishAppUpdateReload();
     };
-
-    const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
     const waiting = waitingSW || reg?.waiting;
     if (!waiting) {
-      await pause(400);
+      await animateProgressTo(100, 1200);
       reloadOnce();
       return;
     }
@@ -2038,16 +2132,12 @@
       }
     });
 
+    setUpdateTargetProgress(92);
     await activationDone;
-    const host = getUpdateBannerHost();
-    const banner = host?.querySelector('.update-banner');
-    const statusEl = banner?.querySelector('.update-banner__status');
-    if (statusEl) {
-      statusEl.textContent = 'Update installed. Restarting…';
-    } else {
-      renderUpdateBanner('installing', { statusLine: 'Update installed. Restarting…' });
+    if (swUpdateStatusLine) {
+      swUpdateStatusLine.classList.remove('hidden');
+      swUpdateStatusLine.textContent = 'Restarting Toolbox…';
     }
-    await pause(650);
     reloadOnce();
   }
 
@@ -2166,7 +2256,7 @@
       return;
     }
     if (!('serviceWorker' in navigator)) {
-      showUptodateBanner({ autoHideMs: 5000 });
+      showUptodateBanner();
       return;
     }
     if (updateUIState === 'ready' && waitingSW) {
@@ -2196,7 +2286,7 @@
     const testHint = PWA_TEST_MODE && IS_LOCAL_DEV
       ? `You already have the latest test version (${APP_VERSION}).`
       : '';
-    showUptodateBanner({ statusLine: testHint || undefined, autoHideMs: UPDATE_BANNER_AUTODISMISS_MS });
+    showUptodateBanner({ statusLine: testHint || undefined });
   }
 
   function syncThemeMeta(theme) {
@@ -2293,6 +2383,13 @@
     if (top === screenId) return;
     settingsNavStack.push(screenId);
     paintSettingsScreens();
+    if (screenId === 'updates') {
+      bindSoftwareUpdateActions();
+      if (updateUIState === 'uptodate') renderSoftwareUpdateUi('uptodate');
+      else if (updateUIState === 'ready' && waitingSW) renderSoftwareUpdateUi('ready');
+      else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
+      else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();
+    }
   }
 
   function popSettingsScreen() {
@@ -2580,24 +2677,14 @@ $('summaryNote').textContent =
       applyFontSize(input.dataset.fontSwitch || 'normal');
     });
   });
-  settingsCheckUpdateBtn?.addEventListener('click', () => {
-    if (DEV_MODE) {
-      reloadLatestDev();
-      return;
-    }
-    runUpdateCheckFlow();
-  });
+  bindSoftwareUpdateActions();
   settingsPwaTestBtn?.addEventListener('click', () => {
     try {
       sessionStorage.removeItem('toolboxShowUptodate');
       sessionStorage.removeItem('toolboxUpdateReady');
       sessionStorage.setItem('toolboxQuietLoad', '1');
     } catch {}
-    const host = getUpdateBannerHost();
-    if (host) {
-      host.innerHTML = '';
-      host.classList.remove('is-visible', 'is-hiding');
-    }
+    resetDisplayProgress();
     if (PWA_TEST_MODE) localStorage.removeItem('toolboxPwaTest');
     else localStorage.setItem('toolboxPwaTest', '1');
     location.reload();
@@ -2684,23 +2771,18 @@ $('summaryNote').textContent =
         quietUpdateLoad = true;
         waitingSW = null;
         applyingAppUpdate = false;
-        showUptodateBanner({ autoHideMs: UPDATE_BANNER_AUTODISMISS_MS });
+        showUptodateBanner();
       } else if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
         sessionStorage.removeItem('toolboxShowUptodate');
         suppressUpdatePromptOnLoad = true;
         quietUpdateLoad = true;
         waitingSW = null;
-        showUptodateBanner({ autoHideMs: UPDATE_BANNER_AUTODISMISS_MS });
+        showUptodateBanner();
       }
     } catch {}
 
     if (DEV_MODE) {
       await clearServiceWorkersForDev();
-      const host = getUpdateBannerHost();
-      if (host) {
-        host.innerHTML = '';
-        host.classList.remove('is-visible', 'is-hiding');
-      }
       return;
     }
 
@@ -2718,14 +2800,7 @@ $('summaryNote').textContent =
 
       const registration = await registerForCurrentBuild();
 
-      if (!navigator.serviceWorker.controller) {
-        const host = getUpdateBannerHost();
-        if (host) {
-          host.innerHTML = '';
-          host.classList.remove('is-visible', 'is-hiding');
-        }
-        return;
-      }
+      if (!navigator.serviceWorker.controller) return;
 
       if (registration.waiting) {
         bindWaitingWorker(registration);

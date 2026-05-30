@@ -1,10 +1,23 @@
 {
-  "latest": "v113",
+  "latest": "v114",
   "appVersion": "3.5.4",
   "highlights": [
-    "Developer settings use page intro cards; Reduce motion uses one On/Off row with a dynamic label."
+    "Settings sub-pages use back only (no X); Guides match the intro card design."
   ],
   "builds": {
+    "v114": {
+      "intro": "Investigator Toolbox 3.5.4 — settings navigation and guides UI.",
+      "sections": [
+        {
+          "heading": "Settings",
+          "items": [
+            "Sub-pages show a back chevron on the left; the close X is hidden on those screens.",
+            "How to Use guides and Version Details use the same page intro card layout.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v114)."
+          ]
+        }
+      ]
+    },
     "v113": {
       "intro": "Investigator Toolbox 3.5.4 — developer settings UI and reduce motion row.",
       "sections": [

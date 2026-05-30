@@ -605,6 +605,11 @@
       opacity:1;
       pointer-events:auto;
     }
+    .settings-overlay.is-subpage .settings-close{
+      opacity:0;
+      pointer-events:none;
+      visibility:hidden;
+    }
     .settings-overlay.is-subpage .settings-sheet__toolbar{
       padding-bottom:var(--space-5);
     }
@@ -1525,11 +1530,16 @@
       </div>
 
       <div class="settings-screen" data-screen="update-whats-new" aria-hidden="true">
-        <div class="settings-scroll">
-          <div class="settings-page-head">
-            <span class="settings-page-head__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-            <h1 class="settings-screen-title">Version Details</h1>
-          </div>
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="update-whats-new-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="update-whats-new-intro-title">Version Details</h1>
+                <p class="settings-page-intro__blurb">What changed in this Toolbox build.</p>
+              </div>
+            </div>
+          </section>
           <div class="settings-group sw-whatsnew-card">
             <p class="sw-whatsnew-intro" id="updateWhatsNewIntro"></p>
             <div id="updateWhatsNewBody"></div>
@@ -1538,11 +1548,16 @@
       </div>
 
       <div class="settings-screen" data-screen="how-menu" aria-hidden="true">
-        <div class="settings-scroll">
-          <div class="settings-page-head">
-            <span class="settings-page-head__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-            <h1 class="settings-screen-title">How to Use</h1>
-          </div>
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="how-menu-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="how-menu-intro-title">How to Use</h1>
+                <p class="settings-page-intro__blurb">Guides for installing Toolbox and using Calculator, Hotels, and Camera.</p>
+              </div>
+            </div>
+          </section>
           <div class="settings-group">
             <button type="button" class="settings-row settings-row--nav" data-settings-push="how-install">
               <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
@@ -1569,11 +1584,16 @@
       </div>
 
       <div class="settings-screen" data-screen="how-install" aria-hidden="true">
-        <div class="settings-scroll">
-          <div class="settings-page-head">
-            <span class="settings-page-head__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
-            <h1 class="settings-screen-title">Install Icon</h1>
-          </div>
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="how-install-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="how-install-intro-title">Install Icon</h1>
+                <p class="settings-page-intro__blurb">Add Toolbox to your home screen on iPhone or Android.</p>
+              </div>
+            </div>
+          </section>
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
@@ -1588,11 +1608,16 @@
       </div>
 
       <div class="settings-screen" data-screen="how-calculator" aria-hidden="true">
-        <div class="settings-scroll">
-          <div class="settings-page-head">
-            <span class="settings-page-head__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg></span>
-            <h1 class="settings-screen-title">Calculator</h1>
-          </div>
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="how-calculator-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="how-calculator-intro-title">Calculator</h1>
+                <p class="settings-page-intro__blurb">Surveillance travel, Google Maps, and billing in Trackops.</p>
+              </div>
+            </div>
+          </section>
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
@@ -1609,11 +1634,16 @@
       </div>
 
       <div class="settings-screen" data-screen="how-hotels" aria-hidden="true">
-        <div class="settings-scroll">
-          <div class="settings-page-head">
-            <span class="settings-page-head__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg></span>
-            <h1 class="settings-screen-title">Hotels</h1>
-          </div>
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="how-hotels-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="how-hotels-intro-title">Hotels</h1>
+                <p class="settings-page-intro__blurb">Search nearby hotels and send your pick to admin.</p>
+              </div>
+            </div>
+          </section>
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
@@ -1627,11 +1657,16 @@
       </div>
 
       <div class="settings-screen" data-screen="how-camera" aria-hidden="true">
-        <div class="settings-scroll">
-          <div class="settings-page-head">
-            <span class="settings-page-head__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
-            <h1 class="settings-screen-title">Camera</h1>
-          </div>
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="how-camera-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="how-camera-intro-title">Camera</h1>
+                <p class="settings-page-intro__blurb">Field photo workflows — coming soon.</p>
+              </div>
+            </div>
+          </section>
           <div class="settings-group">
             <p class="settings-body-text">Coming soon — this tab will support field photo workflows.</p>
           </div>
@@ -1870,7 +1905,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v113';
+  const BUNDLED_PWA_CACHE_VERSION = 'v114';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

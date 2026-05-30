@@ -270,6 +270,7 @@
     }
     .card{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:var(--space-5);display:grid;gap:var(--space-4);min-width:0;max-width:100%}
     .card-title{font-size:var(--text-lg);line-height:1.15}
+    .card-title--section{font-size:var(--text-base);line-height:1.2;font-weight:700}
     .card-sub{color:var(--color-text-muted);font-size:var(--text-sm)}
     .field{display:grid;gap:var(--space-2)}
     .field label{font-size:var(--text-sm);font-weight:700}
@@ -1014,7 +1015,7 @@
   <div class="app-content" id="appContent">
     <div class="tab-panel" id="tab-calculator" data-tab="calculator" role="tabpanel" aria-labelledby="tab-btn-calculator">
       <section class="card" aria-labelledby="form-title">
-        <div><h2 id="form-title" class="card-title">Extended Travel Calculator</h2><p class="card-sub">Make your selections.</p></div>
+        <div><h2 id="form-title" class="card-title card-title--section">Extended Travel Calculator</h2><p class="card-sub">Make your selections.</p></div>
         <div><div class="seg-label">Billing Type</div><div class="segmented" role="group" aria-label="Billing type"><button type="button" class="segment active" data-trip="oneway" aria-pressed="true">One-Way</button><button type="button" class="segment" data-trip="roundtrip" aria-pressed="false">Round Trip</button></div></div>
         <div class="field"><label for="city">Starting Location</label>
     <div class="menu-wrap city-wrap">
@@ -1089,7 +1090,7 @@
     <div class="tab-panel hidden" id="tab-hotels" data-tab="hotels" role="tabpanel" aria-labelledby="tab-btn-hotels">
       <section class="card" aria-labelledby="hotel-title">
         <div>
-          <h2 id="hotel-title" class="card-title">Hotel Finder</h2>
+          <h2 id="hotel-title" class="card-title card-title--section">Hotel Finder</h2>
           <p class="card-sub">Choose your current location, set dates, then search for nearby hotels.</p>
         </div>
 

@@ -1,10 +1,37 @@
 {
-  "latest": "v68",
-  "appVersion": "3.4.6",
+  "latest": "v70",
+  "appVersion": "3.4.8",
   "highlights": [
-    "Hotel Finder: faster search UX — one attempt, no spinning “nearly there” messages."
+    "Hotel Finder: ScraperAPI Async — automated search up to 4 minutes, no manual Booking fallback."
   ],
   "builds": {
+    "v70": {
+      "intro": "Investigator Toolbox 3.4.8 — Booking search uses ScraperAPI Async (worker 53).",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Searches run via ScraperAPI Async (retries until success or timeout) — fixes Cloudflare 30s cap.",
+            "App polls automatically; one Search tap, no manual Booking.com step.",
+            "Deploy booking-worker-53 on Cloudflare plus the three GitHub files."
+          ]
+        }
+      ]
+    },
+    "v69": {
+      "intro": "Investigator Toolbox 3.4.7 — Booking search reliability (worker 52).",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Cloudflare worker booking-worker-52: removed wait_for_selector (main cause of 500 / 30s failures).",
+            "No second ScraperAPI call on failure — one search, one charge attempt.",
+            "Clearer errors when ScraperAPI returns “Request failed after automatic retries”.",
+            "Deploy cloudflare/booking-worker.js AND the three GitHub files together."
+          ]
+        }
+      ]
+    },
     "v68": {
       "intro": "Investigator Toolbox 3.4.6 — Hotel search speed UX.",
       "sections": [

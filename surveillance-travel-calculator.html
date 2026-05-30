@@ -1428,8 +1428,8 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.4.6';
-  const BUNDLED_PWA_CACHE_VERSION = 'v68';
+  const BUNDLED_APP_VERSION = '3.4.8';
+  const BUNDLED_PWA_CACHE_VERSION = 'v70';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3521,12 +3521,92 @@ textarea:focus, textarea:focus-visible {
     /* Progress is a single static line — nothing to clear besides the status UI. */
   }
 
-  function startHotelSearchProgress(phase) {
+  function startHotelSearchProgress(phaseOrMessage) {
     const labels = {
       geocode: 'Getting your location…',
-      booking: 'Searching Booking.com… usually 15–30 seconds.',
+      booking: 'Searching Booking.com… automated (up to 4 minutes).',
     };
-    showHotelSearchProgress(labels[phase] || labels.booking);
+    const msg = labels[phaseOrMessage] || String(phaseOrMessage || labels.booking);
+    showHotelSearchProgress(msg);
+  }
+
+  function finishBookingWorkerPayload(data) {
+    const rawHotels = Array.isArray(data.hotels)
+      ? data.hotels
+      : (data.hotels && typeof data.hotels === 'object' ? [data.hotels] : []);
+
+    if (hotelFiltersAreActive()) {
+      const build = parseWorkerBuildNumber(data.workerVersion);
+      if (build < MIN_FILTER_WORKER_BUILD) {
+        return {
+          ok: false,
+          hotels: [],
+          error:
+            `Filters need booking-worker-${MIN_FILTER_WORKER_BUILD}+ (got ${data.workerVersion || 'unknown'}). ` +
+            'Deploy cloudflare/booking-worker.js to Cloudflare before searching.',
+        };
+      }
+      if (data.ok && rawHotels.length && !bookingHotelsHaveFilterFields(rawHotels)) {
+        return {
+          ok: false,
+          hotels: [],
+          error:
+            'Worker returned listings without filter data. Redeploy cloudflare/booking-worker.js (booking-worker-51+).',
+        };
+      }
+    }
+
+    const errText = formatBookingSearchError(data);
+    if (!data.ok) {
+      return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
+    }
+    if (!rawHotels.length) {
+      return { ok: false, hotels: [], error: 'No hotels returned for this area and dates.' };
+    }
+    return { ok: true, hotels: rawHotels, error: '' };
+  }
+
+  async function pollBookingSearchJob(baseParams, jobId) {
+    const pollParams = new URLSearchParams(baseParams);
+    pollParams.set('jobId', jobId);
+    const pollIntervalMs = 4000;
+    const pollMaxMs = 300000;
+    const started = Date.now();
+
+    while (Date.now() - started < pollMaxMs) {
+      const elapsed = Math.round((Date.now() - started) / 1000);
+      startHotelSearchProgress(`Searching Booking.com… ${elapsed}s (automated, up to 4 min)`);
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 25000);
+      try {
+        const response = await fetch(getBookingApiUrl(pollParams), {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(`booking poll ${response.status}`);
+        const data = await response.json();
+        if (data.pending || data.status === 'running') {
+          await new Promise((r) => setTimeout(r, pollIntervalMs));
+          continue;
+        }
+        return finishBookingWorkerPayload(data);
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          await new Promise((r) => setTimeout(r, pollIntervalMs));
+          continue;
+        }
+        return { ok: false, hotels: [], error: friendlyBookingApiError(String(err?.message || err)) };
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    return {
+      ok: false,
+      hotels: [],
+      error: 'Booking.com search timed out after 4 minutes. Tap Search to try again.',
+    };
   }
 
   function setStatus(message, mode = '') {
@@ -3988,8 +4068,14 @@ textarea:focus, textarea:focus-visible {
     if (/out of credits|quota|exhausted/i.test(s)) {
       return 'Hotel search is out of API credits. Contact admin.';
     }
-    if (/timed out|took longer than 30/i.test(s)) {
-      return 'Booking.com timed out (30s limit). Wait a minute, then tap Search once.';
+    if (/automatic retries|request failed after/i.test(s)) {
+      return 'ScraperAPI HTTP 500 — Booking did not load after ScraperAPI’s own retries. Wait 2–3 minutes, check premium render credits, then tap Search once.';
+    }
+    if (/HTTP 500|scraperapi http 500/i.test(s)) {
+      return 'ScraperAPI could not load Booking.com (HTTP 500). Wait a few minutes, then tap Search once.';
+    }
+    if (/timed out|took longer than 30|took longer than 26/i.test(s)) {
+      return 'Booking.com timed out. Wait a minute, then tap Search once.';
     }
     if (/not configured/i.test(s)) {
       return s;
@@ -3998,7 +4084,11 @@ textarea:focus, textarea:focus-visible {
   }
 
   function formatBookingSearchError(data) {
-    const base = friendlyBookingApiError(data?.error || '');
+    let base = friendlyBookingApiError(data?.error || '');
+    const scraperDetail = String(data?.scraperDetail || '').trim();
+    if (scraperDetail && !base.includes(scraperDetail.slice(0, 40))) {
+      base = base ? `${base} (${scraperDetail})` : scraperDetail;
+    }
     if (data?.rateLimited) {
       return base || 'Daily search limit reached for this network. Try again tomorrow.';
     }
@@ -4006,16 +4096,16 @@ textarea:focus, textarea:focus-visible {
     if (!wv) {
       return (
         'Cloudflare Worker is outdated (no workerVersion in response). ' +
-        'Redeploy cloudflare/booking-worker.js on Cloudflare, then hard-refresh the app (footer should show v3.2.0).'
+        'Redeploy cloudflare/booking-worker.js on Cloudflare, then hard-refresh the app.'
       );
     }
-    const expected = 'booking-worker-49';
-    if (wv !== expected && /protected|premium\+render|ScraperAPI blocked/i.test(base)) {
-      return `${base} (deployed: ${wv}; need ${expected} on Cloudflare)`;
+    const build = parseWorkerBuildNumber(wv);
+    if (build < 53 && /500|automatic retries|timed out|protected|async/i.test(base)) {
+      return `${base} Deploy booking-worker-53 on Cloudflare (you have ${wv}).`;
     }
     if (/protected|ScraperAPI blocked/i.test(base)) {
       const status = data?.scraperStatus != null ? ` HTTP ${data.scraperStatus}` : '';
-      return `${base}${status}. Parking/breakfast filters are not sent to Booking — this is a ScraperAPI/plan issue, not amenities.`;
+      return `${base}${status}. This is a ScraperAPI/plan issue — not your amenity filters.`;
     }
     return base ? `${base} (${wv})` : `Booking.com search failed (${wv}).`;
   }
@@ -4144,69 +4234,42 @@ textarea:focus, textarea:focus-visible {
     // while the same search without filters works. Breakfast/parking/cancellation: verify on
     // the Booking.com link. "Hotels & motels only" is applied below after results return.
 
-    const isBookingTimeoutError = (raw, formatted) =>
-      /took longer than 30|timed out|took too long|timeout/i.test(String(raw || '')) ||
-      /took longer than 30|timed out|took too long/i.test(String(formatted || ''));
-
-    const maxAttempts = 1;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const BOOKING_SEARCH_TIMEOUT_MS = 38000;
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), BOOKING_SEARCH_TIMEOUT_MS);
-      try {
-        const response = await fetch(getBookingApiUrl(params), {
-          cache: 'no-store',
-          signal: controller.signal
-        });
-        if (response.status === 404) {
-          return { ok: false, hotels: [], error: 'Local search API not found. Stop the server (Ctrl+C), run Start Local Server.bat again, then hard refresh (Ctrl+Shift+R).' };
-        }
-        if (!response.ok) throw new Error(`booking ${response.status}`);
-        const data = await response.json();
-        const rawHotels = Array.isArray(data.hotels)
-          ? data.hotels
-          : (data.hotels && typeof data.hotels === 'object' ? [data.hotels] : []);
-        if (hotelFiltersAreActive()) {
-          const build = parseWorkerBuildNumber(data.workerVersion);
-          if (build < MIN_FILTER_WORKER_BUILD) {
-            return {
-              ok: false,
-              hotels: [],
-              error:
-                `Filters need booking-worker-${MIN_FILTER_WORKER_BUILD}+ (got ${data.workerVersion || 'unknown'}). ` +
-                'Deploy cloudflare/booking-worker.js to Cloudflare before searching.',
-            };
-          }
-          if (data.ok && rawHotels.length && !bookingHotelsHaveFilterFields(rawHotels)) {
-            return {
-              ok: false,
-              hotels: [],
-              error:
-                'Worker returned listings without filter data. Redeploy cloudflare/booking-worker.js (booking-worker-51+).',
-            };
-          }
-        }
-        const errText = formatBookingSearchError(data);
-        if (!data.ok) {
-          return { ok: false, hotels: [], error: errText || 'Booking.com search failed.' };
-        }
-        if (!rawHotels.length) {
-          return { ok: false, hotels: [], error: 'No hotels returned for this area and dates.' };
-        }
-        return { ok: true, hotels: rawHotels, error: '' };
-      } catch (err) {
-        const isAbort = err && err.name === 'AbortError';
-        const msg = isAbort
-          ? 'Booking.com search timed out (30s limit). Wait a minute, then tap Search once.'
-          : String(err?.message || err);
-        const friendly = friendlyBookingApiError(msg);
-        return { ok: false, hotels: [], error: friendly };
-      } finally {
-        clearTimeout(timer);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch(getBookingApiUrl(params), {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (response.status === 404) {
+        return { ok: false, hotels: [], error: 'Local search API not found. Stop the server (Ctrl+C), run Start Local Server.bat again, then hard refresh (Ctrl+Shift+R).' };
       }
-    }
+      if (!response.ok) throw new Error(`booking ${response.status}`);
+      let data = await response.json();
 
-    return { ok: false, hotels: [], error: 'Booking.com search failed. Tap Search again in a minute.' };
+      const build = parseWorkerBuildNumber(data.workerVersion);
+      if (build < 53 && !data.pending) {
+        return {
+          ok: false,
+          hotels: [],
+          error:
+            `Deploy booking-worker-53 on Cloudflare for reliable automated search (you have ${data.workerVersion || 'unknown'}).`,
+        };
+      }
+
+      if (data.pending && data.jobId) {
+        return await pollBookingSearchJob(params, data.jobId);
+      }
+
+      return finishBookingWorkerPayload(data);
+    } catch (err) {
+      const msg = err && err.name === 'AbortError'
+        ? 'Could not start Booking.com search. Check connection and tap Search again.'
+        : String(err?.message || err);
+      return { ok: false, hotels: [], error: friendlyBookingApiError(msg) };
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   function applyHotelsComInventoryToHotel(hotel, inventoryState) {
@@ -5159,23 +5222,15 @@ out body;`;
       setEmailActionsEnabled(false);
       hideEmailSectionCollapsible();
       if (resultMeta.verifyMode === 'blocked') {
-        const link = resultMeta.areaSearchUrl
-          ? ` <a href="${escapeHtml(resultMeta.areaSearchUrl)}" target="_blank" rel="noopener noreferrer">Open Booking.com for this area</a> to check manually.`
-          : '';
-        const lead = `Couldn't read Booking.com listings for this area${resultMeta.inventoryError ? ` (${resultMeta.inventoryError})` : ''}.`;
-        els.status.className = 'status show error';
-        els.status.innerHTML = `${escapeHtml(lead)}${link}`;
+        const lead = `Couldn't load hotels from Booking.com${resultMeta.inventoryError ? ` — ${resultMeta.inventoryError}` : ''}. Tap Search to try again.`;
+        setStatus(lead, 'error');
         scrollToHotelResults();
         return;
       } else if (resultMeta.verifyMode === 'over-budget') {
         const capLabel = resultMeta.budgetCap ? formatMoney(resultMeta.budgetCap) : '$200.00';
         const nearby = resultMeta.nearbyCount || 0;
-        const link = resultMeta.areaSearchUrl
-          ? ` <a href="${escapeHtml(resultMeta.areaSearchUrl)}" target="_blank" rel="noopener noreferrer">See all listings on Booking.com</a>.`
-          : '';
-        const lead = `Found ${nearby} hotel${nearby === 1 ? '' : 's'} near this event, but none were ≤ ${capLabel}/night incl. tax for your dates. Try different dates or turn off amenity filters.`;
-        els.status.className = 'status show error';
-        els.status.innerHTML = `${escapeHtml(lead)}${link}`;
+        const lead = `Found ${nearby} hotel${nearby === 1 ? '' : 's'} nearby, but none were ≤ ${capLabel}/night incl. tax for your dates. Try different dates or turn off filters.`;
+        setStatus(lead, 'error');
         scrollToHotelResults();
         return;
       } else if (!geo) {

@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v193",
-  "appVersion": "3.5.62",
+  "latest": "v194",
+  "appVersion": "3.5.63",
   "highlights": [
-    "Camera: the help guide is now its own \"How To Use\" page on the Camera tab (under Camera Settings), opening just like the Clip Library — and it was removed from the Camera Settings screen so settings stay clean."
+    "Camera: fixed the on-screen status — \"Recording\" now stays visible the whole time you record (it no longer flashes for a second and vanishes), and \"Stopped\" reliably appears every time you triple-tap to stop. Plus the new \"How To Use\" guide page on the Camera tab."
   ],
   "builds": {
+    "v194": {
+      "intro": "Build v194 — Covert Camera: reliable on-screen Recording / Stopped status.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "\"● Recording\" now stays on the black screen for the entire recording instead of flashing for about a second and disappearing. It's re-shown after the camera locks to landscape/fullscreen so the orientation step can't wipe it.",
+            "\"Stopped\" now shows every time you triple-tap to stop — including very short clips and the rare save-error case, where it previously showed nothing.",
+            "No change to recording, saving, timestamps, fail-safes or any other camera feature — this only fixes the status text.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v194)."
+          ]
+        }
+      ]
+    },
     "v193": {
       "intro": "Build v193 — Covert Camera: \"How To Use\" guide moved to its own page on the Camera tab.",
       "sections": [

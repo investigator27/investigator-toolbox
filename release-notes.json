@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v171",
-  "appVersion": "3.5.40",
+  "latest": "v172",
+  "appVersion": "3.5.41",
   "highlights": [
-    "Camera fullscreen black screen again; horizontal clip playback; Open Camera label."
+    "Post-update no longer loops to Update Now; camera true fullscreen and landscape record/playback."
   ],
   "builds": {
+    "v172": {
+      "intro": "Build v172 — update loop, camera fullscreen, landscape.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "After restart, Software Update stays on up-to-date (no second Update Now loop).",
+            "Open Camera uses device fullscreen so Android status/nav bars hide while recording.",
+            "Landscape recording enforced; clip View plays wide (16:9).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v172)."
+          ]
+        }
+      ]
+    },
     "v171": {
       "intro": "Build v171 — camera fullscreen and playback.",
       "sections": [

@@ -243,6 +243,21 @@
       max-width:none;
       background:#000;
     }
+    #tab-camera:fullscreen,
+    #tab-camera:-webkit-full-screen{
+      position:fixed!important;
+      inset:0!important;
+      width:100%!important;
+      height:100%!important;
+      max-width:none!important;
+      margin:0!important;
+      background:#000!important;
+      z-index:9999!important;
+    }
+    html.toolbox-covert-active,
+    html.toolbox-covert-active body{
+      background:#000!important;
+    }
     #tab-camera.hidden{display:none!important}
     .covert-camera--session-off{display:none!important}
     .camera-clips-hub{
@@ -376,27 +391,26 @@
       min-height:0;
     }
     .camera-clip-viewer video{
-      width:min(100%,calc((100dvh - 8rem) * 16 / 9));
+      width:100%;
       max-width:100%;
       height:auto;
-      max-height:min(calc(100dvh - 8rem),calc(100vw * 9 / 16));
+      max-height:min(78dvh,calc(100vw * 9 / 16));
       aspect-ratio:16/9;
       border-radius:var(--radius-lg);
       background:#000;
       object-fit:contain;
     }
-    .camera-clip-viewer video.camera-clip-viewer__video--landscape{
-      width:min(100%,calc((100dvh - 8rem) * 16 / 9));
-      max-height:min(calc(100dvh - 8rem),calc(100vw * 9 / 16));
+    .camera-clip-viewer__stage--rotated{
+      width:min(100dvh,100vw);
+      height:min(100vw,calc(100dvh - 6rem));
     }
-    .camera-clip-viewer video.camera-clip-viewer__video--portrait{
-      width:min(calc(100dvh - 8rem),100vw);
-      max-width:calc(100dvh - 8rem);
+    .camera-clip-viewer__stage--rotated video{
+      transform:rotate(90deg);
+      width:min(78dvh,100vw);
+      max-width:none;
       height:auto;
       max-height:100vw;
       aspect-ratio:auto;
-      transform:rotate(90deg);
-      transform-origin:center center;
     }
     .camera-clip-viewer__close{align-self:center;min-width:12rem}
     .covert-camera{
@@ -2394,7 +2408,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=171" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=172" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2416,8 +2430,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.40';
-  const BUNDLED_PWA_CACHE_VERSION = 'v171';
+  const BUNDLED_APP_VERSION = '3.5.41';
+  const BUNDLED_PWA_CACHE_VERSION = 'v172';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3056,6 +3070,7 @@
     try {
       sessionStorage.setItem(POST_UPDATE_LAUNCH_KEY, '1');
       localStorage.setItem(POST_UPDATE_LAUNCH_KEY, '1');
+      sessionStorage.setItem('toolboxBlockUpdateUntil', String(Date.now() + 20000));
       document.documentElement.setAttribute('data-post-update', '1');
     } catch {}
   }
@@ -3092,6 +3107,20 @@
 
   let postUpdateLaunchStarted = false;
   let postUpdateFlowCompleted = false;
+  let postUpdateFlowInProgress = false;
+
+  function shouldBlockUpdateUi() {
+    if (postUpdateFlowInProgress) return true;
+    if (postUpdateLaunchStarted && !postUpdateFlowCompleted) return true;
+    if (quietUpdateLoad || suppressUpdatePromptOnLoad) return true;
+    if (document.documentElement.getAttribute('data-post-update') === '1') return true;
+    if (settingsOverlay?.classList.contains('settings-overlay--post-update')) return true;
+    try {
+      const until = parseInt(sessionStorage.getItem('toolboxBlockUpdateUntil'), 10);
+      if (Number.isFinite(until) && until > Date.now()) return true;
+    } catch {}
+    return false;
+  }
 
   async function ensurePostUpdateLaunchFlow() {
     if (postUpdateLaunchStarted || !isPostUpdateLaunchPending()) return false;
@@ -3116,6 +3145,7 @@
 
   /** After Update Now + reload: Software Update screen, up-to-date UI, badges cleared. Does not touch tabs. */
   async function runPostUpdateLaunchFlow() {
+    postUpdateFlowInProgress = true;
     applyingAppUpdate = false;
     waitingSW = null;
     clearUpdateReadyMark();
@@ -3128,14 +3158,15 @@
     renderSoftwareUpdateUi('uptodate');
     try {
       if ('serviceWorker' in navigator) {
-        await registerForCurrentBuild();
+        const reg = await registerForCurrentBuild();
+        await clearStaleUpdateUiIfCurrent(reg);
+        waitingSW = null;
       }
       refreshAllVersionDisplays();
       renderSoftwareUpdateUi('uptodate');
     } finally {
       postUpdateFlowCompleted = true;
-      suppressUpdatePromptOnLoad = false;
-      quietUpdateLoad = false;
+      postUpdateFlowInProgress = false;
       clearPostUpdateLaunchMarkers();
       refreshSettingsUpdateBadge();
     }
@@ -3143,6 +3174,7 @@
 
   async function registerServiceWorkerOnStartup() {
     if (!('serviceWorker' in navigator)) return;
+    if (shouldBlockUpdateUi()) return;
 
     const registration = await registerForCurrentBuild();
     if (!navigator.serviceWorker.controller) return;
@@ -3196,7 +3228,17 @@
     }
 
     if (postUpdateFlowCompleted) {
-      await registerForCurrentBuild();
+      quietUpdateLoad = true;
+      suppressUpdatePromptOnLoad = true;
+      const reg = await registerForCurrentBuild();
+      waitingSW = null;
+      clearUpdateReadyMark();
+      await clearStaleUpdateUiIfCurrent(reg);
+      if (settingsOverlay?.classList.contains('is-open') && updateUIState !== 'uptodate') {
+        renderSoftwareUpdateUi('uptodate');
+      }
+      quietUpdateLoad = false;
+      suppressUpdatePromptOnLoad = false;
       return;
     }
 
@@ -3698,7 +3740,7 @@
   }
 
   async function finishDownloadAndShowReady(versionHint) {
-    if (applyingAppUpdate || quietUpdateLoad) return;
+    if (applyingAppUpdate || quietUpdateLoad || shouldBlockUpdateUi()) return;
     stopWaitingReadyPoll();
     updateProgressValue = 100;
     pendingUpdateBuild = parseBuildFromCacheName(versionHint) || PWA_CACHE_VERSION;
@@ -3747,6 +3789,13 @@
       openSettings('updates');
       return;
     }
+    if (shouldBlockUpdateUi()) {
+      if (data.type === 'APP_ICON_BADGE') {
+        void syncAppIconBadge(false);
+        refreshSettingsUpdateBadge();
+      }
+      return;
+    }
     if (data.type === 'APP_ICON_BADGE') {
       const pending = Number(data.count) > 0;
       if (pending) {
@@ -3793,7 +3842,7 @@
       });
     });
 
-    if (registration.waiting && navigator.serviceWorker.controller) {
+    if (registration.waiting && navigator.serviceWorker.controller && !shouldBlockUpdateUi()) {
       void bindWaitingWorker(registration);
     }
   }
@@ -3929,6 +3978,7 @@
   }
 
   async function bindWaitingWorker(registration, opts = {}) {
+    if (shouldBlockUpdateUi()) return false;
     if (!registration?.waiting || !navigator.serviceWorker.controller) return false;
     if (await isStaleWaitingWorker(registration)) return false;
     const waitingBuild = parseBuildFromScriptUrl(registration.waiting.scriptURL);
@@ -4490,7 +4540,13 @@
 
   function closeSettings() {
     if (!settingsOverlay) return;
+    const wasPostUpdate = settingsOverlay.classList.contains('settings-overlay--post-update');
     settingsOverlay.classList.remove('is-open', 'is-subpage', 'settings-overlay--post-update');
+    if (wasPostUpdate) {
+      quietUpdateLoad = false;
+      suppressUpdatePromptOnLoad = false;
+      try { sessionStorage.removeItem('toolboxBlockUpdateUntil'); } catch {}
+    }
     doc.body.style.overflow = '';
     const sheet = settingsOverlay.querySelector('.settings-sheet');
     const finish = () => {

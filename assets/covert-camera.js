@@ -16,6 +16,9 @@
   const STORAGE_WATCH_MS = 8000;
   const TAP_REQUIRED = 3;
   const TAP_RESET_MS = 700;
+  // Ignore a "stop" that lands right after a "start" — that's almost always a duplicated
+  // tap event, not the user wanting a sub-second clip. Prevents start-then-instant-stop.
+  const MIN_RECORD_MS = 1200;
   const SWIPE_CLOSE_REQUIRED = 2;
   const SWIPE_THRESHOLD = 48;
   const SWIPE_UP_RESET_MS = 1200;
@@ -27,7 +30,7 @@
     strongHapticOnRecord: true,
     timestampEnabled: false,
     timestampDateFormat: 'YYYY-MM-DD',
-    timestampClock24: true,
+    timestampClock24: false,
     timestampPosition: 'bottom',
     timestampSize: 'medium',
   };
@@ -1642,10 +1645,10 @@
       const id = currentRecordingId;
       const seq = currentChunkSeq++;
       if (id != null) {
-        // Persist each ~1s chunk so a power-loss/crash only costs the last second.
-        appendChunk(id, seq, e.data).catch((err) => {
-          if (isQuotaError(err)) onStorageCritical();
-        });
+        // Best-effort crash backup of each ~1s chunk. A failed backup write must NEVER stop
+        // the live recording — the full clip is still in memory and saved on stop. Genuine
+        // out-of-space is handled by the periodic storage watch instead.
+        appendChunk(id, seq, e.data).catch(() => {});
       }
     };
 
@@ -1763,8 +1766,13 @@
   }
 
   function onTripleTap() {
-    if (isRecording) stopRecording();
-    else startRecording();
+    if (isRecording) {
+      // Don't let a duplicated/echoed tap kill a recording the instant it begins.
+      if (recordingStartedAt && Date.now() - recordingStartedAt < MIN_RECORD_MS) return;
+      stopRecording();
+    } else {
+      startRecording();
+    }
   }
 
   function onTapZone() {

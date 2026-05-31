@@ -495,6 +495,25 @@
       line-height:1.5;
     }
     .covert-permission-gate .btn{max-width:16rem;width:100%;touch-action:manipulation}
+    /* Discreet (non-red) gate buttons for covert use on the black screen. */
+    .covert-gate-btn{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.18);
+      color:#e4e4e7;
+      font-weight:600;
+      box-shadow:none;
+    }
+    .covert-gate-btn:hover{background:rgba(255,255,255,0.14)}
+    .covert-gate-btn:active{background:rgba(255,255,255,0.14);transform:scale(0.98)}
+    .covert-gate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .covert-gate-btn--close{
+      background:transparent;
+      border-color:transparent;
+      color:#a1a1aa;
+      min-height:44px;
+      font-weight:500;
+    }
+    .covert-gate-btn--close:hover{background:rgba(255,255,255,0.06);color:#e4e4e7}
     .covert-permission-gate__error{
       margin:0;
       min-height:1.25em;
@@ -1681,7 +1700,8 @@
         <div class="covert-camera__hud"><span id="covertStatus"></span></div>
         <div class="covert-permission-gate" id="covertPermissionGate">
           <p class="covert-permission-gate__error" id="covertPermissionError" role="alert" aria-live="polite"></p>
-          <button type="button" class="btn btn-primary" id="covertAllowCameraBtn">Allow camera access</button>
+          <button type="button" class="btn covert-gate-btn" id="covertAllowCameraBtn">Allow camera access</button>
+          <button type="button" class="btn covert-gate-btn covert-gate-btn--close" id="covertCloseGateBtn">Close</button>
         </div>
       </div>
     </div>
@@ -2233,7 +2253,48 @@
                 <span class="settings-row__label">Strong haptic on start/stop</span>
                 <label class="settings-switch"><input type="checkbox" id="cameraStrongHapticSwitch" data-cam-pref="strongHapticOnRecord" checked aria-label="Stronger haptic on record start and stop" /><span class="settings-switch__track"></span></label>
               </div>
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Airplane / Do Not Disturb reminder</span>
+                <label class="settings-switch"><input type="checkbox" id="cameraAirplaneReminderSwitch" data-cam-pref="airplaneReminder" checked aria-label="Show reminder to enable Airplane mode or Do Not Disturb" /><span class="settings-switch__track"></span></label>
+              </div>
             </div>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">A phone web app can't silence calls or texts on its own. For fully silent recording, turn on Airplane mode or Do Not Disturb before you record.</p>
+            <h2 class="settings-section-title">Time &amp; date stamp</h2>
+            <div class="settings-group" role="group" aria-label="Time and date stamp">
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Burn date &amp; time onto video</span>
+                <label class="settings-switch"><input type="checkbox" id="cameraTimestampSwitch" data-cam-pref="timestampEnabled" aria-label="Burn date and time onto the recorded video" /><span class="settings-switch__track"></span></label>
+              </div>
+              <div class="field" style="padding:var(--space-3) var(--space-4)">
+                <label for="cameraTimestampFormat">Date format</label>
+                <select id="cameraTimestampFormat" class="city-btn" data-cam-select="timestampDateFormat" style="width:100%;min-height:48px">
+                  <option value="YYYY-MM-DD">2026-04-01 (YYYY-MM-DD)</option>
+                  <option value="MM/DD/YYYY">04/01/2026 (MM/DD/YYYY)</option>
+                  <option value="DD/MM/YYYY">01/04/2026 (DD/MM/YYYY)</option>
+                  <option value="MON-DD-YYYY">Apr 01, 2026</option>
+                </select>
+              </div>
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">24-hour clock</span>
+                <label class="settings-switch"><input type="checkbox" id="cameraTimestampClockSwitch" data-cam-pref="timestampClock24" checked aria-label="Use 24-hour clock for the timestamp" /><span class="settings-switch__track"></span></label>
+              </div>
+              <div class="field" style="padding:var(--space-3) var(--space-4)">
+                <label for="cameraTimestampPosition">Position</label>
+                <select id="cameraTimestampPosition" class="city-btn" data-cam-select="timestampPosition" style="width:100%;min-height:48px">
+                  <option value="bottom">Bottom (date left · time right)</option>
+                  <option value="top">Top (date left · time right)</option>
+                </select>
+              </div>
+              <div class="field" style="padding:var(--space-3) var(--space-4)">
+                <label for="cameraTimestampSize">Size</label>
+                <select id="cameraTimestampSize" class="city-btn" data-cam-select="timestampSize" style="width:100%;min-height:48px">
+                  <option value="small">Small</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </div>
+            </div>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">The stamp is burned into the video so any player or software shows it. When you upload, a matching .txt with the exact time and GPS is included for evidence.</p>
             <h2 class="settings-section-title">Max clip length</h2>
             <div class="settings-group">
               <div class="field" style="padding:var(--space-3) var(--space-4)">
@@ -2512,7 +2573,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=191" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=192" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2534,8 +2595,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.60';
-  const BUNDLED_PWA_CACHE_VERSION = 'v191';
+  const BUNDLED_APP_VERSION = '3.5.61';
+  const BUNDLED_PWA_CACHE_VERSION = 'v192';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

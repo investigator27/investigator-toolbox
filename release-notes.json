@@ -1,11 +1,27 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v191",
-  "appVersion": "3.5.60",
+  "latest": "v192",
+  "appVersion": "3.5.61",
   "highlights": [
-    "Hotel Finder is more reliable: searches now auto-retry when Booking.com intermittently returns an unreadable page, instead of failing with a \"couldn't parse\" error."
+    "Camera: optional date & time stamp burned onto your video (with format, position and size), a discreet camera-access screen with a Close button, and an Airplane/Do Not Disturb reminder for silent recording."
   ],
   "builds": {
+    "v192": {
+      "intro": "Build v192 — Covert Camera: on-video timestamp, discreet access screen, silent-recording reminder.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "New Time & date stamp: turn it on in Camera Settings to burn the date and time into the recorded video (choose date format, 12/24-hour, top/bottom position and size). Off by default, so normal recording is unchanged.",
+            "When you upload a clip, a matching .txt sidecar with the exact recorded time and GPS coordinates is included so other software / an investigator can confirm when and where it was shot. Clip filenames now include the date, time and location.",
+            "The camera-access screen is now discreet (no red button) and has a Close button to instantly drop back to the Camera tab.",
+            "Optional reminder to switch on Airplane mode or Do Not Disturb before recording. Note: a web app cannot silence calls or texts by itself, so this is a reminder you action on the phone.",
+            "The record-start haptic now fires the instant recording begins, instead of waiting for orientation/timestamp setup (haptics still require the Haptic feedback toggle under Personalization, and Android only — iPhone has no web vibration).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v192)."
+          ]
+        }
+      ]
+    },
     "v191": {
       "intro": "Build v191 — Hotel Finder auto-retries Booking.com's intermittent failures.",
       "sections": [

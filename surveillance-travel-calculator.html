@@ -2334,7 +2334,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=160" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=161" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2356,8 +2356,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.29';
-  const BUNDLED_PWA_CACHE_VERSION = 'v160';
+  const BUNDLED_APP_VERSION = '3.5.30';
+  const BUNDLED_PWA_CACHE_VERSION = 'v161';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2948,13 +2948,116 @@
   function finishAppUpdateReload() {
     try {
       sessionStorage.setItem('toolboxJustUpdated', '1');
-      sessionStorage.setItem('toolboxOpenSettingsUpdates', '1');
       sessionStorage.removeItem('toolboxUpdateReady');
       sessionStorage.removeItem('toolboxShowUptodate');
       sessionStorage.removeItem('toolboxReloadBuild');
+      sessionStorage.removeItem('toolboxQuietLoad');
     } catch {}
     resetDisplayProgress();
     window.location.reload();
+  }
+
+  /** After Update Now + reload: Software Update screen, up-to-date UI, badges cleared. Does not touch tabs. */
+  async function runPostUpdateLaunchFlow() {
+    applyingAppUpdate = false;
+    waitingSW = null;
+    clearUpdateReadyMark();
+    suppressUpdatePromptOnLoad = true;
+    quietUpdateLoad = false;
+    await registerForCurrentBuild();
+    refreshAllVersionDisplays();
+    showUptodateBanner();
+    suppressUpdatePromptOnLoad = false;
+    refreshSettingsUpdateBadge();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => openSettings('updates'));
+    });
+  }
+
+  async function registerServiceWorkerOnStartup() {
+    if (!('serviceWorker' in navigator)) return;
+
+    const registration = await registerForCurrentBuild();
+    if (!navigator.serviceWorker.controller) return;
+
+    if (registration.waiting) {
+      bindWaitingWorker(registration);
+      return;
+    }
+    if (registration.installing) {
+      watchInstallingWorker(registration);
+      await waitForServiceWorkerSettle(registration, 10000);
+      bindWaitingWorker(registration);
+      return;
+    }
+    if (!registration.installing && !registration.waiting) {
+      await registration.update();
+    }
+    if (registration.waiting) {
+      bindWaitingWorker(registration);
+    } else if (registration.installing) {
+      watchInstallingWorker(registration);
+      await waitForServiceWorkerSettle(registration, 10000);
+      bindWaitingWorker(registration);
+    }
+  }
+
+  async function handleAppLoadUpdateSequence() {
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+
+    if (DEV_MODE) {
+      await clearServiceWorkersForDev();
+      return;
+    }
+    if (!('serviceWorker' in navigator)) return;
+
+    let justUpdated = false;
+    let showUptodateOnly = false;
+    try {
+      if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
+        sessionStorage.removeItem('toolboxQuietLoad');
+        quietUpdateLoad = true;
+        suppressUpdatePromptOnLoad = true;
+      }
+      justUpdated = sessionStorage.getItem('toolboxJustUpdated') === '1';
+      if (justUpdated) {
+        sessionStorage.removeItem('toolboxJustUpdated');
+        sessionStorage.removeItem('toolboxOpenSettingsUpdates');
+        sessionStorage.removeItem('toolboxReloadBuild');
+        sessionStorage.removeItem('toolboxShowUptodate');
+      } else {
+        showUptodateOnly = sessionStorage.getItem('toolboxShowUptodate') === '1';
+        if (showUptodateOnly) sessionStorage.removeItem('toolboxShowUptodate');
+      }
+    } catch {}
+
+    if (justUpdated) {
+      await runPostUpdateLaunchFlow();
+      return;
+    }
+
+    if (showUptodateOnly) {
+      suppressUpdatePromptOnLoad = true;
+      waitingSW = null;
+      applyingAppUpdate = false;
+      showUptodateBanner();
+      suppressUpdatePromptOnLoad = false;
+      quietUpdateLoad = false;
+      refreshSettingsUpdateBadge();
+      await registerForCurrentBuild();
+      return;
+    }
+
+    await runUpdateFlowTask(async () => {
+      if (suppressUpdatePromptOnLoad) {
+        await registerForCurrentBuild();
+        suppressUpdatePromptOnLoad = false;
+        quietUpdateLoad = false;
+        refreshSettingsVersionLabel();
+        return;
+      }
+      await registerServiceWorkerOnStartup();
+    });
   }
 
   /** Only when covert fullscreen is stuck on top of the tab bar (does not reset normal camera tab). */
@@ -5151,74 +5254,7 @@ $('summaryNote').textContent =
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
 
-    try {
-      if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
-        sessionStorage.removeItem('toolboxQuietLoad');
-        quietUpdateLoad = true;
-        suppressUpdatePromptOnLoad = true;
-      }
-      if (sessionStorage.getItem('toolboxJustUpdated') === '1') {
-        sessionStorage.removeItem('toolboxJustUpdated');
-        sessionStorage.removeItem('toolboxOpenSettingsUpdates');
-        sessionStorage.removeItem('toolboxReloadBuild');
-        sessionStorage.removeItem('toolboxShowUptodate');
-        suppressUpdatePromptOnLoad = true;
-        waitingSW = null;
-        applyingAppUpdate = false;
-        showUptodateBanner();
-      } else if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
-        sessionStorage.removeItem('toolboxShowUptodate');
-        suppressUpdatePromptOnLoad = true;
-        waitingSW = null;
-        showUptodateBanner();
-      }
-    } catch {}
-
-    if (DEV_MODE) {
-      await clearServiceWorkersForDev();
-      return;
-    }
-
-    if (!('serviceWorker' in navigator)) return;
-
-    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
-
-    runUpdateFlowTask(async () => {
-      if (suppressUpdatePromptOnLoad) {
-        await registerForCurrentBuild();
-        suppressUpdatePromptOnLoad = false;
-        quietUpdateLoad = false;
-        refreshSettingsVersionLabel();
-        const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
-        if (reg?.waiting) bindWaitingWorker(reg);
-        return;
-      }
-
-      const registration = await registerForCurrentBuild();
-
-      if (!navigator.serviceWorker.controller) return;
-
-      if (registration.waiting) {
-        bindWaitingWorker(registration);
-        return;
-      }
-      if (registration.installing) {
-        watchInstallingWorker(registration);
-        await waitForServiceWorkerSettle(registration, 10000);
-        bindWaitingWorker(registration);
-        return;
-      }
-      if (!registration.installing && !registration.waiting) {
-        await registration.update();
-      }
-      if (registration.waiting) {
-        bindWaitingWorker(registration);
-      } else if (registration.installing) {
-        watchInstallingWorker(registration);
-        await waitForServiceWorkerSettle(registration, 10000);
-        bindWaitingWorker(registration);
-      }
-    })
+    await handleAppLoadUpdateSequence()
       .catch(() => {})
       .finally(() => {
         refreshSettingsUpdateBadge();

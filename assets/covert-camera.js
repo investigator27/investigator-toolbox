@@ -23,7 +23,6 @@
     timestampClock24: true,
     timestampPosition: 'bottom',
     timestampSize: 'medium',
-    airplaneReminder: true,
   };
 
   let mediaStream = null;
@@ -1057,9 +1056,6 @@
     enterCovertMode();
     hidePreview();
     clearHud();
-    if (getPrefs().airplaneReminder) {
-      showBriefHud('Tip: turn on Airplane mode or Do Not Disturb for fully silent recording', 4500);
-    }
     void prepareLandscapeCapture();
   }
 
@@ -1105,6 +1101,13 @@
   function showPermissionGate(show) {
     $('covertPermissionGate')?.classList.toggle('hidden', !show);
     $('covertCamera')?.classList.toggle('covert-camera--gate-open', !!show);
+  }
+
+  function showAirplaneReminder(show) {
+    const modal = $('covertAirplaneReminder');
+    if (!modal) return;
+    modal.classList.toggle('hidden', !show);
+    modal.setAttribute('aria-hidden', show ? 'false' : 'true');
   }
 
   function setPreviewVisible(visible) {
@@ -1514,7 +1517,12 @@
     const dy = swipeStartY - e.changedTouches[0].clientY;
     swipeStartY = null;
     if (dy > SWIPE_THRESHOLD) {
-      if (!cameraSessionActive || isRecording) return;
+      if (!cameraSessionActive) return;
+      // While recording, swipe up only peeks at the live feed (no exit-to-clips gesture).
+      if (isRecording) {
+        showPreview();
+        return;
+      }
       swipeUpCount += 1;
       clearTimeout(swipeUpResetTimer);
       swipeUpResetTimer = setTimeout(() => {
@@ -1587,6 +1595,13 @@
   }
 
   async function uploadClips(clipIds) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      haptic('medium');
+      window.alert(
+        'You appear to be offline. If Airplane mode is still on, turn it off (and reconnect to Wi-Fi or data) to upload clips to OneDrive.\n\nYour clips are safe on this device in the meantime.'
+      );
+      return;
+    }
     let clips = await getAllClips();
     if (clipIds?.length) {
       const set = new Set(clipIds);
@@ -1674,7 +1689,7 @@
       });
     });
 
-    ['timestampEnabled', 'timestampClock24', 'airplaneReminder'].forEach((key) => {
+    ['timestampEnabled', 'timestampClock24'].forEach((key) => {
       document.querySelectorAll(`[data-cam-pref="${key}"]`).forEach((input) => {
         input.addEventListener('change', (e) => {
           const prefs = getPrefs();
@@ -1740,7 +1755,6 @@
     [
       ['timestampEnabled', !!prefs.timestampEnabled],
       ['timestampClock24', prefs.timestampClock24 !== false],
-      ['airplaneReminder', prefs.airplaneReminder !== false],
     ].forEach(([key, checked]) => {
       document.querySelectorAll(`[data-cam-pref="${key}"]`).forEach((input) => {
         input.checked = checked;
@@ -1791,9 +1805,20 @@
 
     $('covertOpenCameraBtn')?.addEventListener('click', () => {
       haptic('light');
+      showAirplaneReminder(true);
+    });
+
+    $('covertAirplaneContinueBtn')?.addEventListener('click', () => {
+      haptic('light');
+      showAirplaneReminder(false);
       userClosedSession = false;
       cameraSessionActive = true;
       resumeCameraSession();
+    });
+
+    $('covertAirplaneCancelBtn')?.addEventListener('click', () => {
+      haptic('light');
+      showAirplaneReminder(false);
     });
 
     $('covertClipsSelectAllBtn')?.addEventListener('click', () => {

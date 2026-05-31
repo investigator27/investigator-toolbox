@@ -1,10 +1,49 @@
 {
-  "latest": "v123",
+  "latest": "v126",
   "appVersion": "3.5.4",
   "highlights": [
-    "Install page and install guide are Android (Chrome) only."
+    "Install page: Open on Desktop with Firefox, Chrome, or Edge picker."
   ],
   "builds": {
+    "v126": {
+      "intro": "Investigator Toolbox 3.5.4 — desktop browser picker on install page.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Install page adds Open on Desktop — choose Firefox, Chrome, or Edge to open Toolbox.",
+            "Settings → Install Icon guide includes desktop steps.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v126)."
+          ]
+        }
+      ]
+    },
+    "v125": {
+      "intro": "Investigator Toolbox 3.5.4 — Android install prompt fix.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Install page registers the service worker immediately and shows Install when Chrome is ready.",
+            "Tapping Install runs the native prompt; if not ready yet, opens the app with an Install Toolbox bar.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v125)."
+          ]
+        }
+      ]
+    },
+    "v124": {
+      "intro": "Investigator Toolbox 3.5.4 — simpler install page.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Install page shows QR only (no URL text under the code); Android Chrome only.",
+            "Settings → Install Icon steps shortened to match.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v124)."
+          ]
+        }
+      ]
+    },
     "v123": {
       "intro": "Investigator Toolbox 3.5.4 — Android-only install rollout.",
       "sections": [

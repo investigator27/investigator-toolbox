@@ -29,6 +29,16 @@
   <title>Install Toolbox (Android)</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon-192.png" />
+  <script>
+  (function () {
+    var path = location.pathname.replace(/\/?index\.html$/i, '');
+    var base = path.endsWith('/') ? path : path + '/';
+    window.__TOOLBOX_PAGE_BASE__ = base;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register(base + 'service-worker.js', { scope: base }).catch(function () {});
+    }
+  })();
+  </script>
   <style>
     :root {
       --color-bg: #ffffff;
@@ -89,13 +99,6 @@
     }
     .card h2 { font-size: var(--text-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); }
     #qrCanvas { display: block; border-radius: var(--radius-lg); background: #fff; padding: var(--space-3); max-width: 100%; height: auto; }
-    .install-url {
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-      word-break: break-all;
-      line-height: 1.4;
-      user-select: all;
-    }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       min-height: 52px; width: 100%; padding: 0 var(--space-4);
@@ -132,6 +135,22 @@
       text-align:center;
     }
     .install-callout strong{color:var(--color-text)}
+    .browser-dialog{
+      border:none;
+      padding:0;
+      max-width:min(22rem,calc(100vw - 2rem));
+      width:100%;
+      border-radius:var(--radius-xl);
+      background:var(--color-surface);
+      color:var(--color-text);
+      box-shadow:0 12px 40px rgb(0 0 0 / .22);
+    }
+    .browser-dialog::backdrop{background:rgb(0 0 0 / .45)}
+    .browser-dialog__inner{padding:var(--space-5);display:grid;gap:var(--space-4)}
+    .browser-dialog__title{margin:0;font-size:var(--text-lg);font-weight:700;text-align:center}
+    .browser-dialog__sub{margin:0;font-size:var(--text-sm);color:var(--color-text-muted);text-align:center;line-height:1.45}
+    .browser-picker{display:grid;gap:var(--space-2)}
+    .browser-picker .btn{min-height:48px}
     .hidden { display: none !important; }
   </style>
 </head>
@@ -140,64 +159,204 @@
     <header class="hero">
       <div class="logo" role="img" aria-label="Toolbox"></div>
       <h1>Toolbox</h1>
-      <p class="tagline">Android only — install in Chrome, then open Toolbox from your home screen.</p>
+      <p class="tagline">Android · Chrome</p>
     </header>
 
     <section class="card" aria-labelledby="qr-heading">
       <h2 id="qr-heading">Scan to install</h2>
       <canvas id="qrCanvas" width="240" height="240" aria-label="QR code for install link"></canvas>
-      <p class="install-url" id="installUrl"></p>
-      <p class="hint">Print this page or save the QR for posters and onboarding. The link should stay the same for company-wide rollout.</p>
     </section>
 
     <p class="install-callout" id="installCallout" role="status"></p>
 
     <div class="actions" style="display:grid;gap:var(--space-3);">
       <button type="button" class="btn btn-primary" id="installBtn">Install on this phone</button>
-      <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Open Toolbox in browser</a>
-      <button type="button" class="btn btn-secondary" id="copyLinkBtn" type="button">Copy install link</button>
+      <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Open Toolbox</a>
+      <button type="button" class="btn btn-secondary" id="openDesktopBtn">Open on Desktop</button>
     </div>
 
     <section class="card hidden" id="installStepsPanel" aria-live="polite">
-      <p style="font-size:var(--text-sm);text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);font-weight:700;margin:0;">Follow these steps</p>
       <ol class="steps" id="installStepsList"></ol>
     </section>
-
-    <section class="card" aria-label="Install instructions" id="androidSteps">
-      <h2>Android (Chrome)</h2>
-      <ol class="steps">
-        <li>Scan the QR or open this page in <strong>Chrome</strong> on your Android phone.</li>
-        <li>Tap <strong>Install on this phone</strong>, or the <strong>⋮</strong> menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
-        <li>Open <strong>Toolbox</strong> from your home screen.</li>
-      </ol>
-    </section>
-
-    <p class="hint">After installing, allow <strong>Notifications</strong> and <strong>Location</strong> when prompted if you use Hotel Finder.</p>
   </main>
 
-  <script type="module">
-    /**
-     * Set this to your permanent GitHub Pages URL before printing QR posters
-     * (e.g. https://investigator27.github.io/investigator-toolbox/).
-     * Leave empty to use the current page URL (fine for testing).
-     */
-    const CANONICAL_INSTALL_URL = 'https://investigator27.github.io/investigator-toolbox/';
+  <dialog class="browser-dialog" id="desktopBrowserDialog" aria-labelledby="desktopBrowserDialogTitle">
+    <div class="browser-dialog__inner">
+      <h2 class="browser-dialog__title" id="desktopBrowserDialogTitle">Open in browser</h2>
+      <p class="browser-dialog__sub">Choose Firefox, Chrome, or Edge to open Toolbox on your computer.</p>
+      <div class="browser-picker" role="group" aria-label="Desktop browser">
+        <button type="button" class="btn btn-secondary" data-browser="firefox">Firefox</button>
+        <button type="button" class="btn btn-secondary" data-browser="chrome">Chrome</button>
+        <button type="button" class="btn btn-secondary" data-browser="edge">Edge</button>
+      </div>
+      <button type="button" class="btn btn-secondary" id="desktopBrowserCancel">Cancel</button>
+    </div>
+  </dialog>
 
+  <script>
+  (function () {
+    var CANONICAL_INSTALL_URL = 'https://investigator27.github.io/investigator-toolbox/';
     function normalizeInstallBase(url) {
-      const u = (url || '').trim().replace(/\/?index\.html$/i, '');
-      return u.endsWith('/') ? u : `${u}/`;
+      var u = (url || '').trim().replace(/\/?index\.html$/i, '');
+      return u.endsWith('/') ? u : u + '/';
     }
-
-    const path = location.pathname.replace(/\/?index\.html$/i, '');
-    const pageBase = path.endsWith('/') ? path : `${path}/`;
-    const installUrl = CANONICAL_INSTALL_URL
+    var path = location.pathname.replace(/\/?index\.html$/i, '');
+    var pageBase = window.__TOOLBOX_PAGE_BASE__
+      || (path.endsWith('/') ? path : path + '/');
+    var installUrl = CANONICAL_INSTALL_URL
       ? normalizeInstallBase(CANONICAL_INSTALL_URL)
       : normalizeInstallBase(location.origin + pageBase);
+    var appUrl = installUrl + 'surveillance-travel-calculator.html';
 
-    document.getElementById('installUrl').textContent = installUrl;
-    document.getElementById('openAppBtn').href = `${installUrl}surveillance-travel-calculator.html`;
+    var openAppBtn = document.getElementById('openAppBtn');
+    if (openAppBtn) openAppBtn.href = appUrl;
 
+    var isAndroid = /Android/i.test(navigator.userAgent);
+    var isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    var ua = navigator.userAgent || '';
+    var isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter/i.test(ua);
+
+    var installBtn = document.getElementById('installBtn');
+    var installCallout = document.getElementById('installCallout');
+    var actionsEl = document.querySelector('.actions');
+    var deferredPrompt = null;
+    var installReady = false;
+
+    function setCallout(text) {
+      if (installCallout) installCallout.textContent = text;
+    }
+
+    function markInstallReady() {
+      installReady = true;
+      if (!installBtn || installBtn.disabled) return;
+      installBtn.disabled = false;
+      installBtn.textContent = 'Install on this phone';
+      setCallout('Tap Install on this phone.');
+    }
+
+    function blockNonAndroid() {
+      setCallout('Install on this phone is Android only. Use Open on Desktop below.');
+      if (installBtn) {
+        installBtn.disabled = true;
+        installBtn.textContent = 'Android only';
+      }
+    }
+
+    var desktopBrowserDialog = document.getElementById('desktopBrowserDialog');
+    var openDesktopBtn = document.getElementById('openDesktopBtn');
+
+    function openInDesktopBrowser(browserId) {
+      var target = appUrl;
+      try {
+        if (browserId === 'edge') {
+          window.location.href = 'microsoft-edge:' + target;
+        } else if (browserId === 'firefox') {
+          window.location.href = 'firefox://open-url?url=' + encodeURIComponent(target);
+        } else if (browserId === 'chrome') {
+          window.location.href = 'googlechrome://' + target.replace(/^https:\/\//i, 'https://');
+        }
+      } catch (err) {}
+      window.setTimeout(function () {
+        var opened = window.open(target, '_blank', 'noopener');
+        if (!opened) window.location.href = target;
+      }, 350);
+      try {
+        navigator.clipboard.writeText(target);
+      } catch (err) {}
+      if (desktopBrowserDialog) desktopBrowserDialog.close();
+      var label = browserId.charAt(0).toUpperCase() + browserId.slice(1);
+      setCallout('Opening in ' + label + '. Link copied if the browser did not start.');
+    }
+
+    if (openDesktopBtn && desktopBrowserDialog) {
+      openDesktopBtn.addEventListener('click', function () {
+        if (typeof desktopBrowserDialog.showModal === 'function') {
+          desktopBrowserDialog.showModal();
+          return;
+        }
+        var pick = window.prompt('Open Toolbox in:\n1 = Firefox\n2 = Chrome\n3 = Edge', '2');
+        if (pick === '1') openInDesktopBrowser('firefox');
+        else if (pick === '3') openInDesktopBrowser('edge');
+        else if (pick === '2') openInDesktopBrowser('chrome');
+      });
+      desktopBrowserDialog.querySelectorAll('[data-browser]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openInDesktopBrowser(btn.getAttribute('data-browser'));
+        });
+      });
+      var cancelBtn = document.getElementById('desktopBrowserCancel');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function () {
+          desktopBrowserDialog.close();
+        });
+      }
+    }
+
+    function runInstallPrompt() {
+      if (!deferredPrompt) return false;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.finally(function () {
+        deferredPrompt = null;
+        installReady = false;
+        if (installBtn) installBtn.disabled = true;
+      });
+      return true;
+    }
+
+    if (!isAndroid && (isIOS || !/Mobile/i.test(ua))) {
+      blockNonAndroid();
+    } else if (isStandalone) {
+      setCallout('Already installed — open Toolbox from your home screen.');
+      if (installBtn) {
+        installBtn.textContent = 'Installed';
+        installBtn.disabled = true;
+      }
+    } else if (isInAppBrowser) {
+      setCallout('Open this page in Chrome (⋮ → Open in browser).');
+      if (installBtn) installBtn.disabled = true;
+    } else if (installBtn) {
+      installBtn.disabled = true;
+      installBtn.textContent = 'Preparing install…';
+      setCallout('Preparing install…');
+    }
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+      if (!isAndroid || isStandalone) return;
+      e.preventDefault();
+      deferredPrompt = e;
+      markInstallReady();
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', function () {
+        if (!isAndroid || isStandalone) return;
+        if (runInstallPrompt()) return;
+        try {
+          sessionStorage.setItem('toolboxPwaInstall', '1');
+        } catch (err) {}
+        window.location.href = appUrl + (appUrl.indexOf('?') >= 0 ? '&' : '?') + 'install=1';
+      });
+    }
+
+    if (isAndroid && !isStandalone && !isInAppBrowser && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(function () {
+        if (!installReady && installBtn && !deferredPrompt) {
+          installBtn.disabled = false;
+          installBtn.textContent = 'Install on this phone';
+          setCallout('Tap Install on this phone.');
+        }
+      }).catch(function () {});
+    }
+
+    window.__TOOLBOX_INSTALL_URL__ = installUrl;
+  })();
+  </script>
+  <script type="module">
+    const installUrl = window.__TOOLBOX_INSTALL_URL__
+      || (location.origin + (window.__TOOLBOX_PAGE_BASE__ || '/'));
     const canvas = document.getElementById('qrCanvas');
+    if (!canvas) return;
     try {
       const { default: QRCode } = await import('https://esm.sh/qrcode@1.5.4');
       await QRCode.toCanvas(canvas, installUrl, {
@@ -209,97 +368,8 @@
     } catch {
       canvas.replaceWith(Object.assign(document.createElement('p'), {
         className: 'hint',
-        textContent: 'QR preview unavailable offline. Use the link above or open this page on Wi‑Fi.',
+        textContent: 'QR unavailable offline.',
       }));
-    }
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const ua = navigator.userAgent || '';
-    const isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter/i.test(ua);
-
-    const installBtn = document.getElementById('installBtn');
-    const installCallout = document.getElementById('installCallout');
-    const installStepsPanel = document.getElementById('installStepsPanel');
-    const installStepsList = document.getElementById('installStepsList');
-    const actionsEl = document.querySelector('.actions');
-
-    const ANDROID_MANUAL_STEPS = [
-      'Open this page in <strong>Chrome</strong> on your Android phone.',
-      'Tap the <strong>⋮</strong> menu (top right).',
-      'Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.',
-      'Open <strong>Toolbox</strong> from your home screen when done.',
-    ];
-
-    function showManualSteps(lines) {
-      installStepsList.innerHTML = lines.map((t) => `<li>${t}</li>`).join('');
-      installStepsPanel.classList.remove('hidden');
-      installStepsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function setCallout(html) {
-      if (installCallout) installCallout.innerHTML = html;
-    }
-
-    function blockNonAndroid() {
-      setCallout('<strong>Android only.</strong> This QR install page is for Android phones. Use Chrome on Android to install Toolbox.');
-      installBtn.disabled = true;
-      installBtn.textContent = 'Android only';
-      if (actionsEl) actionsEl.classList.add('hidden');
-      document.getElementById('androidSteps')?.classList.add('hidden');
-    }
-
-    if (!isAndroid && (isIOS || !/Mobile/i.test(ua))) {
-      blockNonAndroid();
-    } else if (isStandalone) {
-      setCallout('<strong>Toolbox is already installed.</strong> Open it from your home screen.');
-      installBtn.textContent = 'Installed';
-      installBtn.disabled = true;
-    } else if (isInAppBrowser) {
-      setCallout('<strong>Open in Chrome first.</strong> QR scanners inside other apps often block Install. Copy the link or tap ⋮ → Open in Chrome.');
-    } else {
-      setCallout('<strong>Android:</strong> Tap <strong>Install on this phone</strong>. If Chrome does not offer install yet, use ⋮ → <strong>Install app</strong> or <strong>Add to Home screen</strong>.');
-    }
-
-    let deferredPrompt = null;
-    if (isAndroid) {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        setCallout('<strong>Ready.</strong> Tap <strong>Install on this phone</strong> to add Toolbox to your home screen.');
-        installBtn.textContent = 'Install on this phone';
-      });
-    }
-
-    installBtn.addEventListener('click', async () => {
-      if (!isAndroid) return;
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-        return;
-      }
-      showManualSteps(ANDROID_MANUAL_STEPS);
-    });
-
-    document.getElementById('copyLinkBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(installUrl);
-        document.getElementById('copyLinkBtn').textContent = 'Copied!';
-        setTimeout(() => { document.getElementById('copyLinkBtn').textContent = 'Copy install link'; }, 2000);
-      } catch {
-        window.prompt('Copy this link:', installUrl);
-      }
-    });
-
-    if ('serviceWorker' in navigator) {
-      try {
-        const swUrl = `${pageBase}service-worker.js`;
-        await navigator.serviceWorker.register(swUrl, { scope: pageBase });
-        await navigator.serviceWorker.ready;
-      } catch {}
     }
   </script>
 </body>

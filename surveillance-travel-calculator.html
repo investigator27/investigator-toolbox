@@ -170,6 +170,8 @@
       border:none;
       box-shadow:none;
     }
+    .app-header .pwa-install-banner{padding-top:var(--space-3)}
+    .pwa-install-banner .btn{min-height:48px;width:100%}
     .app-content{
       grid-row:2;
       min-height:0;
@@ -1010,6 +1012,9 @@
       </div>
       <button class="icon-btn" type="button" id="openSettingsBtn" aria-label="Open settings"><svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 6h16M4 12h16M4 18h16'/></svg><span class="menu-update-badge update-count-badge hidden" id="menuUpdateBadge" aria-hidden="true">1</span></button>
     </div>
+    <div class="pwa-install-banner hidden" id="pwaInstallBanner" role="region" aria-label="Install Toolbox">
+      <button type="button" class="btn btn-primary" id="installBtn">Install Toolbox</button>
+    </div>
   </header>
 
   <div class="app-content" id="appContent">
@@ -1557,7 +1562,7 @@
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
               <div class="settings-page-intro__text">
                 <h1 class="settings-page-intro__title" id="how-menu-intro-title">How to Use</h1>
-                <p class="settings-page-intro__blurb">Guides for installing Toolbox and using Calculator, Hotels, and Camera.</p>
+                <p class="settings-page-intro__blurb">Calculator, Hotels, Camera, and Android install.</p>
               </div>
             </div>
           </section>
@@ -1593,16 +1598,16 @@
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
               <div class="settings-page-intro__text">
                 <h1 class="settings-page-intro__title" id="how-install-intro-title">Install Icon</h1>
-                <p class="settings-page-intro__blurb">Add Toolbox to your home screen on Android (Chrome).</p>
+                <p class="settings-page-intro__blurb">Scan the install QR on an Android phone (Chrome).</p>
               </div>
             </div>
           </section>
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li>On an <strong>Android</strong> phone, open the <a id="howInstallPageLink" href="#">install page</a> (QR) in <strong>Chrome</strong>.</li>
-                <li>Tap <strong>Install on this phone</strong>, or the <strong>⋮</strong> menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
-                <li>Open <strong>Toolbox</strong> from your home screen.</li>
+                <li><strong>Android:</strong> Scan the install QR (<a id="howInstallPageLink" href="#">install page</a>) in Chrome → <strong>Install on this phone</strong> (or ⋮ → Install app).</li>
+                <li><strong>Desktop:</strong> On the install page, tap <strong>Open on Desktop</strong> → choose Firefox, Chrome, or Edge.</li>
+                <li>Open <strong>Toolbox</strong> from your home screen (phone) or browser (desktop).</li>
               </ol>
             </div>
           </div>
@@ -1844,7 +1849,7 @@
                 <li>manifest.webmanifest</li>
                 <li>assets/ (icons)</li>
               </ul>
-              <p style="margin-top:var(--space-3)">Install / QR page: <a id="developerInstallUrl" href="#" rel="noopener">…</a></p>
+              <p style="margin-top:var(--space-3)">Android install QR: <a id="developerInstallUrl" href="#" rel="noopener">…</a></p>
               <p style="margin-top:var(--space-2)">Use <strong>Developer Tools</strong> for live build checks before you upload.</p>
             </div>
           </div>
@@ -1910,7 +1915,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v123';
+  const BUNDLED_PWA_CACHE_VERSION = 'v126';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4388,18 +4393,46 @@ $('summaryNote').textContent =
     });
   });
 
+  const pwaInstallBanner = $('pwaInstallBanner');
+
+  function shouldShowPwaInstallBanner() {
+    if (!/Android/i.test(navigator.userAgent)) return false;
+    if (window.matchMedia('(display-mode: standalone)').matches) return false;
+    try {
+      if (sessionStorage.getItem('toolboxPwaInstall') === '1') return true;
+    } catch {}
+    return /(?:\?|&)install=1(?:&|$)/.test(location.search);
+  }
+
+  function revealPwaInstallBanner() {
+    pwaInstallBanner?.classList.remove('hidden');
+  }
+
+  function hidePwaInstallBanner() {
+    pwaInstallBanner?.classList.add('hidden');
+    try { sessionStorage.removeItem('toolboxPwaInstall'); } catch {}
+  }
+
+  if (shouldShowPwaInstallBanner()) {
+    revealPwaInstallBanner();
+    try { sessionStorage.removeItem('toolboxPwaInstall'); } catch {}
+  }
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
+    revealPwaInstallBanner();
     installBtn?.classList.remove('hidden');
+    if (installBtn) installBtn.disabled = false;
   });
 
-  installBtn?.addEventListener('click', async () => {
+  installBtn?.addEventListener('click', () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.classList.add('hidden');
+    deferredPrompt.userChoice.finally(() => {
+      deferredPrompt = null;
+      hidePwaInstallBanner();
+    });
   });
 
   function initTabBar() {

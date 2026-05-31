@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v173",
-  "appVersion": "3.5.42",
+  "latest": "v174",
+  "appVersion": "3.5.43",
   "highlights": [
-    "Red update badges visible on menu, Settings, and Software Update screen; Android home icon dot refreshes per build."
+    "Fix update check falsely showing up to date when a newer build was downloaded but not installed; red badges return with Update Now."
   ],
   "builds": {
+    "v174": {
+      "intro": "Build v174 — fix false up-to-date and restore update badges.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Installed build is read from the running service worker only, not a newer cache still waiting to activate — Update Now and badges work again.",
+            "Red badges on menu, Settings, and Software Update when an update is pending.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v174)."
+          ]
+        }
+      ]
+    },
     "v173": {
       "intro": "Build v173 — update badge visibility.",
       "sections": [

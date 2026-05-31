@@ -2421,7 +2421,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=173" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=174" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2443,8 +2443,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.42';
-  const BUNDLED_PWA_CACHE_VERSION = 'v173';
+  const BUNDLED_APP_VERSION = '3.5.43';
+  const BUNDLED_PWA_CACHE_VERSION = 'v174';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2809,16 +2809,20 @@
     }
   }
 
-  /** Build actually installed (running SW script, else newest offline cache). Never guesses from bundled HTML. */
+  /** Build actually running (controller SW only). Never uses a newer offline cache — that breaks waiting-worker detection. */
   async function resolveInstalledBuild(reg) {
-    return getActiveSwBuild(reg) || (await getHighestCacheBuild());
+    const running = getActiveSwBuild(reg);
+    if (running) return running;
+    const registration = reg || swRegistration;
+    if (registration?.waiting || registration?.installing) return '';
+    return getHighestCacheBuild();
   }
 
   /** True when waiting worker is same/older than the one currently running (phantom update). */
   async function isStaleWaitingWorker(registration) {
     if (!registration?.waiting || !navigator.serviceWorker.controller) return true;
     const waitingBuild = parseBuildFromScriptUrl(registration.waiting.scriptURL);
-    const activeBuild = await resolveInstalledBuild(registration);
+    const activeBuild = getActiveSwBuild(registration);
     if (!waitingBuild || !activeBuild) return false;
     return !isBuildNewer(waitingBuild, activeBuild);
   }
@@ -3007,7 +3011,6 @@
       }
     } catch {}
     void syncAppIconBadge(false);
-    refreshSettingsUpdateBadge();
   }
 
   function isAndroidDevice() {
@@ -3223,7 +3226,6 @@
       await bindWaitingWorker(registration);
     }
     await clearStaleUpdateUiIfCurrent(registration);
-    await syncPendingUpdateIndicators();
   }
 
   async function handleAppLoadUpdateSequence() {
@@ -3474,29 +3476,16 @@
   }
 
   function isUpdateMenuBadgeActive() {
+    if (waitingSW || isUpdateReadyInSession()) return true;
     if (updateUIState === 'installing' || updateUIState === 'uptodate') return false;
     if (updateUIState === 'ready' || updateUIState === 'downloading') return true;
-    if (updateUIState === 'checking' && (waitingSW || isUpdateReadyInSession())) return true;
-    if (waitingSW) return true;
-    return isUpdateReadyInSession();
+    if (updateUIState === 'checking') return true;
+    return false;
   }
 
   function getUpdateNotificationShownKey() {
     const build = String(pendingUpdateBuild || resolveTargetBuild() || 'unknown').trim();
     return `toolboxUpdateNotificationShown_${build}`;
-  }
-
-  async function syncPendingUpdateIndicators() {
-    if (DEV_MODE || !('serviceWorker' in navigator) || shouldBlockUpdateUi()) return;
-    try {
-      const reg = swRegistration || (await navigator.serviceWorker.getRegistration(BASE_PATH));
-      if (!reg?.waiting || !navigator.serviceWorker.controller) return;
-      if (await isStaleWaitingWorker(reg)) return;
-      swRegistration = reg;
-      if (await bindWaitingWorker(reg, { showBanner: false })) return;
-      markUpdateReadyForBanner();
-      refreshSettingsUpdateBadge();
-    } catch {}
   }
 
   async function postBadgeToServiceWorkers(count) {

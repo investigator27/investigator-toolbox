@@ -226,14 +226,6 @@
       visibility:hidden;
       pointer-events:none;
     }
-    #tab-camera{
-      position:relative;
-      margin:0;
-      width:100%;
-      padding:0;
-      background:var(--color-bg);
-      display:block;
-    }
     #tab-camera.tab-panel--camera-active{
       position:fixed;
       inset:0;
@@ -260,16 +252,8 @@
     }
     #tab-camera.hidden{display:none!important}
     .covert-camera--session-off{display:none!important}
-    .camera-clips-hub{
-      display:flex;
-      flex-direction:column;
-      gap:var(--space-3);
-      padding:var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom,0px));
-      min-height:100%;
-      box-sizing:border-box;
-    }
-    .camera-clips-hub.hidden{display:none!important}
-    .camera-clips-hub__head{display:flex;flex-direction:column;gap:var(--space-1)}
+    .camera-clips-card.hidden{display:none!important}
+    .camera-clips-card__head{display:flex;flex-direction:column;gap:var(--space-1)}
     .camera-clips-hub__toolbar{
       display:flex;
       flex-wrap:wrap;
@@ -283,16 +267,16 @@
       gap:var(--space-3);
       padding-bottom:var(--space-2);
     }
-    .camera-clips-hub__empty{
+    .camera-clips-card__empty{
       grid-column:1/-1;
       padding:var(--space-6) var(--space-3);
       text-align:center;
       border:1px dashed var(--color-divider);
       border-radius:var(--radius-lg);
-      background:var(--color-surface);
+      background:var(--color-surface-2);
     }
-    .camera-clips-hub__empty p{margin:0}
-    .camera-clips-hub__empty .card-sub{margin-top:var(--space-2)}
+    .camera-clips-card__empty p{margin:0}
+    .camera-clips-card__empty .card-sub{margin-top:var(--space-2)}
     .camera-clip-card{
       display:flex;
       flex-direction:column;
@@ -360,15 +344,14 @@
       color:var(--color-text);
       width:100%;
     }
-    .camera-clips-hub__footer{
+    .camera-clips-card__footer{
       display:flex;
       flex-direction:column;
       gap:var(--space-2);
-      margin-top:auto;
       padding-top:var(--space-2);
       border-top:1px solid var(--color-divider);
     }
-    .camera-clips-hub__footer .btn{min-height:50px}
+    .camera-clips-card__footer .btn{min-height:50px}
     .camera-clip-viewer{
       position:fixed;
       inset:0;
@@ -1555,21 +1538,22 @@
     </div>
 
     <div class="tab-panel hidden" id="tab-camera" data-tab="camera" role="tabpanel" aria-labelledby="tab-btn-camera">
-      <div class="camera-clips-hub hidden" id="covertClipsHub" aria-label="Saved clips">
-        <header class="camera-clips-hub__head">
-          <h2 class="card-title">Saved clips</h2>
+      <section class="card camera-clips-card hidden" id="covertClipsHub" aria-labelledby="camera-clips-title">
+        <div class="camera-clips-card__head">
+          <h2 id="camera-clips-title" class="card-title card-title--section">Covert Camera</h2>
+          <p class="card-sub">Record clips in the field, then manage and send them from this device.</p>
           <p class="card-sub" id="covertClipsSummary">0 clips · 0 B</p>
-        </header>
+        </div>
         <div class="camera-clips-hub__toolbar">
           <button type="button" class="btn btn-secondary" id="covertClipsSelectAllBtn">Select all</button>
           <button type="button" class="btn btn-primary" id="covertOpenCameraBtn">Open Camera</button>
         </div>
         <div class="camera-clips-hub__list" id="covertClipsList" role="list"></div>
-        <footer class="camera-clips-hub__footer">
+        <div class="camera-clips-card__footer">
           <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Send to OneDrive</button>
           <button type="button" class="btn btn-secondary" id="covertClipsDeleteBtn" disabled>Delete selected</button>
-        </footer>
-      </div>
+        </div>
+      </section>
       <div class="camera-clip-viewer hidden" id="covertClipViewer" aria-hidden="true">
         <div class="camera-clip-viewer__stage">
           <video id="covertClipViewerVideo" controls playsinline></video>
@@ -2408,7 +2392,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=176" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=177" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2430,8 +2414,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.45';
-  const BUNDLED_PWA_CACHE_VERSION = 'v176';
+  const BUNDLED_APP_VERSION = '3.5.46';
+  const BUNDLED_PWA_CACHE_VERSION = 'v177';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v176",
-  "appVersion": "3.5.45",
+  "latest": "v177",
+  "appVersion": "3.5.46",
   "highlights": [
-    "Update badges and notification appear on app open or in background when a new build is ready — not only after opening Software Update."
+    "Camera tab Saved clips screen uses the same rounded card layout as Calculator and Hotels."
   ],
   "builds": {
+    "v177": {
+      "intro": "Build v177 — Camera tab card layout.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Covert Camera clips library wrapped in the same rounded card panel as Calculator and Hotel Finder.",
+            "Live camera fullscreen recording unchanged.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v177)."
+          ]
+        }
+      ]
+    },
     "v176": {
       "intro": "Build v176 — early update badges and background notification.",
       "sections": [

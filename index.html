@@ -25,8 +25,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
-  <meta name="description" content="Install Toolbox on Android (Chrome) — travel calculator, hotels, and field tools." />
-  <title>Install Toolbox (Android)</title>
+  <meta name="description" content="Install Toolbox on your phone or computer — travel calculator, hotels, and field tools." />
+  <title>Install Toolbox</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon-192.png" />
   <script>
@@ -176,11 +176,11 @@
     <header class="hero">
       <div class="logo" role="img" aria-label="Toolbox"></div>
       <h1>Toolbox</h1>
-      <p class="tagline">Android · Chrome</p>
+      <p class="tagline">Phone or computer</p>
     </header>
 
     <section class="card" aria-labelledby="qr-heading">
-      <h2 id="qr-heading">Scan to install</h2>
+      <h2 id="qr-heading">Scan on your phone</h2>
       <div class="qr-wrap" id="qrWrap">
         <canvas id="qrCanvas" width="240" height="240" aria-label="QR code for install link"></canvas>
       </div>
@@ -189,9 +189,9 @@
     <p class="install-callout" id="installCallout" role="status"></p>
 
     <div class="actions" style="display:grid;gap:var(--space-3);">
-      <button type="button" class="btn btn-primary" id="installBtn">Install on this phone</button>
-      <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Open Toolbox</a>
-      <button type="button" class="btn btn-secondary" id="openDesktopBtn">Open on Desktop</button>
+      <button type="button" class="btn btn-primary" id="installBtn">Install app</button>
+      <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Use in browser</a>
+      <button type="button" class="btn btn-secondary hidden" id="openDesktopBtn">Open on computer</button>
     </div>
 
     <section class="card hidden" id="installStepsPanel" aria-live="polite">
@@ -201,9 +201,9 @@
 
   <dialog class="browser-dialog" id="desktopBrowserDialog" aria-labelledby="desktopBrowserDialogTitle">
     <div class="browser-dialog__inner">
-      <h2 class="browser-dialog__title" id="desktopBrowserDialogTitle">Open in browser</h2>
-      <p class="browser-dialog__sub">Choose Firefox, Chrome, or Edge to open Toolbox on your computer.</p>
-      <div class="browser-picker" role="group" aria-label="Desktop browser">
+      <h2 class="browser-dialog__title" id="desktopBrowserDialogTitle">Open on this computer</h2>
+      <p class="browser-dialog__sub">Pick a browser. In Chrome or Edge you can also install Toolbox (browser menu → Install app).</p>
+      <div class="browser-picker" role="group" aria-label="Computer browser">
         <button type="button" class="btn btn-secondary" data-browser="firefox">Firefox</button>
         <button type="button" class="btn btn-secondary" data-browser="chrome">Chrome</button>
         <button type="button" class="btn btn-secondary" data-browser="edge">Edge</button>
@@ -227,7 +227,6 @@
       : normalizeInstallBase(location.origin + pageBase);
     var appUrl = installUrl + 'surveillance-travel-calculator.html';
 
-    var openAppBtn = document.getElementById('openAppBtn');
     if (openAppBtn) openAppBtn.href = appUrl;
 
     var isAndroid = /Android/i.test(navigator.userAgent);
@@ -235,10 +234,13 @@
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     var ua = navigator.userAgent || '';
     var isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter/i.test(ua);
+    var isPhone = isAndroid || isIOS;
+    var isComputer = !isPhone && !/Mobile/i.test(ua);
 
     var installBtn = document.getElementById('installBtn');
     var installCallout = document.getElementById('installCallout');
-    var actionsEl = document.querySelector('.actions');
+    var openAppBtn = document.getElementById('openAppBtn');
+    var openDesktopBtn = document.getElementById('openDesktopBtn');
     var deferredPrompt = null;
     var installReady = false;
     var launchScheduled = false;
@@ -247,24 +249,38 @@
       if (installCallout) installCallout.textContent = text;
     }
 
+    function installButtonLabel() {
+      if (isAndroid) return 'Install on phone';
+      if (isComputer) return 'Install on computer';
+      return 'Install app';
+    }
+
+    function refreshActionButtons() {
+      if (openAppBtn) openAppBtn.textContent = 'Use in browser';
+      if (openDesktopBtn) {
+        openDesktopBtn.classList.toggle('hidden', isComputer);
+        if (!isComputer) openDesktopBtn.textContent = 'Open on computer';
+      }
+    }
+    refreshActionButtons();
+
     function markInstallReady() {
       installReady = true;
       if (!installBtn || installBtn.disabled) return;
       installBtn.disabled = false;
-      installBtn.textContent = 'Install on this phone';
-      setCallout('Tap Install on this phone.');
+      installBtn.textContent = installButtonLabel();
+      setCallout('Tap ' + installButtonLabel() + ' (or use the browser menu → Install app).');
     }
 
-    function blockNonAndroid() {
-      setCallout('Install on this phone is Android only. Use Open on Desktop below.');
+    function blockIOSInstall() {
+      setCallout('iPhone cannot install from this page. Use Use in browser, or scan the QR on an Android phone or computer.');
       if (installBtn) {
         installBtn.disabled = true;
-        installBtn.textContent = 'Android only';
+        installBtn.textContent = 'Install not available';
       }
     }
 
     var desktopBrowserDialog = document.getElementById('desktopBrowserDialog');
-    var openDesktopBtn = document.getElementById('openDesktopBtn');
 
     function openInDesktopBrowser(browserId) {
       var target = appUrl;
@@ -344,20 +360,19 @@
     }
 
     window.addEventListener('appinstalled', function () {
-      if (!isAndroid) return;
       launchToolboxAfterInstall();
     });
 
-    if (!isAndroid && (isIOS || !/Mobile/i.test(ua))) {
-      blockNonAndroid();
+    if (isIOS) {
+      blockIOSInstall();
     } else if (isStandalone) {
-      setCallout('Already installed — open Toolbox from your home screen.');
+      setCallout('Already installed — open Toolbox from your apps or home screen.');
       if (installBtn) {
         installBtn.textContent = 'Installed';
         installBtn.disabled = true;
       }
     } else if (isInAppBrowser) {
-      setCallout('Open this page in Chrome (⋮ → Open in browser).');
+      setCallout('Open this page in Chrome or Edge (⋮ → Open in browser).');
       if (installBtn) installBtn.disabled = true;
     } else if (installBtn) {
       installBtn.disabled = true;
@@ -366,7 +381,7 @@
     }
 
     window.addEventListener('beforeinstallprompt', function (e) {
-      if (!isAndroid || isStandalone) return;
+      if (isStandalone || isIOS) return;
       e.preventDefault();
       deferredPrompt = e;
       markInstallReady();
@@ -374,7 +389,7 @@
 
     if (installBtn) {
       installBtn.addEventListener('click', function () {
-        if (!isAndroid || isStandalone) return;
+        if (isStandalone || isIOS) return;
         if (installBtn.textContent === 'Open Toolbox') {
           window.location.href = appUrl;
           return;
@@ -387,12 +402,14 @@
       });
     }
 
-    if (isAndroid && !isStandalone && !isInAppBrowser && 'serviceWorker' in navigator) {
+    if (!isStandalone && !isInAppBrowser && !isIOS && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(function () {
         if (!installReady && installBtn && !deferredPrompt) {
           installBtn.disabled = false;
-          installBtn.textContent = 'Install on this phone';
-          setCallout('Tap Install on this phone.');
+          installBtn.textContent = installButtonLabel();
+          setCallout(isComputer
+            ? 'Tap Install on computer, or use the browser menu (⋮) → Install app.'
+            : 'Tap Install on phone, or use the browser menu (⋮) → Install app.');
         }
       }).catch(function () {});
     }

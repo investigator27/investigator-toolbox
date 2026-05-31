@@ -1562,7 +1562,7 @@
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
               <div class="settings-page-intro__text">
                 <h1 class="settings-page-intro__title" id="how-menu-intro-title">How to Use</h1>
-                <p class="settings-page-intro__blurb">Calculator, Hotels, Camera, and Android install.</p>
+                <p class="settings-page-intro__blurb">Calculator, Hotels, Camera, and install (phone or computer).</p>
               </div>
             </div>
           </section>
@@ -1598,16 +1598,17 @@
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
               <div class="settings-page-intro__text">
                 <h1 class="settings-page-intro__title" id="how-install-intro-title">Install Icon</h1>
-                <p class="settings-page-intro__blurb">Scan the install QR on an Android phone (Chrome).</p>
+                <p class="settings-page-intro__blurb">Install on an Android phone or on a computer (Chrome or Edge).</p>
               </div>
             </div>
           </section>
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li><strong>Android:</strong> Scan the install QR (<a id="howInstallPageLink" href="#">install page</a>) in Chrome → <strong>Install on this phone</strong>. Toolbox opens automatically after install.</li>
-                <li><strong>Desktop:</strong> On the install page, tap <strong>Open on Desktop</strong> → choose Firefox, Chrome, or Edge.</li>
-                <li>If it does not open, use the <strong>Toolbox</strong> icon on your home screen (phone) or open the link again.</li>
+                <li><strong>Phone:</strong> Scan the install QR (<a id="howInstallPageLink" href="#">install page</a>) in Chrome → <strong>Install on phone</strong>.</li>
+                <li><strong>Computer:</strong> Open the install page in Chrome or Edge → <strong>Install on computer</strong> (or browser menu → Install app).</li>
+                <li><strong>No install:</strong> Tap <strong>Use in browser</strong> on the install page.</li>
+                <li>Toolbox opens automatically after install when Chrome allows it.</li>
               </ol>
             </div>
           </div>
@@ -1849,7 +1850,7 @@
                 <li>manifest.webmanifest</li>
                 <li>assets/ (icons)</li>
               </ul>
-              <p style="margin-top:var(--space-3)">Android install QR: <a id="developerInstallUrl" href="#" rel="noopener">…</a></p>
+              <p style="margin-top:var(--space-3)">Install page: <a id="developerInstallUrl" href="#" rel="noopener">…</a></p>
               <p style="margin-top:var(--space-2)">Use <strong>Developer Tools</strong> for live build checks before you upload.</p>
             </div>
           </div>
@@ -1915,7 +1916,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v130';
+  const BUNDLED_PWA_CACHE_VERSION = 'v131';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

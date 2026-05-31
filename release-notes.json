@@ -1,10 +1,23 @@
 {
-  "latest": "v130",
+  "latest": "v131",
   "appVersion": "3.5.4",
   "highlights": [
-    "Install page QR white frame fits the code (less side padding)."
+    "Install page: clearer buttons for phone vs computer; desktop can install the app too."
   ],
   "builds": {
+    "v131": {
+      "intro": "Build v131 — install page wording (phone + computer).",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Buttons: Install on phone / Install on computer, Use in browser, Open on computer (from a phone).",
+            "Desktop Chrome and Edge can install Toolbox as an app, not only Android.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v131)."
+          ]
+        }
+      ]
+    },
     "v130": {
       "intro": "Build v130 — install page QR layout.",
       "sections": [

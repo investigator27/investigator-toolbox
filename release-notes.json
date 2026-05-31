@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v152",
-  "appVersion": "3.5.21",
+  "latest": "v153",
+  "appVersion": "3.5.22",
   "highlights": [
-    "Fix dead tab bar after update reload; tab policy (disabled tabs) applies correctly again."
+    "Restore working tabs, update badges, and Software Update after botched post-update changes."
   ],
   "builds": {
+    "v153": {
+      "intro": "Build v153 — tabs, badges, and update flow restored.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Tab bar initializes immediately again (no waiting on network).",
+            "Red update badge on menu, Settings, and app icon works when an update is ready.",
+            "Post-update reload no longer leaves update detection permanently disabled.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v153)."
+          ]
+        }
+      ]
+    },
     "v152": {
       "intro": "Build v152 — tab bar works after update.",
       "sections": [

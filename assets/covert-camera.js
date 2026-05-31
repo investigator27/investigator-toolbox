@@ -1878,13 +1878,6 @@
   }
 
   async function uploadClips(clipIds) {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      haptic('medium');
-      window.alert(
-        'You appear to be offline. If Airplane mode is still on, turn it off (and reconnect to Wi-Fi or data) to upload clips to OneDrive.\n\nYour clips are safe on this device in the meantime.'
-      );
-      return;
-    }
     let clips = await getAllClips();
     if (clipIds?.length) {
       const set = new Set(clipIds);
@@ -1904,7 +1897,7 @@
         await navigator.share({
           files,
           title: 'Toolbox clips',
-          text: 'Choose OneDrive and save to your Desktop folder.',
+          text: 'Save to Files on your device, or pick an app to send them to.',
         });
         return;
       } catch (err) {
@@ -2070,7 +2063,7 @@
     const free = await getFreeStorageBytes();
     const freeText = free != null ? ` · ${formatBytes(free)} free on device` : '';
     const storageText =
-      `${summary.count} clip(s) · ${formatBytes(summary.bytes)} used${freeText} — view & upload in Clip Library.`;
+      `${summary.count} clip(s) · ${formatBytes(summary.bytes)} used${freeText} — view & download in Clip Library.`;
     document.querySelectorAll('[data-cam-storage-summary]').forEach((el) => {
       el.textContent = storageText;
     });

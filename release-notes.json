@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v172",
-  "appVersion": "3.5.41",
+  "latest": "v173",
+  "appVersion": "3.5.42",
   "highlights": [
-    "Post-update no longer loops to Update Now; camera true fullscreen and landscape record/playback."
+    "Red update badges visible on menu, Settings, and Software Update screen; Android home icon dot refreshes per build."
   ],
   "builds": {
+    "v173": {
+      "intro": "Build v173 — update badge visibility.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Update badges always show red (menu, Settings list, Software Update title) in light and dark theme.",
+            "Badges refresh on app load, when closing Settings, and on the Software Update screen.",
+            "Android launcher dot uses a fresh notification per build (renotify).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v173)."
+          ]
+        }
+      ]
+    },
     "v172": {
       "intro": "Build v172 — update loop, camera fullscreen, landscape.",
       "sections": [

@@ -1,6 +1,6 @@
 /* sw-revision: 27 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v172';
+let activeCacheName = 'surveillance-travel-pwa-v173';
 
 const CORE_ASSETS = [
   BASE + 'index.html',
@@ -85,7 +85,7 @@ async function showSwUpdateReadyNotification() {
     await self.registration.showNotification('Toolbox update ready', {
       body: 'Open Toolbox → Settings → Software Update to install.',
       tag: UPDATE_NOTIFICATION_TAG,
-      renotify: false,
+      renotify: true,
       icon: BASE + 'assets/icon-192.png',
       badge: BASE + 'assets/icon-192.png',
       data: { screen: 'updates' },

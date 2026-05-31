@@ -221,25 +221,130 @@
       padding-bottom:0;
       background:var(--color-bg);
     }
-    .covert-camera-idle{
+    .covert-camera--session-off{display:none!important}
+    .camera-clips-hub{
       display:flex;
       flex-direction:column;
+      gap:var(--space-3);
+      padding:var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom,0px));
+      min-height:100%;
+      box-sizing:border-box;
+    }
+    .camera-clips-hub.hidden{display:none!important}
+    .camera-clips-hub__head{display:flex;flex-direction:column;gap:var(--space-1)}
+    .camera-clips-hub__toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:var(--space-2);
       align-items:center;
-      justify-content:center;
-      gap:var(--space-4);
-      min-height:min(70vh,32rem);
-      padding:var(--space-5);
+    }
+    .camera-clips-hub__toolbar .btn{flex:1;min-width:8rem;min-height:46px}
+    .camera-clips-hub__list{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));
+      gap:var(--space-3);
+      padding-bottom:var(--space-2);
+    }
+    .camera-clips-hub__empty{
+      grid-column:1/-1;
+      padding:var(--space-6) var(--space-3);
       text-align:center;
+      border:1px dashed var(--color-divider);
+      border-radius:var(--radius-lg);
+      background:var(--color-surface);
     }
-    .covert-camera-idle.hidden{display:none!important}
-    .covert-camera-idle p{
-      margin:0;
-      font-size:var(--text-sm);
+    .camera-clips-hub__empty p{margin:0}
+    .camera-clips-hub__empty .card-sub{margin-top:var(--space-2)}
+    .camera-clip-card{
+      display:flex;
+      flex-direction:column;
+      gap:var(--space-2);
+      padding:var(--space-2);
+      border-radius:var(--radius-lg);
+      border:1px solid var(--color-divider);
+      background:var(--color-surface);
+      box-shadow:var(--shadow-sm);
+      cursor:pointer;
+      position:relative;
+    }
+    .camera-clip-card:has(.camera-clip-card__check:checked){
+      border-color:var(--color-primary);
+      box-shadow:var(--shadow-md);
+    }
+    .camera-clip-card__check{
+      position:absolute;
+      top:var(--space-2);
+      right:var(--space-2);
+      width:1.25rem;
+      height:1.25rem;
+      z-index:2;
+      accent-color:var(--color-primary);
+    }
+    .camera-clip-card__thumb{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      border-radius:var(--radius-md);
+      overflow:hidden;
+      background:#000;
+    }
+    .camera-clip-card__thumb video{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      pointer-events:none;
+    }
+    .camera-clip-card__meta{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:var(--space-1);
+      font-size:var(--text-xs);
       color:var(--color-text-muted);
-      max-width:18rem;
-      line-height:1.5;
     }
-    .covert-camera--session-off{display:none!important}
+    .camera-clip-card__id{font-weight:700;color:var(--color-text)}
+    .camera-clip-card__play{
+      min-height:40px;
+      padding:0.5rem;
+      border-radius:var(--radius-md);
+      border:1px solid var(--color-divider);
+      background:var(--color-bg);
+      font-size:var(--text-sm);
+      font-weight:700;
+      color:var(--color-text);
+      width:100%;
+    }
+    .camera-clips-hub__footer{
+      display:flex;
+      flex-direction:column;
+      gap:var(--space-2);
+      margin-top:auto;
+      padding-top:var(--space-2);
+      border-top:1px solid var(--color-divider);
+    }
+    .camera-clips-hub__footer .btn{min-height:50px}
+    .camera-clip-viewer{
+      position:fixed;
+      inset:0;
+      z-index:500;
+      background:rgb(0 0 0 / .92);
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      justify-content:center;
+      gap:var(--space-3);
+      padding:var(--space-4);
+      padding-bottom:calc(var(--space-4) + env(safe-area-inset-bottom,0px));
+    }
+    .camera-clip-viewer.hidden{display:none!important}
+    .camera-clip-viewer video{
+      width:100%;
+      max-height:70vh;
+      border-radius:var(--radius-lg);
+      background:#000;
+      object-fit:contain;
+    }
+    .camera-clip-viewer__close{align-self:center;min-width:12rem}
     .covert-camera{
       position:absolute;
       inset:0;
@@ -1376,9 +1481,24 @@
     </div>
 
     <div class="tab-panel hidden" id="tab-camera" data-tab="camera" role="tabpanel" aria-labelledby="tab-btn-camera">
-      <div class="covert-camera-idle hidden" id="covertCameraIdle">
-        <p>Camera is off. Open when you are ready to record.</p>
-        <button type="button" class="btn btn-primary" id="covertOpenCameraBtn">Open camera</button>
+      <div class="camera-clips-hub hidden" id="covertClipsHub" aria-label="Saved clips">
+        <header class="camera-clips-hub__head">
+          <h2 class="card-title">Saved clips</h2>
+          <p class="card-sub" id="covertClipsSummary">0 clips · 0 B</p>
+        </header>
+        <div class="camera-clips-hub__toolbar">
+          <button type="button" class="btn btn-secondary" id="covertClipsSelectAllBtn">Select all</button>
+          <button type="button" class="btn btn-primary" id="covertOpenCameraBtn">Open camera</button>
+        </div>
+        <div class="camera-clips-hub__list" id="covertClipsList" role="list"></div>
+        <footer class="camera-clips-hub__footer">
+          <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Send to OneDrive</button>
+          <button type="button" class="btn btn-secondary" id="covertClipsDeleteBtn" disabled>Delete selected</button>
+        </footer>
+      </div>
+      <div class="camera-clip-viewer hidden" id="covertClipViewer" aria-hidden="true">
+        <video id="covertClipViewerVideo" controls playsinline></video>
+        <button type="button" class="btn btn-secondary camera-clip-viewer__close" id="covertClipViewerClose">Close</button>
       </div>
       <div class="covert-camera" id="covertCamera" aria-label="Covert camera">
         <video id="covertVideoPreview" playsinline muted autoplay></video>
@@ -1856,8 +1976,7 @@
                 <li>3 taps on the black area — start recording (screen stays black).</li>
                 <li>3 taps again — stop; clip saved as 00000, 00001, …</li>
                 <li>Swipe up — live preview · Swipe down — hide preview.</li>
-                <li>Swipe up twice (after stop) — close camera and return to Camera tab.</li>
-                <li>Clips are stored in Toolbox only — use Upload clips below to save to OneDrive or Files (not Gallery).</li>
+                <li>Swipe up twice (after stop) — clips library on Camera tab (view, select, send to OneDrive).</li>
               </ol>
               <p><strong>Notes</strong></p>
               <ul class="steps-list">
@@ -2107,7 +2226,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=144" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=145" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2129,8 +2248,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.13';
-  const BUNDLED_PWA_CACHE_VERSION = 'v144';
+  const BUNDLED_APP_VERSION = '3.5.14';
+  const BUNDLED_PWA_CACHE_VERSION = 'v145';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v144",
-  "appVersion": "3.5.13",
+  "latest": "v145",
+  "appVersion": "3.5.14",
   "highlights": [
-    "Camera gestures and deploy package v144 — upload all four files listed in release notes."
+    "Swipe up twice opens clips library — view, select, send to OneDrive."
   ],
   "builds": {
+    "v145": {
+      "intro": "Build v145 — Camera clips library on double swipe up.",
+      "sections": [
+        {
+          "heading": "Camera",
+          "items": [
+            "Swipe up twice (after stop) — Saved clips screen with thumbnails, View, Select all, Send to OneDrive, Delete selected.",
+            "Swipe up once — live preview. Open camera — return to black screen recording.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v145)."
+          ]
+        }
+      ]
+    },
     "v144": {
       "intro": "Build v144 — full deploy package (camera + version sync).",
       "sections": [

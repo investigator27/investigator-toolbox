@@ -25,8 +25,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
-  <meta name="description" content="Install Toolbox on your phone — travel calculator, hotels, and field tools." />
-  <title>Install Toolbox</title>
+  <meta name="description" content="Install Toolbox on Android (Chrome) — travel calculator, hotels, and field tools." />
+  <title>Install Toolbox (Android)</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon-192.png" />
   <style>
@@ -140,7 +140,7 @@
     <header class="hero">
       <div class="logo" role="img" aria-label="Toolbox"></div>
       <h1>Toolbox</h1>
-      <p class="tagline">Travel calculator, hotel finder, and field tools. Install once, then open from your home screen.</p>
+      <p class="tagline">Android only — install in Chrome, then open Toolbox from your home screen.</p>
     </header>
 
     <section class="card" aria-labelledby="qr-heading">
@@ -163,23 +163,13 @@
       <ol class="steps" id="installStepsList"></ol>
     </section>
 
-    <section aria-label="Install instructions">
-      <details id="androidSteps" open>
-        <summary>Android (Chrome)</summary>
-        <ol class="steps">
-          <li>Scan the QR or open this page in <strong>Chrome</strong>.</li>
-          <li>Tap <strong>Install app</strong> above, or the menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
-          <li>Open <strong>Toolbox</strong> from your home screen.</li>
-        </ol>
-      </details>
-      <details id="iphoneSteps">
-        <summary>iPhone (Safari)</summary>
-        <ol class="steps">
-          <li>Scan the QR or open this link in <strong>Safari</strong> (not Chrome).</li>
-          <li>Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
-          <li>Open <strong>Toolbox</strong> from your home screen.</li>
-        </ol>
-      </details>
+    <section class="card" aria-label="Install instructions" id="androidSteps">
+      <h2>Android (Chrome)</h2>
+      <ol class="steps">
+        <li>Scan the QR or open this page in <strong>Chrome</strong> on your Android phone.</li>
+        <li>Tap <strong>Install on this phone</strong>, or the <strong>⋮</strong> menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
+        <li>Open <strong>Toolbox</strong> from your home screen.</li>
+      </ol>
     </section>
 
     <p class="hint">After installing, allow <strong>Notifications</strong> and <strong>Location</strong> when prompted if you use Hotel Finder.</p>
@@ -223,10 +213,10 @@
       }));
     }
 
+    const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent)
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      || window.navigator.standalone === true;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const ua = navigator.userAgent || '';
     const isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter/i.test(ua);
 
@@ -234,8 +224,14 @@
     const installCallout = document.getElementById('installCallout');
     const installStepsPanel = document.getElementById('installStepsPanel');
     const installStepsList = document.getElementById('installStepsList');
-    const androidSteps = document.getElementById('androidSteps');
-    const iphoneSteps = document.getElementById('iphoneSteps');
+    const actionsEl = document.querySelector('.actions');
+
+    const ANDROID_MANUAL_STEPS = [
+      'Open this page in <strong>Chrome</strong> on your Android phone.',
+      'Tap the <strong>⋮</strong> menu (top right).',
+      'Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.',
+      'Open <strong>Toolbox</strong> from your home screen when done.',
+    ];
 
     function showManualSteps(lines) {
       installStepsList.innerHTML = lines.map((t) => `<li>${t}</li>`).join('');
@@ -247,54 +243,45 @@
       if (installCallout) installCallout.innerHTML = html;
     }
 
-    if (isStandalone) {
+    function blockNonAndroid() {
+      setCallout('<strong>Android only.</strong> This QR install page is for Android phones. Use Chrome on Android to install Toolbox.');
+      installBtn.disabled = true;
+      installBtn.textContent = 'Android only';
+      if (actionsEl) actionsEl.classList.add('hidden');
+      document.getElementById('androidSteps')?.classList.add('hidden');
+    }
+
+    if (!isAndroid && (isIOS || !/Mobile/i.test(ua))) {
+      blockNonAndroid();
+    } else if (isStandalone) {
       setCallout('<strong>Toolbox is already installed.</strong> Open it from your home screen.');
       installBtn.textContent = 'Installed';
       installBtn.disabled = true;
     } else if (isInAppBrowser) {
-      setCallout('<strong>Open in Chrome or Safari first.</strong> QR scanners inside other apps often block Install. Copy the link or tap ⋮ → Open in browser.');
-      if (iphoneSteps) iphoneSteps.open = isIOS;
-      if (androidSteps) androidSteps.open = !isIOS;
-    } else if (isIOS) {
-      setCallout('<strong>iPhone:</strong> Apple does not show an Install button here. Use <strong>Safari</strong> → Share → <strong>Add to Home Screen</strong> (steps below).');
-      if (iphoneSteps) { iphoneSteps.open = true; androidSteps.open = false; }
+      setCallout('<strong>Open in Chrome first.</strong> QR scanners inside other apps often block Install. Copy the link or tap ⋮ → Open in Chrome.');
     } else {
-      setCallout('<strong>Android:</strong> Tap <strong>Install on this phone</strong>. If Chrome does not offer install yet, use the menu (⋮) → <strong>Install app</strong> or <strong>Add to Home screen</strong>.');
-      if (androidSteps) { androidSteps.open = true; iphoneSteps.open = false; }
+      setCallout('<strong>Android:</strong> Tap <strong>Install on this phone</strong>. If Chrome does not offer install yet, use ⋮ → <strong>Install app</strong> or <strong>Add to Home screen</strong>.');
     }
 
     let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      setCallout('<strong>Ready.</strong> Tap <strong>Install on this phone</strong> to add Toolbox to your home screen.');
-      installBtn.textContent = 'Install on this phone';
-    });
+    if (isAndroid) {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        setCallout('<strong>Ready.</strong> Tap <strong>Install on this phone</strong> to add Toolbox to your home screen.');
+        installBtn.textContent = 'Install on this phone';
+      });
+    }
 
     installBtn.addEventListener('click', async () => {
+      if (!isAndroid) return;
       if (deferredPrompt) {
         deferredPrompt.prompt();
         await deferredPrompt.userChoice;
         deferredPrompt = null;
         return;
       }
-      if (isIOS) {
-        showManualSteps([
-          'Open this page in <strong>Safari</strong> (not Chrome on iPhone).',
-          'Tap <strong>Share</strong> (square with arrow).',
-          'Tap <strong>Add to Home Screen</strong> → <strong>Add</strong>.',
-          'Open <strong>Toolbox</strong> from your home screen.',
-        ]);
-        return;
-      }
-      showManualSteps([
-        'Use <strong>Chrome</strong> on Android (recommended).',
-        'Tap the <strong>⋮</strong> menu (top right).',
-        'Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.',
-        'If you only see Open Toolbox, open it once, then try the menu again on this page.',
-        'Open <strong>Toolbox</strong> from your home screen when done.',
-      ]);
-      if (androidSteps) androidSteps.open = true;
+      showManualSteps(ANDROID_MANUAL_STEPS);
     });
 
     document.getElementById('copyLinkBtn').addEventListener('click', async () => {

@@ -1593,16 +1593,15 @@
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
               <div class="settings-page-intro__text">
                 <h1 class="settings-page-intro__title" id="how-install-intro-title">Install Icon</h1>
-                <p class="settings-page-intro__blurb">Add Toolbox to your home screen on iPhone or Android.</p>
+                <p class="settings-page-intro__blurb">Add Toolbox to your home screen on Android (Chrome).</p>
               </div>
             </div>
           </section>
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li>Open the <a id="howInstallPageLink" href="#">install page</a> (QR for new phones) or this app in Chrome / Safari.</li>
-                <li>On Android Chrome: tap <strong>Install app</strong> on the install page, or browser menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
-                <li>On iPhone Safari: <strong>Share</strong> → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+                <li>On an <strong>Android</strong> phone, open the <a id="howInstallPageLink" href="#">install page</a> (QR) in <strong>Chrome</strong>.</li>
+                <li>Tap <strong>Install on this phone</strong>, or the <strong>⋮</strong> menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
                 <li>Open <strong>Toolbox</strong> from your home screen.</li>
               </ol>
             </div>
@@ -1911,7 +1910,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v122';
+  const BUNDLED_PWA_CACHE_VERSION = 'v123';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

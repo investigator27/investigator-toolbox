@@ -1,10 +1,23 @@
 {
-  "latest": "v122",
+  "latest": "v123",
   "appVersion": "3.5.4",
   "highlights": [
-    "Install page: always shows Install button, fixes service worker, clearer iPhone/Android steps."
+    "Install page and install guide are Android (Chrome) only."
   ],
   "builds": {
+    "v123": {
+      "intro": "Investigator Toolbox 3.5.4 — Android-only install rollout.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Install page (index.html) is for Android Chrome only; iPhone visitors see an Android-only message.",
+            "Settings → Install Icon guide updated for Android only.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v123)."
+          ]
+        }
+      ]
+    },
     "v122": {
       "intro": "Investigator Toolbox 3.5.4 — install page fixes.",
       "sections": [

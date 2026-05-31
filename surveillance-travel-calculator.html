@@ -310,6 +310,10 @@
       gap:var(--space-2);
     }
     .camera-hub-block__actions .btn{width:100%;min-height:50px}
+    /* How To Use page: keep title tight under the back button and one clean gap to the
+       first section, matching the Clip Library page rhythm. */
+    #cameraPanelHowToUse > .camera-hub-card__back + .camera-hub-card__intro{margin-top:0}
+    #cameraPanelHowToUse > .camera-hub-card__intro{margin-bottom:0}
     .camera-settings-body > .settings-page-intro{margin-bottom:var(--space-5)}
     .camera-settings-body > .settings-permission-hint{
       margin:0 0 var(--space-5);
@@ -1785,7 +1789,7 @@
   </div>
 
   <nav class="tab-bar" role="tablist" aria-label="Main navigation">
-    <button type="button" class="tab-bar-item" id="tab-btn-camera" data-tab="camera" role="tab" aria-selected="false" aria-controls="tab-camera">
+    <button type="button" class="tab-bar-item active" id="tab-btn-camera" data-tab="camera" role="tab" aria-selected="true" aria-controls="tab-camera">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
       <span>Camera</span>
     </button>
@@ -1797,7 +1801,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
       <span>Requests</span>
     </button>
-    <button type="button" class="tab-bar-item active" id="tab-btn-calculator" data-tab="calculator" role="tab" aria-selected="true" aria-controls="tab-calculator">
+    <button type="button" class="tab-bar-item" id="tab-btn-calculator" data-tab="calculator" role="tab" aria-selected="false" aria-controls="tab-calculator">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg>
       <span>Calculator</span>
     </button>
@@ -2335,50 +2339,84 @@
             <h2 class="settings-section-title">Time &amp; date stamp</h2>
             <div class="settings-group" role="group" aria-label="Time and date stamp">
               <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Burn date &amp; time onto video</span>
-                <label class="settings-switch"><input type="checkbox" id="cameraTimestampSwitch" data-cam-pref="timestampEnabled" aria-label="Burn date and time onto the recorded video" /><span class="settings-switch__track"></span></label>
+                <span class="settings-row__label">Enable Date &amp; Timestamp</span>
+                <label class="settings-switch"><input type="checkbox" id="cameraTimestampSwitch" data-cam-pref="timestampEnabled" aria-label="Enable date and timestamp on the recorded video" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="field" style="padding:var(--space-3) var(--space-4)">
-                <label for="cameraTimestampFormat">Date format</label>
-                <select id="cameraTimestampFormat" class="city-btn" data-cam-select="timestampDateFormat" style="width:100%;min-height:48px">
-                  <option value="YYYY-MM-DD">2026-04-01 (YYYY-MM-DD)</option>
-                  <option value="MM/DD/YYYY">04/01/2026 (MM/DD/YYYY)</option>
-                  <option value="DD/MM/YYYY">01/04/2026 (DD/MM/YYYY)</option>
-                  <option value="MON-DD-YYYY">Apr 01, 2026</option>
-                </select>
+                <label for="cameraTimestampFormatBtn">Date format</label>
+                <div class="menu-wrap city-wrap">
+                  <button type="button" class="menu-btn city-btn" id="cameraTimestampFormatBtn" aria-haspopup="listbox" aria-expanded="false"><span id="cameraTimestampFormatLabel">2026-04-01 (YYYY-MM-DD)</span></button>
+                  <div class="menu-panel city-panel" id="cameraTimestampFormatDrop" hidden role="listbox">
+                    <button type="button" class="menu-item city-item" data-picker-value="YYYY-MM-DD">2026-04-01 (YYYY-MM-DD)</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="MM/DD/YYYY">04/01/2026 (MM/DD/YYYY)</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="DD/MM/YYYY">01/04/2026 (DD/MM/YYYY)</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="MON-DD-YYYY">Apr 01, 2026</button>
+                  </div>
+                  <select id="cameraTimestampFormat" data-cam-select="timestampDateFormat" style="display:none">
+                    <option value="YYYY-MM-DD">2026-04-01 (YYYY-MM-DD)</option>
+                    <option value="MM/DD/YYYY">04/01/2026 (MM/DD/YYYY)</option>
+                    <option value="DD/MM/YYYY">01/04/2026 (DD/MM/YYYY)</option>
+                    <option value="MON-DD-YYYY">Apr 01, 2026</option>
+                  </select>
+                </div>
               </div>
               <div class="settings-row settings-row--toggle">
                 <span class="settings-row__label">24-hour clock</span>
                 <label class="settings-switch"><input type="checkbox" id="cameraTimestampClockSwitch" data-cam-pref="timestampClock24" aria-label="Use 24-hour clock for the timestamp" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="field" style="padding:var(--space-3) var(--space-4)">
-                <label for="cameraTimestampPosition">Position</label>
-                <select id="cameraTimestampPosition" class="city-btn" data-cam-select="timestampPosition" style="width:100%;min-height:48px">
-                  <option value="bottom">Bottom (date left · time right)</option>
-                  <option value="top">Top (date left · time right)</option>
-                </select>
+                <label for="cameraTimestampPositionBtn">Position</label>
+                <div class="menu-wrap city-wrap">
+                  <button type="button" class="menu-btn city-btn" id="cameraTimestampPositionBtn" aria-haspopup="listbox" aria-expanded="false"><span id="cameraTimestampPositionLabel">Bottom (date left · time right)</span></button>
+                  <div class="menu-panel city-panel" id="cameraTimestampPositionDrop" hidden role="listbox">
+                    <button type="button" class="menu-item city-item" data-picker-value="bottom">Bottom (date left · time right)</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="top">Top (date left · time right)</button>
+                  </div>
+                  <select id="cameraTimestampPosition" data-cam-select="timestampPosition" style="display:none">
+                    <option value="bottom">Bottom (date left · time right)</option>
+                    <option value="top">Top (date left · time right)</option>
+                  </select>
+                </div>
               </div>
               <div class="field" style="padding:var(--space-3) var(--space-4)">
-                <label for="cameraTimestampSize">Size</label>
-                <select id="cameraTimestampSize" class="city-btn" data-cam-select="timestampSize" style="width:100%;min-height:48px">
-                  <option value="small">Small</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="large">Large</option>
-                </select>
+                <label for="cameraTimestampSizeBtn">Size</label>
+                <div class="menu-wrap city-wrap">
+                  <button type="button" class="menu-btn city-btn" id="cameraTimestampSizeBtn" aria-haspopup="listbox" aria-expanded="false"><span id="cameraTimestampSizeLabel">Medium</span></button>
+                  <div class="menu-panel city-panel" id="cameraTimestampSizeDrop" hidden role="listbox">
+                    <button type="button" class="menu-item city-item" data-picker-value="small">Small</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="medium">Medium</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="large">Large</button>
+                  </div>
+                  <select id="cameraTimestampSize" data-cam-select="timestampSize" style="display:none">
+                    <option value="small">Small</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                </div>
               </div>
             </div>
             <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">The stamp is burned into the video so any player or software shows it. When you upload, a matching .txt with the exact time and GPS is included for evidence.</p>
             <h2 class="settings-section-title">Max clip length</h2>
             <div class="settings-group">
               <div class="field" style="padding:var(--space-3) var(--space-4)">
-                <label for="cameraMaxClipSelect">Max clip length</label>
-                <select id="cameraMaxClipSelect" class="city-btn" data-cam-max-minutes style="width:100%;min-height:48px">
-                  <option value="5">5 minutes</option>
-                  <option value="10" selected>10 minutes</option>
-                  <option value="20">20 minutes</option>
-                  <option value="30">30 minutes</option>
-                  <option value="0">No limit</option>
-                </select>
+                <label for="cameraMaxClipBtn">Max clip length</label>
+                <div class="menu-wrap city-wrap">
+                  <button type="button" class="menu-btn city-btn" id="cameraMaxClipBtn" aria-haspopup="listbox" aria-expanded="false"><span id="cameraMaxClipLabel">10 minutes</span></button>
+                  <div class="menu-panel city-panel" id="cameraMaxClipDrop" hidden role="listbox">
+                    <button type="button" class="menu-item city-item" data-picker-value="5">5 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="10">10 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="20">20 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="30">30 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="0">No limit</button>
+                  </div>
+                  <select id="cameraMaxClipSelect" data-cam-max-minutes style="display:none">
+                    <option value="5">5 minutes</option>
+                    <option value="10" selected>10 minutes</option>
+                    <option value="20">20 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="0">No limit</option>
+                  </select>
+                </div>
               </div>
             </div>
             <h2 class="settings-section-title">Storage</h2>
@@ -2628,7 +2666,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=196" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=197" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2650,8 +2688,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.65';
-  const BUNDLED_PWA_CACHE_VERSION = 'v196';
+  const BUNDLED_APP_VERSION = '3.5.66';
+  const BUNDLED_PWA_CACHE_VERSION = 'v197';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4540,7 +4578,7 @@
       const saved = localStorage.getItem(DEFAULT_TAB_PREF_KEY);
       if (saved && VALID_DEFAULT_TABS.has(saved)) return saved;
     } catch {}
-    return 'last';
+    return 'camera';
   }
 
   function getLastTabPreference() {
@@ -8960,6 +8998,7 @@ out body;`;
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('#tab-hotels .city-wrap')) return;
+    if (event.target.closest('[data-screen="camera-settings"] .city-wrap')) return;
     closeAllPickers();
   });
 
@@ -9028,6 +9067,18 @@ out body;`;
       syncClientBilledField();
       refreshEmailDraft();
     }
+  });
+
+  // Camera settings dropdowns use the same picker component as the rest of the app.
+  // initPicker dispatches a native 'change' on the hidden <select>, which the camera
+  // module already listens to (data-cam-select / data-cam-max-minutes) to persist prefs.
+  [
+    ['cameraTimestampFormatBtn', 'cameraTimestampFormatDrop', 'cameraTimestampFormat', 'cameraTimestampFormatLabel'],
+    ['cameraTimestampPositionBtn', 'cameraTimestampPositionDrop', 'cameraTimestampPosition', 'cameraTimestampPositionLabel'],
+    ['cameraTimestampSizeBtn', 'cameraTimestampSizeDrop', 'cameraTimestampSize', 'cameraTimestampSizeLabel'],
+    ['cameraMaxClipBtn', 'cameraMaxClipDrop', 'cameraMaxClipSelect', 'cameraMaxClipLabel'],
+  ].forEach(([btnId, dropId, selId, labelId]) => {
+    initPicker({ button: $(btnId), panel: $(dropId), hidden: $(selId), label: $(labelId) });
   });
 
   if (els.recipient?.options.length) {

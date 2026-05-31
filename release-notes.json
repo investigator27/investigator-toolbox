@@ -1,11 +1,31 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v196",
-  "appVersion": "3.5.65",
+  "latest": "v197",
+  "appVersion": "3.5.66",
   "highlights": [
-    "Camera tab moved to the first position in the bottom bar (Calculator moved to the last). Plus the on-screen Recording / Stopped status now clears itself after a few seconds like it should."
+    "The app now opens to the Camera tab by default, the camera dropdowns match the rest of the app, and the How To Use page spacing is tidied up."
   ],
   "builds": {
+    "v197": {
+      "intro": "Build v197 — Camera default tab, consistent dropdowns, and small Camera polish.",
+      "sections": [
+        {
+          "heading": "Layout & navigation",
+          "items": [
+            "The app now opens straight to the Camera tab on launch (you can still change the launch tab under Settings → Personalization).",
+            "How To Use page: the title now sits neatly under the back arrow with even spacing down to the Controls and Notes sections, matching the Clip Library page."
+          ]
+        },
+        {
+          "heading": "Camera Settings",
+          "items": [
+            "All the Camera Settings dropdowns (Date format, Position, Size, Max clip length) now use the same dropdown style and behaviour as the rest of the app — for example the Calculator's Starting Location picker.",
+            "\"Burn date & time onto video\" is now labelled \"Enable Date & Timestamp\".",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v197)."
+          ]
+        }
+      ]
+    },
     "v196": {
       "intro": "Build v196 — Camera tab moved to the front; tidier on-screen recording status.",
       "sections": [

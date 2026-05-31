@@ -1,6 +1,6 @@
 /* sw-revision: 30 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v196';
+let activeCacheName = 'surveillance-travel-pwa-v197';
 
 // Mirrors the in-app "Notifications" toggle. The page pushes the current value
 // via SET_NOTIF_PREF so the worker never shows an update notification the user

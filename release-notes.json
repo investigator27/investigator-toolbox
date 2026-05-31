@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v148",
-  "appVersion": "3.5.17",
+  "latest": "v149",
+  "appVersion": "3.5.18",
   "highlights": [
-    "Clip addresses (not coordinates), white Recording/Stopped at top, stronger tap haptics."
+    "Fix tab bar not responding after camera (stuck fullscreen overlay)."
   ],
   "builds": {
+    "v149": {
+      "intro": "Build v149 — tab bar touch fix after camera.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Leaving camera or Saved clips no longer leaves an invisible layer blocking tab taps.",
+            "Camera fullscreen only while recording view is active; tab bar works on Saved clips and other tabs.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v149)."
+          ]
+        }
+      ]
+    },
     "v148": {
       "intro": "Build v148 — clip addresses, HUD, haptics.",
       "sections": [

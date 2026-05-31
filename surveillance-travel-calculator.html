@@ -199,28 +199,24 @@
     .app-shell--covert-camera .app-content{padding:0;overflow:hidden}
     .app-shell--covert-camera .tab-bar{display:none!important}
     #tab-camera{
+      position:relative;
+      margin:0;
+      width:100%;
+      padding:0;
+      background:var(--color-bg);
+      display:block;
+    }
+    #tab-camera.tab-panel--camera-active{
       position:fixed;
       top:0;
       left:0;
       right:0;
       bottom:0;
       padding-bottom:env(safe-area-inset-bottom,0px);
-      margin:0;
-      width:100%;
-      padding:0;
-      z-index:180;
+      z-index:350;
       background:#000;
-      display:block;
     }
-    .app-shell--covert-camera #tab-camera{z-index:350}
     #tab-camera.hidden{display:none!important}
-    #tab-camera:not(.tab-panel--camera-active){
-      position:relative;
-      inset:auto;
-      bottom:auto;
-      padding-bottom:0;
-      background:var(--color-bg);
-    }
     .covert-camera--session-off{display:none!important}
     .camera-clips-hub{
       display:flex;
@@ -2235,7 +2231,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=148" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=149" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2257,8 +2253,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.17';
-  const BUNDLED_PWA_CACHE_VERSION = 'v148';
+  const BUNDLED_APP_VERSION = '3.5.18';
+  const BUNDLED_PWA_CACHE_VERSION = 'v149';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

@@ -508,7 +508,7 @@
 
     if (!clips.length) {
       list.innerHTML = `
-        <div class="camera-clips-hub__empty">
+        <div class="camera-clips-card__empty">
           <p><strong>No clips yet</strong></p>
           <p class="card-sub">Open Camera to record. Swipe up twice when finished to manage clips here.</p>
         </div>`;

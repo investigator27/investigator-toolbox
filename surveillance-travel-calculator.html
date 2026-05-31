@@ -1918,7 +1918,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v134';
+  const BUNDLED_PWA_CACHE_VERSION = 'v135';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4488,24 +4488,29 @@ $('summaryNote').textContent =
     });
   }
 
-  function launchToolboxAfterInstall() {
+  function showInstallCompleteUi() {
     if (pwaLaunchScheduled) return;
     pwaLaunchScheduled = true;
     hidePwaInstallBanner();
-    syncInstallUi();
-    if (installBtn) {
-      installBtn.textContent = 'Open Toolbox';
-      installBtn.disabled = false;
+    try { sessionStorage.removeItem('toolboxPwaInstall'); } catch {}
+    const inApp = isStandalonePwa();
+    const doneLabel = inApp ? 'Installed' : 'Installed — open from home screen';
+    const doneMessage = inApp
+      ? 'Toolbox is ready.'
+      : 'Installed! Close this browser tab and open Toolbox from your home screen or app drawer.';
+    if (settingsInstallStatus) settingsInstallStatus.textContent = doneMessage;
+    [installBtn, settingsInstallBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.textContent = doneLabel;
+      btn.disabled = !inApp;
+    });
+    if (inApp) {
+      const target = new URL(window.location.href);
+      target.searchParams.delete('install');
+      if (target.href !== window.location.href) {
+        window.setTimeout(() => window.location.replace(target.href), 300);
+      }
     }
-    if (settingsInstallBtn) {
-      settingsInstallBtn.textContent = 'Open Toolbox';
-      settingsInstallBtn.disabled = false;
-    }
-    const target = new URL(window.location.href);
-    target.searchParams.delete('install');
-    window.setTimeout(() => {
-      window.location.replace(target.toString());
-    }, 500);
   }
 
   function shouldShowPwaInstallBanner() {
@@ -4532,24 +4537,21 @@ $('summaryNote').textContent =
     deferredPrompt.userChoice
       .then((choice) => {
         if (choice?.outcome === 'accepted') {
-          setTimeout(() => {
-            if (!pwaLaunchScheduled) launchToolboxAfterInstall();
-          }, 2500);
+          const msg = 'Installing… When Chrome finishes, open Toolbox from your home screen.';
+          if (settingsInstallStatus) settingsInstallStatus.textContent = msg;
+        } else if (!pwaLaunchScheduled) {
+          syncInstallUi();
         }
       })
       .finally(() => {
         deferredPrompt = null;
-        syncInstallUi();
         if (!pwaLaunchScheduled) hidePwaInstallBanner();
       });
     return true;
   }
 
   function handleInstallButtonClick() {
-    if (installBtn?.textContent === 'Open Toolbox' || settingsInstallBtn?.textContent === 'Open Toolbox') {
-      launchToolboxAfterInstall();
-      return;
-    }
+    if (pwaLaunchScheduled) return;
     if (isStandalonePwa() || installPlatform.id === 'ios') return;
     if (runInstallPrompt()) return;
     syncInstallUi();
@@ -4573,7 +4575,7 @@ $('summaryNote').textContent =
   settingsInstallBtn?.addEventListener('click', handleInstallButtonClick);
 
   window.addEventListener('appinstalled', () => {
-    launchToolboxAfterInstall();
+    showInstallCompleteUi();
   });
 
   function initTabBar() {

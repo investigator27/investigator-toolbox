@@ -1,10 +1,23 @@
 {
-  "latest": "v134",
+  "latest": "v135",
   "appVersion": "3.5.4",
   "highlights": [
-    "Settings → Install App: proper install screen with a button that opens the browser install prompt (no install-page links)."
+    "After PWA install on Android, no longer jumps into the Chrome tab — wait for install, then open from home screen."
   ],
   "builds": {
+    "v135": {
+      "intro": "Build v135 — install no longer opens browser tab after accept.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Removed auto-redirect to the calculator in Chrome after you accept Install — the installed app stays on your home screen.",
+            "When install finishes, the page tells you to open Toolbox from your home screen or app drawer.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v135)."
+          ]
+        }
+      ]
+    },
     "v134": {
       "intro": "Build v134 — Settings Install App screen.",
       "sections": [

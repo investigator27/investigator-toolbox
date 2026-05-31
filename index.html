@@ -309,17 +309,22 @@
       }
     }
 
-    function launchToolboxAfterInstall() {
+    function showInstallCompleteUi() {
       if (launchScheduled) return;
       launchScheduled = true;
-      setCallout('Installed! Opening Toolbox…');
-      if (installBtn) {
-        installBtn.disabled = false;
-        installBtn.textContent = 'Open Toolbox';
+      if (isStandalone) {
+        setCallout('Installed! Toolbox is ready.');
+        if (installBtn) {
+          installBtn.disabled = true;
+          installBtn.textContent = 'Installed';
+        }
+        return;
       }
-      window.setTimeout(function () {
-        window.location.replace(appUrl);
-      }, 500);
+      setCallout('Installed! Close this tab and open Toolbox from your home screen or app drawer.');
+      if (installBtn) {
+        installBtn.disabled = true;
+        installBtn.textContent = 'Installed';
+      }
     }
 
     function runInstallPrompt() {
@@ -327,20 +332,19 @@
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function (choice) {
         if (choice && choice.outcome === 'accepted') {
-          window.setTimeout(function () {
-            if (!launchScheduled) launchToolboxAfterInstall();
-          }, 2500);
+          setCallout('Installing… When Chrome finishes, open Toolbox from your home screen.');
+        } else if (!launchScheduled) {
+          showInstallActions();
         }
       }).finally(function () {
         deferredPrompt = null;
         installReady = false;
-        if (installBtn && !launchScheduled) showInstallActions();
       });
       return true;
     }
 
     window.addEventListener('appinstalled', function () {
-      launchToolboxAfterInstall();
+      showInstallCompleteUi();
     });
 
     if (isIOS) {
@@ -371,8 +375,7 @@
     if (installBtn) {
       installBtn.addEventListener('click', function () {
         if (isStandalone || isIOS) return;
-        if (installBtn.textContent === 'Open Toolbox') {
-          window.location.href = appUrl;
+        if (installBtn.textContent === 'Installed') {
           return;
         }
         if (runInstallPrompt()) return;

@@ -53,6 +53,7 @@
   let tsDrawHandle = null;
   let tsSourceVideo = null;
   let tsCanvasStream = null;
+  let tsUsingRVFC = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -541,14 +542,29 @@
         return null;
       }
       const fps = Math.min(30, Math.round(settings.frameRate || 30));
-      const draw = () => {
+      const paint = () => {
         try {
           ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
           if (getPrefs().timestampEnabled) drawTimestampOnCanvas(ctx, canvas.width, canvas.height, getPrefs());
         } catch {}
-        tsDrawHandle = requestAnimationFrame(draw);
       };
-      draw();
+      paint();
+      // Prefer requestVideoFrameCallback so the canvas redraws exactly when a new camera frame
+      // arrives (smooth, no duplicated/dropped frames). Fall back to rAF where it's unavailable.
+      tsUsingRVFC = typeof v.requestVideoFrameCallback === 'function';
+      if (tsUsingRVFC) {
+        const loopRVFC = () => {
+          paint();
+          tsDrawHandle = v.requestVideoFrameCallback(loopRVFC);
+        };
+        tsDrawHandle = v.requestVideoFrameCallback(loopRVFC);
+      } else {
+        const loopRAF = () => {
+          paint();
+          tsDrawHandle = requestAnimationFrame(loopRAF);
+        };
+        loopRAF();
+      }
       const out = canvas.captureStream(fps);
       srcStream.getAudioTracks().forEach((t) => out.addTrack(t));
       tsSourceVideo = v;
@@ -561,10 +577,15 @@
   }
 
   function cleanupTimestampPipeline() {
-    if (tsDrawHandle) {
-      cancelAnimationFrame(tsDrawHandle);
+    if (tsDrawHandle != null) {
+      if (tsUsingRVFC && tsSourceVideo && typeof tsSourceVideo.cancelVideoFrameCallback === 'function') {
+        try { tsSourceVideo.cancelVideoFrameCallback(tsDrawHandle); } catch {}
+      } else {
+        cancelAnimationFrame(tsDrawHandle);
+      }
       tsDrawHandle = null;
     }
+    tsUsingRVFC = false;
     if (tsCanvasStream) {
       tsCanvasStream.getVideoTracks().forEach((t) => t.stop());
       tsCanvasStream = null;
@@ -588,6 +609,16 @@
       'video/mp4',
     ];
     return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  /** Scale bitrate to the actual resolution/fps so motion stays sharp (clamped 3.5–12 Mbps). */
+  function computeVideoBitrate(track) {
+    const s = track?.getSettings?.() || {};
+    const w = s.width || 1920;
+    const h = s.height || 1080;
+    const fps = s.frameRate || 30;
+    const bps = Math.round(w * h * fps * 0.12);
+    return Math.min(Math.max(bps, 3500000), 12000000);
   }
 
   function clearHud() {
@@ -1111,6 +1142,8 @@
       width: { ideal: 1920, min: 640 },
       height: { ideal: 1080, min: 360 },
       aspectRatio: { ideal: 16 / 9 },
+      // Ask for a steady 30fps so the camera doesn't drop to a jittery variable rate.
+      frameRate: { ideal: 30 },
     };
   }
 
@@ -1172,12 +1205,14 @@
           width: { ideal: 1920 },
           height: { ideal: 1080 },
           aspectRatio: { ideal: 16 / 9 },
+          frameRate: { ideal: 30 },
         });
       } catch {
         try {
           await track.applyConstraints({
             width: { ideal: 1280 },
             height: { ideal: 720 },
+            frameRate: { ideal: 30 },
           });
         } catch {}
       }
@@ -1200,7 +1235,7 @@
     const attempts = [
       { video: landscape, audio: false },
       {
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } },
         audio: false,
       },
       { video: { facingMode: 'environment' }, audio: false },
@@ -1356,10 +1391,11 @@
       if (stamped) recordStream = stamped;
       else cleanupTimestampPipeline();
     }
+    const videoBitsPerSecond = computeVideoBitrate(mediaStream.getVideoTracks?.()[0]);
     try {
       mediaRecorder = new MediaRecorder(recordStream, {
         mimeType,
-        videoBitsPerSecond: 2500000,
+        videoBitsPerSecond,
       });
     } catch {
       mediaRecorder = new MediaRecorder(recordStream);

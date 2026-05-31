@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v188",
-  "appVersion": "3.5.57",
+  "latest": "v189",
+  "appVersion": "3.5.58",
   "highlights": [
-    "Update recovery is now bulletproof: an interrupted update self-heals at the earliest startup point and can never leave the app stuck on an old build."
+    "Fixed a startup crash that was silently disabling automatic update checks and notifications — the core reason updates weren't being detected on launch."
   ],
   "builds": {
+    "v189": {
+      "intro": "Build v189 — Critical fix: startup script no longer aborts before the update flow runs.",
+      "sections": [
+        {
+          "heading": "Software Update",
+          "items": [
+            "Fixed a scope error (reverseGeocodeForClip referenced in the wrong script block) that threw on every launch and stopped the automatic update + notification flow from ever running.",
+            "All prior update reliability fixes now actually execute on startup.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v189)."
+          ]
+        }
+      ]
+    },
     "v188": {
       "intro": "Build v188 — Earliest-possible self-heal so updates can never get permanently stuck.",
       "sections": [

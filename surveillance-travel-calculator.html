@@ -2512,7 +2512,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=188" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=189" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2534,8 +2534,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.57';
-  const BUNDLED_PWA_CACHE_VERSION = 'v188';
+  const BUNDLED_APP_VERSION = '3.5.58';
+  const BUNDLED_PWA_CACHE_VERSION = 'v189';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5743,7 +5743,8 @@ $('summaryNote').textContent =
   }
 
   window.toolboxHaptic = toolboxHaptic;
-  window.toolboxReverseGeocode = reverseGeocodeForClip;
+  // window.toolboxReverseGeocode is exported from the hotel script block where
+  // reverseGeocodeForClip is defined (referencing it here threw and aborted startup).
   window.syncToggleStateLabel = syncToggleStateLabel;
   window.openSettings = openSettings;
 
@@ -7631,6 +7632,10 @@ out body;`;
     const hit = await nominatimReverse(lat, lng);
     return (hit?.label || hit?.displayName || hit?.destination || '').trim();
   }
+  // Exposed here (not in the main script block) because reverseGeocodeForClip is
+  // scoped to this IIFE. Referencing it from the other block throws a ReferenceError
+  // that aborts the rest of that block — including the startup update flow.
+  window.toolboxReverseGeocode = reverseGeocodeForClip;
 
   async function nominatimReverse(lat, lng) {
     let best = null;

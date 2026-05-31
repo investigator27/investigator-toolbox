@@ -57,6 +57,20 @@
     } catch (e) {}
   })();
   </script>
+  <style id="toolbox-post-update-critical">
+    html[data-post-update] .app-shell{visibility:hidden}
+    html[data-post-update] #settingsOverlay{
+      display:grid!important;
+      opacity:1!important;
+      visibility:visible!important;
+      pointer-events:auto!important;
+      transition:none!important;
+    }
+    html[data-post-update] #settingsOverlay .settings-sheet{
+      transform:translateY(0)!important;
+      transition:none!important;
+    }
+  </style>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
   <style>
@@ -815,6 +829,10 @@
       opacity:1;
       visibility:visible;
       pointer-events:auto;
+    }
+    html[data-post-update] .settings-overlay.settings-overlay--post-update,
+    html[data-post-update] .settings-overlay.is-open{
+      transition:none;
     }
     .settings-sheet{
       width:100%;
@@ -2347,7 +2365,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=169" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=170" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2369,8 +2387,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.38';
-  const BUNDLED_PWA_CACHE_VERSION = 'v169';
+  const BUNDLED_APP_VERSION = '3.5.39';
+  const BUNDLED_PWA_CACHE_VERSION = 'v170';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3077,7 +3095,7 @@
     updateUIState = 'uptodate';
     document.documentElement.setAttribute('data-post-update', '1');
     settingsOverlay?.classList.add('settings-overlay--post-update');
-    openSettings('updates', { instant: true });
+    openSettings('updates', { instant: true, postUpdate: true });
     renderSoftwareUpdateUi('uptodate');
     try {
       if ('serviceWorker' in navigator) {
@@ -4406,7 +4424,12 @@
 
   function openSettings(screenId, opts = {}) {
     if (!settingsOverlay) return;
-    resetSettingsNav();
+    const postUpdate = opts.postUpdate === true;
+    if (postUpdate && screenId === 'updates') {
+      settingsNavStack = ['root', 'updates'];
+    } else {
+      resetSettingsNav();
+    }
     settingsOverlay.classList.remove('hidden');
     settingsOverlay.setAttribute('aria-hidden', 'false');
     doc.body.style.overflow = 'hidden';
@@ -4422,9 +4445,14 @@
     }
     const openSheet = () => {
       settingsOverlay.classList.add('is-open');
-      if (screenId && screenId !== 'root') pushSettingsScreen(screenId);
+      if (postUpdate && screenId === 'updates') {
+        paintSettingsScreens();
+        bindSoftwareUpdateActions();
+      } else if (screenId && screenId !== 'root') {
+        pushSettingsScreen(screenId);
+      }
     };
-    if (opts.instant) {
+    if (opts.instant || postUpdate) {
       openSheet();
       return;
     }

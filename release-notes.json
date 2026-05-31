@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v169",
-  "appVersion": "3.5.38",
+  "latest": "v170",
+  "appVersion": "3.5.39",
   "highlights": [
-    "Settings stays on top after update; Software Update up-to-date screen no longer hidden behind Calculator tab."
+    "Smoother post-update reload — no Calculator flash before up-to-date screen."
   ],
   "builds": {
+    "v170": {
+      "intro": "Build v170 — post-update flash fix.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Hides Calculator on first paint after restart until Software Update is visible.",
+            "Opens directly on up-to-date screen without settings animation flash.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v170)."
+          ]
+        }
+      ]
+    },
     "v169": {
       "intro": "Build v169 — post-update screen stays visible.",
       "sections": [

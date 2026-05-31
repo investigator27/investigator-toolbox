@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v190",
-  "appVersion": "3.5.59",
+  "latest": "v191",
+  "appVersion": "3.5.60",
   "highlights": [
-    "Hotel Finder: \"Hotels & Motels only\" now correctly hides homes, cottages and other non-hotel stays that were slipping through."
+    "Hotel Finder is more reliable: searches now auto-retry when Booking.com intermittently returns an unreadable page, instead of failing with a \"couldn't parse\" error."
   ],
   "builds": {
+    "v191": {
+      "intro": "Build v191 — Hotel Finder auto-retries Booking.com's intermittent failures.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "Booking.com sometimes serves a page that can't be parsed (or ScraperAPI briefly 500s); the search now re-scrapes automatically (up to twice) and only shows an error if every attempt fails.",
+            "Retry is opt-in from the app and capped in the worker, so it can never loop or drain ScraperAPI credits.",
+            "Requires Cloudflare worker booking-worker-76. Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json (v191) + cloudflare/booking-worker.js."
+          ]
+        }
+      ]
+    },
     "v190": {
       "intro": "Build v190 — Hotel Finder filter fix + optional ScraperAPI reliability lever.",
       "sections": [

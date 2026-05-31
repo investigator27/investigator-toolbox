@@ -2512,7 +2512,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=190" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=191" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2534,8 +2534,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.59';
-  const BUNDLED_PWA_CACHE_VERSION = 'v190';
+  const BUNDLED_APP_VERSION = '3.5.60';
+  const BUNDLED_PWA_CACHE_VERSION = 'v191';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -6165,6 +6165,9 @@ textarea:focus, textarea:focus-visible {
   async function pollBookingSearchJob(baseParams, jobId) {
     const pollParams = new URLSearchParams(baseParams);
     pollParams.set('jobId', jobId);
+    // Opt into the worker's capped auto-retry: Booking intermittently serves an unparseable
+    // page (or ScraperAPI 500s). The worker re-scrapes and hands back a new jobId to follow.
+    pollParams.set('autoRetry', '1');
     const pollIntervalMs = 4000;
     const pollMaxMs = 300000;
     const started = Date.now();
@@ -6183,6 +6186,11 @@ textarea:focus, textarea:focus-visible {
         if (!response.ok) throw new Error(`booking poll ${response.status}`);
         const data = await response.json();
         if (data.pending || data.status === 'running') {
+          // Follow a worker-issued retry job so an intermittent failure self-heals transparently.
+          if (data.jobId && data.jobId !== pollParams.get('jobId')) {
+            pollParams.set('jobId', data.jobId);
+          }
+          if (data.retry != null) pollParams.set('retry', String(data.retry));
           await new Promise((r) => setTimeout(r, pollIntervalMs));
           continue;
         }

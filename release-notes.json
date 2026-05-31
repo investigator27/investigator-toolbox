@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v146",
-  "appVersion": "3.5.15",
+  "latest": "v147",
+  "appVersion": "3.5.16",
   "highlights": [
-    "Camera recording locked to landscape (screen + 1080p wide video)."
+    "Saved clips: newest first, duration, date/time, and GPS on each card."
   ],
   "builds": {
+    "v147": {
+      "intro": "Build v147 — Saved clips list improvements.",
+      "sections": [
+        {
+          "heading": "Camera",
+          "items": [
+            "Newest clips appear at the top of Saved clips.",
+            "Each clip shows duration, date/time, and location (GPS) in grey under the file size.",
+            "Allow Location for Toolbox so clips can store coordinates when recording.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v147)."
+          ]
+        }
+      ]
+    },
     "v146": {
       "intro": "Build v146 — landscape lock for covert recording.",
       "sections": [

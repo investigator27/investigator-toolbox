@@ -302,7 +302,6 @@
       setClipLibrarySubview(getClipDayKeyFromScreen(activeId) ? 'day' : 'folders');
       void renderClipsLibrary();
     }
-    if (activeId === 'camera-settings') void refreshCameraSettingsUi();
   }
 
   function pushCameraScreen(screenId) {
@@ -357,7 +356,15 @@
       }
       const pushBtn = event.target.closest('[data-camera-push]');
       if (pushBtn) {
-        pushCameraScreen(pushBtn.dataset.cameraPush || '');
+        const target = pushBtn.dataset.cameraPush || '';
+        if (target === 'camera-settings') {
+          if (typeof window.openSettings === 'function') {
+            window.openSettings('camera-settings', { fromCameraTab: true });
+          }
+          haptic('light');
+          return;
+        }
+        pushCameraScreen(target);
         haptic('light');
         return;
       }

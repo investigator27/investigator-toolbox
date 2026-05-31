@@ -2231,7 +2231,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=156" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=157" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2253,8 +2253,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.25';
-  const BUNDLED_PWA_CACHE_VERSION = 'v156';
+  const BUNDLED_APP_VERSION = '3.5.26';
+  const BUNDLED_PWA_CACHE_VERSION = 'v157';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2852,18 +2852,28 @@
     window.location.reload();
   }
 
-  /** Remove stuck fullscreen camera layer that blocks the tab bar. */
-  function ensureInteractiveShell() {
-    window.ToolboxCovertCamera?.forceExitCovertUi?.();
-    document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+  /** Only when covert fullscreen is stuck on top of the tab bar (does not reset normal camera tab). */
+  function resetStuckCovertOverlay() {
+    const shell = document.querySelector('.app-shell');
     const cameraTab = $('tab-camera');
-    cameraTab?.classList.remove('tab-panel--camera-active');
-    const activeId = qs('.tab-bar-item.active')?.dataset.tab || 'calculator';
-    qsa('.tab-panel').forEach((panel) => {
-      const tabId = panel.dataset.tab;
-      if (!tabId) return;
-      panel.classList.toggle('hidden', tabId !== activeId);
-    });
+    const stuck = cameraTab?.classList.contains('tab-panel--camera-active')
+      || shell?.classList.contains('app-shell--covert-camera');
+    if (!stuck) return;
+    window.ToolboxCovertCamera?.onTabLeave?.();
+  }
+
+  let shellBootstrapDone = false;
+
+  async function bootstrapToolboxShell() {
+    if (shellBootstrapDone) return;
+    shellBootstrapDone = true;
+    resetStuckCovertOverlay();
+    if (!tabBarInitialized) initTabBar();
+    try {
+      await syncBuildLabelFromReleaseNotes();
+    } catch {}
+    refreshAllVersionDisplays();
+    await fetchRemoteTabPolicy();
   }
 
   function syncViewportHeight() {
@@ -4973,7 +4983,6 @@ $('summaryNote').textContent =
   function initTabBar() {
     if (tabBarInitialized) return;
     tabBarInitialized = true;
-    ensureInteractiveShell();
     tabVisibilityState = loadTabVisibility();
     const tabPanels = qsa('.tab-panel');
     const tabButtons = qsa('.tab-bar-item');
@@ -5019,7 +5028,13 @@ $('summaryNote').textContent =
     function switchTab(tabId) {
       if (!isTabEnabled(tabId)) return;
       const prev = qs('.tab-bar-item.active')?.dataset.tab;
-      if (prev === 'camera' && tabId !== 'camera') window.ToolboxCovertCamera?.onTabLeave?.();
+      if (prev === 'camera' && tabId !== 'camera') {
+        window.ToolboxCovertCamera?.onTabLeave?.();
+      }
+      if (tabId !== 'camera') {
+        document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+        $('tab-camera')?.classList.remove('tab-panel--camera-active');
+      }
       rememberLastTab(tabId);
       toolboxHaptic('light');
       tabPanels.forEach((panel) => {
@@ -5036,10 +5051,7 @@ $('summaryNote').textContent =
       if (cityDrop) cityDrop.hidden = true;
       qsa('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
       qsa('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
-      if (tabId === 'camera') {
-        const cold = !!window.__toolboxTabColdStart;
-        window.ToolboxCovertCamera?.onTabEnter?.(cold ? { coldStart: true } : {});
-      }
+      if (tabId === 'camera') window.ToolboxCovertCamera?.onTabEnter?.();
     }
 
     window.ToolboxTabs = {
@@ -5060,7 +5072,7 @@ $('summaryNote').textContent =
     bindTabBarNavigation(tabNav, switchTab, isTabEnabled);
 
     window.addEventListener('pageshow', () => {
-      ensureInteractiveShell();
+      resetStuckCovertOverlay();
       tabVisibilityState = loadTabVisibility();
       applyTabBarState();
       const active = qs('.tab-bar-item.active');
@@ -5080,10 +5092,7 @@ $('summaryNote').textContent =
     applyTabBarState();
     let initialTab = resolveInitialTabId();
     if (!isTabEnabled(initialTab)) initialTab = 'calculator';
-    window.__toolboxTabColdStart = true;
     switchTab(initialTab);
-    window.__toolboxTabColdStart = false;
-    ensureInteractiveShell();
   }
 
   window.toolboxHaptic = toolboxHaptic;
@@ -5091,12 +5100,7 @@ $('summaryNote').textContent =
   window.syncToggleStateLabel = syncToggleStateLabel;
   window.openSettings = openSettings;
 
-  initTabBar();
-  fetchRemoteTabPolicy().finally(() => {
-    if (remoteTabPolicyMap && window.ToolboxTabs?.applyVisibility) {
-      window.ToolboxTabs.applyVisibility(remoteTabPolicyMap);
-    }
-  });
+  void bootstrapToolboxShell();
   bindViewportHeightSync();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
@@ -5107,10 +5111,7 @@ $('summaryNote').textContent =
 
   window.addEventListener('load', async () => {
     syncViewportHeight();
-    await syncBuildLabelFromReleaseNotes();
-    await fetchRemoteTabPolicy();
-    refreshAllVersionDisplays();
-    if (!tabBarInitialized) initTabBar();
+    await bootstrapToolboxShell();
     try {
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
@@ -5126,7 +5127,6 @@ $('summaryNote').textContent =
         sessionStorage.removeItem('toolboxReloadBuild');
         sessionStorage.removeItem('toolboxShowUptodate');
         suppressUpdatePromptOnLoad = true;
-        quietUpdateLoad = true;
         waitingSW = null;
         applyingAppUpdate = false;
         showUptodateBanner();
@@ -5139,7 +5139,6 @@ $('summaryNote').textContent =
       } else if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
         sessionStorage.removeItem('toolboxShowUptodate');
         suppressUpdatePromptOnLoad = true;
-        quietUpdateLoad = true;
         waitingSW = null;
         showUptodateBanner();
       }
@@ -5160,6 +5159,8 @@ $('summaryNote').textContent =
         suppressUpdatePromptOnLoad = false;
         quietUpdateLoad = false;
         refreshSettingsVersionLabel();
+        const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
+        if (reg?.waiting) bindWaitingWorker(reg);
         return;
       }
 
@@ -8310,40 +8311,6 @@ out body;`;
   syncClientBilledField();
   setEmailActionsEnabled(false);
 
-  (function bindCovertAllowFallback() {
-    let busy = false;
-    let lastAt = 0;
-    const run = () => {
-      const now = Date.now();
-      if (busy || now - lastAt < 400) return;
-      lastAt = now;
-      const cam = window.ToolboxCovertCamera;
-      if (cam && typeof cam.requestCameraAccess === 'function') {
-        busy = true;
-        Promise.resolve(cam.requestCameraAccess()).finally(() => {
-          busy = false;
-        });
-        return;
-      }
-      const status = $('covertStatus');
-      const err = $('covertPermissionError');
-      const msg = window.__covertCameraLoadFailed
-        ? 'Camera script failed to load. Deploy assets/covert-camera.js with the app, then update.'
-        : 'Camera module not ready — force-close Toolbox and open again.';
-      if (err) err.textContent = msg;
-      if (status) status.textContent = msg;
-    };
-    doc.addEventListener(
-      'pointerdown',
-      (event) => {
-        if (!event.target.closest('#covertAllowCameraBtn')) return;
-        event.preventDefault();
-        event.stopPropagation();
-        run();
-      },
-      true
-    );
-  })();
 })();
 </script>
 

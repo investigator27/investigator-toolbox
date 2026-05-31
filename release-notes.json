@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v140",
-  "appVersion": "3.5.9",
+  "latest": "v141",
+  "appVersion": "3.5.10",
   "highlights": [
-    "Fix Allow camera access on Android (permission gesture + fallback binding)."
+    "Camera Allow button now triggers Android permission popup on first tap when not blocked."
   ],
   "builds": {
+    "v141": {
+      "intro": "Build v141 — Android camera permission popup on first tap.",
+      "sections": [
+        {
+          "heading": "Camera",
+          "items": [
+            "Fixed early Permission denied with no Android popup (camera is requested before microphone).",
+            "Clearer message when permissions were blocked earlier and must be reset in Chrome or Android Settings.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v141)."
+          ]
+        }
+      ]
+    },
     "v140": {
       "intro": "Build v140 — Allow camera access works on Android.",
       "sections": [

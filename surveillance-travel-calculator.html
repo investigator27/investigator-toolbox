@@ -1358,7 +1358,7 @@
         <div class="covert-camera__tap" id="covertTapZone" aria-hidden="true"></div>
         <div class="covert-camera__hud"><span id="covertStatus"></span></div>
         <div class="covert-permission-gate" id="covertPermissionGate">
-          <p>Toolbox needs camera and microphone on this device. Tap below — Android will ask you to allow access.</p>
+          <p>Tap the button below. Android should show a system popup — tap <strong>Allow</strong> for Camera and Microphone. If you never see a popup, permissions were blocked earlier (see red message).</p>
           <p class="covert-permission-gate__error" id="covertPermissionError" role="alert" aria-live="polite"></p>
           <button type="button" class="btn btn-primary" id="covertAllowCameraBtn">Allow camera access</button>
         </div>
@@ -2078,7 +2078,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=140" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=141" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2100,8 +2100,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.9';
-  const BUNDLED_PWA_CACHE_VERSION = 'v140';
+  const BUNDLED_APP_VERSION = '3.5.10';
+  const BUNDLED_PWA_CACHE_VERSION = 'v141';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -8129,7 +8129,7 @@ out body;`;
       if (status) status.textContent = msg;
     };
     doc.addEventListener(
-      'pointerup',
+      'pointerdown',
       (event) => {
         if (!event.target.closest('#covertAllowCameraBtn')) return;
         event.preventDefault();

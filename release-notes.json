@@ -1,11 +1,63 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v197",
-  "appVersion": "3.5.66",
+  "latest": "v201",
+  "appVersion": "3.5.70",
   "highlights": [
-    "The app now opens to the Camera tab by default, the camera dropdowns match the rest of the app, and the How To Use page spacing is tidied up."
+    "Renamed the clip export button to \"Download to device\" and clarified that clips are stored privately inside Toolbox, not in your gallery. Export now also works in Airplane mode."
   ],
   "builds": {
+    "v201": {
+      "intro": "Build v201 — Clearer clip export: \"Download to device\".",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "The \"Upload clips to OneDrive\" / \"Send to OneDrive\" buttons are now labelled \"Download to device\" — that's what they actually do. Clips are stored privately inside Toolbox (deliberately not in your gallery, so they stay covert); Download to device copies them out to your phone's Files/Share sheet, or your computer's Downloads folder.",
+            "Exporting now works while offline / in Airplane mode (it's a local copy, not a cloud upload), so you no longer get an \"offline\" message when trying to pull clips off the device.",
+            "Wording across Camera Settings and How To Use updated to say download/export instead of upload.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v201)."
+          ]
+        }
+      ]
+    },
+    "v200": {
+      "intro": "Build v200 — Camera Settings dropdown fix and tidier permission help.",
+      "sections": [
+        {
+          "heading": "Camera Settings",
+          "items": [
+            "Fixed the Size and Max clip length dropdowns — being near the bottom of the page, their options were opening off-screen and getting clipped. Dropdowns now flip open upward automatically when there isn't room below, so every option is selectable.",
+            "Removed the \"Camera permission help\" button from Camera Settings. The same instructions now live on the How To Use page under a new \"Camera permission\" section.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v200)."
+          ]
+        }
+      ]
+    },
+    "v199": {
+      "intro": "Build v199 — Camera permission buttons readable in light theme.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed the \"Allow camera access\" and \"Close\" button text being hard to read in the light theme — they were picking up the theme's dark text colour on the black screen. Their text is now always light, so they read clearly in both light and dark themes.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v199)."
+          ]
+        }
+      ]
+    },
+    "v198": {
+      "intro": "Build v198 — Camera permission screen fixes after updating.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed: after installing an update, backing out of the Software Update screen could land on the \"Allow camera access\" screen. The camera overlay now stays hidden until you tap Open Covert Camera, so you land on the camera hub as expected.",
+            "The \"Allow camera access\" and \"Close\" button text on the black screen is now lighter and easier to read.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v198)."
+          ]
+        }
+      ]
+    },
     "v197": {
       "intro": "Build v197 — Camera default tab, consistent dropdowns, and small Camera polish.",
       "sections": [

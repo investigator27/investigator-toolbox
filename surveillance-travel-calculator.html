@@ -502,25 +502,28 @@
       line-height:1.5;
     }
     .covert-permission-gate .btn{max-width:16rem;width:100%;touch-action:manipulation}
-    /* Discreet (non-red) gate buttons for covert use on the black screen. */
-    .covert-gate-btn{
-      background:rgba(255,255,255,0.08);
-      border:1px solid rgba(255,255,255,0.18);
-      color:#e4e4e7;
+    /* Discreet (non-red) gate buttons for covert use on the black screen.
+       Scoped under .covert-permission-gate so the light text beats the base
+       .btn{color:var(--color-text)} rule (which otherwise wins in light theme
+       and renders dark, unreadable text on the black gate). */
+    .covert-permission-gate .covert-gate-btn{
+      background:rgba(255,255,255,0.10);
+      border:1px solid rgba(255,255,255,0.22);
+      color:#ffffff;
       font-weight:600;
       box-shadow:none;
     }
-    .covert-gate-btn:hover{background:rgba(255,255,255,0.14)}
-    .covert-gate-btn:active{background:rgba(255,255,255,0.14);transform:scale(0.98)}
-    .covert-gate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-    .covert-gate-btn--close{
+    .covert-permission-gate .covert-gate-btn:hover{background:rgba(255,255,255,0.16)}
+    .covert-permission-gate .covert-gate-btn:active{background:rgba(255,255,255,0.16);transform:scale(0.98)}
+    .covert-permission-gate .covert-gate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .covert-permission-gate .covert-gate-btn--close{
       background:transparent;
       border-color:transparent;
-      color:#a1a1aa;
+      color:#e4e4e7;
       min-height:44px;
       font-weight:500;
     }
-    .covert-gate-btn--close:hover{background:rgba(255,255,255,0.06);color:#e4e4e7}
+    .covert-permission-gate .covert-gate-btn--close:hover{background:rgba(255,255,255,0.06);color:#ffffff}
     .covert-permission-gate__error{
       margin:0;
       min-height:1.25em;
@@ -1663,7 +1666,7 @@
             <span class="camera-airplane-note__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5S18 3 16.5 4.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
             </span>
-            <span class="camera-airplane-note__text">Before recording, turn on <strong>Airplane mode</strong> (swipe down → tap ✈) so no calls, texts or notifications interrupt. Turn it off afterwards to upload clips.</span>
+            <span class="camera-airplane-note__text">Before recording, turn on <strong>Airplane mode</strong> (swipe down → tap ✈) so no calls, texts or notifications interrupt. Turn it off afterwards when you're done.</span>
           </div>
           <button type="button" class="btn btn-primary" id="covertOpenCameraBtn">Open Covert Camera</button>
           <div class="camera-hub-block">
@@ -1724,7 +1727,7 @@
               <h2 class="settings-section-title">Actions</h2>
               <div class="camera-hub-block__actions">
                 <button type="button" class="btn btn-secondary" id="covertClipsSelectAllBtn">Select all</button>
-                <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Send to OneDrive</button>
+                <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Download to device</button>
                 <button type="button" class="btn btn-secondary" id="covertClipsDeleteBtn" disabled>Delete selected</button>
               </div>
             </div>
@@ -1757,10 +1760,22 @@
             <div class="settings-group">
               <div class="settings-body-text">
                 <ul class="steps-list">
-                  <li>Turn on Airplane mode before recording so no calls, texts or notifications interrupt. Turn it off afterwards to upload.</li>
+                  <li>Turn on Airplane mode before recording so no calls, texts or notifications interrupt. Turn it off afterwards when you're done.</li>
                   <li>Android shows a camera indicator while recording — this cannot be hidden.</li>
-                  <li>Upload opens Share — choose OneDrive; it is not automatic.</li>
+                  <li>Clips stay private inside Toolbox (not in your gallery). Use <strong>Download to device</strong> to copy them out — on a phone it opens Share (Save to Files), on a PC it saves to Downloads. This works in Airplane mode too.</li>
                   <li>Enable Haptic feedback under Personalization for tap pulses.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Camera permission</h2>
+            <div class="settings-group">
+              <div class="settings-body-text">
+                <p>If the camera won't start, re-enable its permission:</p>
+                <ul class="steps-list">
+                  <li><strong>Android:</strong> Settings → Apps → Toolbox (or Chrome) → Permissions → Camera &amp; Microphone → Allow.</li>
+                  <li><strong>Chrome:</strong> ⋮ menu → Settings → Site settings → Camera / Microphone → Allow for this site.</li>
                 </ul>
               </div>
             </div>
@@ -1774,12 +1789,12 @@
         </div>
         <button type="button" class="btn btn-secondary camera-clip-viewer__close" id="covertClipViewerClose">Close</button>
       </div>
-      <div class="covert-camera" id="covertCamera" aria-label="Covert camera">
+      <div class="covert-camera covert-camera--session-off" id="covertCamera" aria-label="Covert camera">
         <video id="covertVideoPreview" playsinline muted autoplay></video>
         <div class="covert-camera__black" id="covertBlack"></div>
         <div class="covert-camera__tap" id="covertTapZone" aria-hidden="true"></div>
         <div class="covert-camera__hud"><span id="covertStatus"></span></div>
-        <div class="covert-permission-gate" id="covertPermissionGate">
+        <div class="covert-permission-gate hidden" id="covertPermissionGate">
           <p class="covert-permission-gate__error" id="covertPermissionError" role="alert" aria-live="polite"></p>
           <button type="button" class="btn covert-gate-btn" id="covertAllowCameraBtn">Allow camera access</button>
           <button type="button" class="btn covert-gate-btn covert-gate-btn--close" id="covertCloseGateBtn">Close</button>
@@ -2318,7 +2333,7 @@
                 <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
                 <div class="settings-page-intro__text">
                   <h1 class="settings-page-intro__title" id="settings-camera-intro-title">Camera Settings</h1>
-                  <p class="settings-page-intro__blurb">Covert video — rear camera, landscape. Clips stay inside Toolbox until you upload or export.</p>
+                  <p class="settings-page-intro__blurb">Covert video — rear camera, landscape. Clips stay private inside Toolbox (not in your gallery) until you download them to your device.</p>
                 </div>
               </div>
             </section>
@@ -2335,7 +2350,7 @@
                 <label class="settings-switch"><input type="checkbox" id="cameraStrongHapticSwitch" data-cam-pref="strongHapticOnRecord" checked aria-label="Stronger haptic on record start and stop" /><span class="settings-switch__track"></span></label>
               </div>
             </div>
-            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">For full discreetness, turn on Airplane mode (or Do Not Disturb) before recording so no calls, texts or notifications come through. A reminder appears each time you open the camera. Turn Airplane mode off afterwards to upload clips.</p>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">For full discreetness, turn on Airplane mode (or Do Not Disturb) before recording so no calls, texts or notifications come through. A reminder appears each time you open the camera. Turn Airplane mode off afterwards when you're done.</p>
             <h2 class="settings-section-title">Time &amp; date stamp</h2>
             <div class="settings-group" role="group" aria-label="Time and date stamp">
               <div class="settings-row settings-row--toggle">
@@ -2395,7 +2410,7 @@
                 </div>
               </div>
             </div>
-            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">The stamp is burned into the video so any player or software shows it. When you upload, a matching .txt with the exact time and GPS is included for evidence.</p>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">The stamp is burned into the video so any player or software shows it. When you download to your device, a matching .txt with the exact time and GPS is included for evidence.</p>
             <h2 class="settings-section-title">Max clip length</h2>
             <div class="settings-group">
               <div class="field" style="padding:var(--space-3) var(--space-4)">
@@ -2421,9 +2436,8 @@
             </div>
             <h2 class="settings-section-title">Storage</h2>
             <div class="settings-actions">
-              <button type="button" class="btn btn-primary" id="cameraUploadAllBtn" data-cam-action="upload-all">Upload clips to OneDrive</button>
+              <button type="button" class="btn btn-primary" id="cameraUploadAllBtn" data-cam-action="upload-all">Download to device</button>
               <button type="button" class="btn btn-secondary" id="cameraClearClipsBtn" data-cam-action="clear-all">Delete all clips on this device</button>
-              <button type="button" class="btn btn-secondary" id="cameraOpenAppSettingsBtn" data-cam-action="perm-help">Camera permission help</button>
             </div>
           </div>
         </div>
@@ -2445,7 +2459,7 @@
               <ol class="steps-list">
                 <li>Install Toolbox as an app (Chrome → Install).</li>
                 <li>Open <strong>Camera</strong> tab — allow camera and microphone.</li>
-                <li>3 taps to record · 3 taps to stop · Upload when done for the day.</li>
+                <li>3 taps to record · 3 taps to stop · Download to device when done for the day.</li>
               </ol>
             </div>
           </div>
@@ -2666,7 +2680,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=197" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=201" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2688,8 +2702,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.66';
-  const BUNDLED_PWA_CACHE_VERSION = 'v197';
+  const BUNDLED_APP_VERSION = '3.5.70';
+  const BUNDLED_PWA_CACHE_VERSION = 'v201';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -6008,6 +6022,13 @@ $('summaryNote').textContent =
   display:none !important;
 }
 
+/* When there isn't room below (e.g. a dropdown near the bottom of a scroll area),
+   open the panel upward so its options aren't clipped. Toggled by initPicker. */
+.city-panel--up{
+  top:auto;
+  bottom:calc(100% + 10px);
+}
+
 .city-item{
   width:100%;
   text-align:left;
@@ -8006,6 +8027,15 @@ out body;`;
       event.stopPropagation();
       const willOpen = panel.hidden;
       closeAllPickers(willOpen ? panel : null);
+      if (willOpen) {
+        // Open upward when there isn't enough room below the button (e.g. dropdowns
+        // near the bottom of a scrollable settings page) so options aren't clipped.
+        panel.classList.remove('city-panel--up');
+        const rect = button.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        if (spaceBelow < 280 && spaceAbove > spaceBelow) panel.classList.add('city-panel--up');
+      }
       panel.hidden = !willOpen;
       button.setAttribute('aria-expanded', String(willOpen));
     });

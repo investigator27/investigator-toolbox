@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v192",
-  "appVersion": "3.5.61",
+  "latest": "v193",
+  "appVersion": "3.5.62",
   "highlights": [
-    "Camera: crash-safe recording with battery & storage fail-safes, smoother/sharper video (steady 30fps + higher bitrate), optional on-video date & time stamp, a discreet camera-access screen with a Close button, an Airplane mode reminder, swipe-up peek while recording, and an offline upload warning."
+    "Camera: the help guide is now its own \"How To Use\" page on the Camera tab (under Camera Settings), opening just like the Clip Library — and it was removed from the Camera Settings screen so settings stay clean."
   ],
   "builds": {
+    "v193": {
+      "intro": "Build v193 — Covert Camera: \"How To Use\" guide moved to its own page on the Camera tab.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Added a \"How To Use\" item under Camera Settings on the Camera tab. It opens its own page (the same way the Clip Library does) with the controls and notes guide inside.",
+            "Removed the Help section from the Camera Settings screen so settings stay focused on options only.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v193)."
+          ]
+        }
+      ]
+    },
     "v192": {
       "intro": "Build v192 — Covert Camera: on-video timestamp, discreet access screen, silent-recording reminder.",
       "sections": [

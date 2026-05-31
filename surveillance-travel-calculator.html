@@ -1683,6 +1683,16 @@
               </button>
             </div>
           </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">How To Use</h2>
+            <div class="settings-group">
+              <button type="button" class="settings-row settings-row--nav" data-camera-push="how-to-use">
+                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
+                <span class="settings-row__label">How To Use</span>
+                <span class="settings-row__chevron" aria-hidden="true">›</span>
+              </button>
+            </div>
+          </div>
         </section>
 
         <section class="card camera-hub-card hidden" id="cameraPanelClipLibrary" data-camera-panel="clip-library" aria-labelledby="clip-library-title" hidden>
@@ -1712,6 +1722,42 @@
                 <button type="button" class="btn btn-secondary" id="covertClipsSelectAllBtn">Select all</button>
                 <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Send to OneDrive</button>
                 <button type="button" class="btn btn-secondary" id="covertClipsDeleteBtn" disabled>Delete selected</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card camera-hub-card hidden" id="cameraPanelHowToUse" data-camera-panel="how-to-use" aria-labelledby="how-to-use-title" hidden>
+          <button type="button" class="settings-back camera-hub-card__back" id="howToUseBackBtn" data-camera-pop aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+          </button>
+          <div class="camera-hub-card__intro">
+            <h2 id="how-to-use-title" class="card-title card-title--section">How To Use</h2>
+            <p class="card-sub">A quick guide to recording covertly and managing your clips.</p>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Controls</h2>
+            <div class="settings-group">
+              <div class="settings-body-text">
+                <ol class="steps-list">
+                  <li>3 taps on the black area — start recording (the screen stays black).</li>
+                  <li>3 taps again — stop; the clip is saved automatically.</li>
+                  <li>While recording: swipe up to peek at the live view, swipe down to hide it back to black.</li>
+                  <li>After a clip stops: swipe up twice to open that day’s clips.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Notes</h2>
+            <div class="settings-group">
+              <div class="settings-body-text">
+                <ul class="steps-list">
+                  <li>Turn on Airplane mode before recording so no calls, texts or notifications interrupt. Turn it off afterwards to upload.</li>
+                  <li>Android shows a camera indicator while recording — this cannot be hidden.</li>
+                  <li>Upload opens Share — choose OneDrive; it is not automatic.</li>
+                  <li>Enable Haptic feedback under Personalization for tap pulses.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2341,24 +2387,6 @@
               <button type="button" class="btn btn-secondary" id="cameraClearClipsBtn" data-cam-action="clear-all">Delete all clips on this device</button>
               <button type="button" class="btn btn-secondary" id="cameraOpenAppSettingsBtn" data-cam-action="perm-help">Camera permission help</button>
             </div>
-            <h2 class="settings-section-title">Help</h2>
-            <div class="settings-group">
-              <div class="settings-body-text">
-                <p><strong>Controls</strong></p>
-                <ol class="steps-list">
-                  <li>3 taps on the black area — start recording (screen stays black).</li>
-                  <li>3 taps again — stop; clip saved as 00000, 00001, …</li>
-                  <li>Swipe up — live preview · Swipe down — hide preview.</li>
-                  <li>Swipe up twice (after stop) — opens that day’s clips.</li>
-                </ol>
-                <p><strong>Notes</strong></p>
-                <ul class="steps-list">
-                  <li>Android shows a camera indicator while recording — cannot be hidden.</li>
-                  <li>Upload opens Share — choose OneDrive; not automatic.</li>
-                  <li>Enable Haptic feedback under Personalization for tap pulses.</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -2600,7 +2628,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=192" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=193" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2622,8 +2650,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.61';
-  const BUNDLED_PWA_CACHE_VERSION = 'v192';
+  const BUNDLED_APP_VERSION = '3.5.62';
+  const BUNDLED_PWA_CACHE_VERSION = 'v193';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

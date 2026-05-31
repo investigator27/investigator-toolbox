@@ -152,22 +152,6 @@
       text-align:center;
     }
     .install-callout strong{color:var(--color-text)}
-    .browser-dialog{
-      border:none;
-      padding:0;
-      max-width:min(22rem,calc(100vw - 2rem));
-      width:100%;
-      border-radius:var(--radius-xl);
-      background:var(--color-surface);
-      color:var(--color-text);
-      box-shadow:0 12px 40px rgb(0 0 0 / .22);
-    }
-    .browser-dialog::backdrop{background:rgb(0 0 0 / .45)}
-    .browser-dialog__inner{padding:var(--space-5);display:grid;gap:var(--space-4)}
-    .browser-dialog__title{margin:0;font-size:var(--text-lg);font-weight:700;text-align:center}
-    .browser-dialog__sub{margin:0;font-size:var(--text-sm);color:var(--color-text-muted);text-align:center;line-height:1.45}
-    .browser-picker{display:grid;gap:var(--space-2)}
-    .browser-picker .btn{min-height:48px}
     .hidden { display: none !important; }
   </style>
 </head>
@@ -190,27 +174,13 @@
 
     <div class="actions" style="display:grid;gap:var(--space-3);">
       <button type="button" class="btn btn-primary" id="installBtn">Install app</button>
-      <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Use in browser</a>
-      <button type="button" class="btn btn-secondary hidden" id="openDesktopBtn">Open on computer</button>
+      <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Use without installing</a>
     </div>
 
     <section class="card hidden" id="installStepsPanel" aria-live="polite">
       <ol class="steps" id="installStepsList"></ol>
     </section>
   </main>
-
-  <dialog class="browser-dialog" id="desktopBrowserDialog" aria-labelledby="desktopBrowserDialogTitle">
-    <div class="browser-dialog__inner">
-      <h2 class="browser-dialog__title" id="desktopBrowserDialogTitle">Open on this computer</h2>
-      <p class="browser-dialog__sub">Pick a browser. In Chrome or Edge you can also install Toolbox (browser menu → Install app).</p>
-      <div class="browser-picker" role="group" aria-label="Computer browser">
-        <button type="button" class="btn btn-secondary" data-browser="firefox">Firefox</button>
-        <button type="button" class="btn btn-secondary" data-browser="chrome">Chrome</button>
-        <button type="button" class="btn btn-secondary" data-browser="edge">Edge</button>
-      </div>
-      <button type="button" class="btn btn-secondary" id="desktopBrowserCancel">Cancel</button>
-    </div>
-  </dialog>
 
   <script>
   (function () {
@@ -227,16 +197,37 @@
       : normalizeInstallBase(location.origin + pageBase);
     var appUrl = installUrl + 'surveillance-travel-calculator.html';
 
-    if (openAppBtn) openAppBtn.href = appUrl;
-
     var ua = navigator.userAgent || '';
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     var isInAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter/i.test(ua);
 
+    function isPhoneSizedScreen() {
+      var w = window.screen && window.screen.width ? window.screen.width : 0;
+      var h = window.screen && window.screen.height ? window.screen.height : 0;
+      var minDim = Math.min(w, h);
+      return minDim > 0 && minDim <= 520;
+    }
+
+    function isLikelyAndroidPhone() {
+      if (/Android/i.test(ua)) return true;
+      var uad = navigator.userAgentData;
+      if (uad && uad.platform === 'Android') return true;
+      if (/iPhone|iPad|iPod/i.test(ua)) return false;
+      if (/Macintosh|Mac OS X/i.test(ua)) return false;
+      var touch = navigator.maxTouchPoints > 0;
+      var uadMobile = uad && uad.mobile === true;
+      if (uadMobile && /Mobile|Android/i.test(ua)) return true;
+      if (touch && isPhoneSizedScreen()) {
+        if (/Windows/i.test(ua) || (uad && uad.platform === 'Windows')) return true;
+        if (/Linux/i.test(ua) && /Mobile/i.test(ua)) return true;
+      }
+      return false;
+    }
+
     function detectInstallPlatform() {
       var uad = navigator.userAgentData;
       var platformName = uad && uad.platform ? String(uad.platform) : '';
-      if (platformName === 'Android' || /Android/i.test(ua)) {
+      if (isLikelyAndroidPhone()) {
         return { id: 'android', label: 'Install on Android', tagline: 'You’re on Android', isMobile: true };
       }
       if (/iPhone|iPad|iPod/i.test(ua) || platformName === 'iOS') {
@@ -260,12 +251,13 @@
     var platform = detectInstallPlatform();
     var isAndroid = platform.id === 'android';
     var isIOS = platform.id === 'ios';
-    var isComputer = !platform.isMobile && platform.id !== 'ios';
 
     var installBtn = document.getElementById('installBtn');
     var installCallout = document.getElementById('installCallout');
     var openAppBtn = document.getElementById('openAppBtn');
-    var openDesktopBtn = document.getElementById('openDesktopBtn');
+    var qrHeading = document.getElementById('qr-heading');
+
+    if (openAppBtn) openAppBtn.href = appUrl;
     var deferredPrompt = null;
     var installReady = false;
     var launchScheduled = false;
@@ -285,13 +277,21 @@
     function refreshActionButtons() {
       var taglineEl = document.getElementById('deviceTagline');
       if (taglineEl) taglineEl.textContent = platform.tagline;
-      if (openAppBtn) openAppBtn.textContent = 'Use in browser';
-      if (openDesktopBtn) {
-        openDesktopBtn.classList.toggle('hidden', !isAndroid);
-        openDesktopBtn.textContent = 'Open on Windows or Mac';
+      if (openAppBtn) {
+        openAppBtn.textContent = platform.isMobile ? 'Try without installing' : 'Use without installing';
+      }
+      if (qrHeading) {
+        qrHeading.textContent = platform.isMobile ? 'Install link' : 'Scan on your phone';
       }
     }
     refreshActionButtons();
+
+    function showInstallActions() {
+      if (!installBtn || isIOS || isStandalone || isInAppBrowser) return;
+      installBtn.disabled = false;
+      installBtn.textContent = installButtonLabel();
+      setCallout(installHint());
+    }
 
     function markInstallReady() {
       installReady = true;
@@ -302,59 +302,10 @@
     }
 
     function blockIOSInstall() {
-      setCallout('Install is not available on iPhone from this page. Use Use in browser, or open this link on Android or Windows.');
+      setCallout('Install is not available on iPhone from this page. Use Try without installing, or open this link on Android or Windows.');
       if (installBtn) {
         installBtn.disabled = true;
         installBtn.textContent = 'Install not available';
-      }
-    }
-
-    var desktopBrowserDialog = document.getElementById('desktopBrowserDialog');
-
-    function openInDesktopBrowser(browserId) {
-      var target = appUrl;
-      try {
-        if (browserId === 'edge') {
-          window.location.href = 'microsoft-edge:' + target;
-        } else if (browserId === 'firefox') {
-          window.location.href = 'firefox://open-url?url=' + encodeURIComponent(target);
-        } else if (browserId === 'chrome') {
-          window.location.href = 'googlechrome://' + target.replace(/^https:\/\//i, 'https://');
-        }
-      } catch (err) {}
-      window.setTimeout(function () {
-        var opened = window.open(target, '_blank', 'noopener');
-        if (!opened) window.location.href = target;
-      }, 350);
-      try {
-        navigator.clipboard.writeText(target);
-      } catch (err) {}
-      if (desktopBrowserDialog) desktopBrowserDialog.close();
-      var label = browserId.charAt(0).toUpperCase() + browserId.slice(1);
-      setCallout('Opening in ' + label + '. Link copied if the browser did not start.');
-    }
-
-    if (openDesktopBtn && desktopBrowserDialog) {
-      openDesktopBtn.addEventListener('click', function () {
-        if (typeof desktopBrowserDialog.showModal === 'function') {
-          desktopBrowserDialog.showModal();
-          return;
-        }
-        var pick = window.prompt('Open Toolbox in:\n1 = Firefox\n2 = Chrome\n3 = Edge', '2');
-        if (pick === '1') openInDesktopBrowser('firefox');
-        else if (pick === '3') openInDesktopBrowser('edge');
-        else if (pick === '2') openInDesktopBrowser('chrome');
-      });
-      desktopBrowserDialog.querySelectorAll('[data-browser]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          openInDesktopBrowser(btn.getAttribute('data-browser'));
-        });
-      });
-      var cancelBtn = document.getElementById('desktopBrowserCancel');
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', function () {
-          desktopBrowserDialog.close();
-        });
       }
     }
 
@@ -383,7 +334,7 @@
       }).finally(function () {
         deferredPrompt = null;
         installReady = false;
-        if (installBtn && !launchScheduled) installBtn.disabled = true;
+        if (installBtn && !launchScheduled) showInstallActions();
       });
       return true;
     }
@@ -401,12 +352,13 @@
         installBtn.disabled = true;
       }
     } else if (isInAppBrowser) {
-      setCallout('Open this page in Chrome or Edge (⋮ → Open in browser).');
-      if (installBtn) installBtn.disabled = true;
-    } else if (installBtn) {
-      installBtn.disabled = true;
-      installBtn.textContent = 'Preparing install…';
-      setCallout('Preparing install…');
+      setCallout('Open this page in Chrome (⋮ → Open in browser), then tap Install on Android.');
+      if (installBtn) {
+        installBtn.disabled = true;
+        installBtn.textContent = installButtonLabel();
+      }
+    } else {
+      showInstallActions();
     }
 
     window.addEventListener('beforeinstallprompt', function (e) {
@@ -433,11 +385,7 @@
 
     if (!isStandalone && !isInAppBrowser && !isIOS && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(function () {
-        if (!installReady && installBtn && !deferredPrompt) {
-          installBtn.disabled = false;
-          installBtn.textContent = installButtonLabel();
-          setCallout(installHint());
-        }
+        if (!installReady && !launchScheduled) showInstallActions();
       }).catch(function () {});
     }
 

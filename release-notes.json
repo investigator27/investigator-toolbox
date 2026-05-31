@@ -1,10 +1,24 @@
 {
-  "latest": "v132",
+  "latest": "v133",
   "appVersion": "3.5.4",
   "highlights": [
-    "Install page detects Android vs Windows/Mac and shows Install on Android or Install on Windows."
+    "Install page fixes Android detection after QR scan; removed computer-only button; no more Preparing install on load."
   ],
   "builds": {
+    "v133": {
+      "intro": "Build v133 — Android install page fixes.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Android phones (including after scanning the QR with the camera) are detected correctly — no more Install on Windows on your phone.",
+            "Removed Open on Windows or Mac button from the install page.",
+            "Install on Android and install steps show immediately instead of Preparing install… on page load.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v133)."
+          ]
+        }
+      ]
+    },
     "v132": {
       "intro": "Build v132 — install page detects your device.",
       "sections": [

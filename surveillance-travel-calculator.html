@@ -1536,6 +1536,110 @@
     </button>
   </nav>
 </div>
+<script id="toolbox-tabs-core">
+(function () {
+  'use strict';
+  var TAB_POLICY = { hotels: false, requests: false, camera: true };
+
+  function isEnabled(tabId) {
+    if (tabId === 'calculator') return true;
+    return TAB_POLICY[tabId] === true;
+  }
+
+  function activeTabId() {
+    var btn = document.querySelector('nav.tab-bar .tab-bar-item.active');
+    return (btn && btn.dataset.tab) || 'calculator';
+  }
+
+  function applyBarState() {
+    var active = activeTabId();
+    document.querySelectorAll('#appContent > .tab-panel').forEach(function (panel) {
+      var id = panel.dataset.tab;
+      if (!id) return;
+      var show = isEnabled(id) && id === active;
+      panel.classList.toggle('hidden', !show);
+    });
+    document.querySelectorAll('nav.tab-bar .tab-bar-item').forEach(function (btn) {
+      var id = btn.dataset.tab;
+      if (!id || id === 'calculator') {
+        btn.classList.remove('tab-bar-item--disabled');
+        btn.removeAttribute('aria-disabled');
+        btn.removeAttribute('tabindex');
+        return;
+      }
+      var on = isEnabled(id);
+      btn.classList.toggle('tab-bar-item--disabled', !on);
+      if (on) {
+        btn.removeAttribute('aria-disabled');
+        btn.removeAttribute('tabindex');
+      } else {
+        btn.setAttribute('aria-disabled', 'true');
+        btn.setAttribute('tabindex', '-1');
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+      }
+    });
+  }
+
+  function switchTab(tabId) {
+    if (!tabId || !isEnabled(tabId)) return;
+    var prev = activeTabId();
+    if (prev === tabId) {
+      applyBarState();
+      return;
+    }
+    if (prev === 'camera' && window.ToolboxCovertCamera && window.ToolboxCovertCamera.onTabLeave) {
+      window.ToolboxCovertCamera.onTabLeave();
+    }
+    if (tabId !== 'camera') {
+      document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+      var cam = document.getElementById('tab-camera');
+      if (cam) cam.classList.remove('tab-panel--camera-active');
+    }
+    document.querySelectorAll('nav.tab-bar .tab-bar-item').forEach(function (btn) {
+      var on = btn.dataset.tab === tabId;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    applyBarState();
+    var content = document.getElementById('appContent');
+    if (content) content.scrollTop = 0;
+    if (tabId === 'camera' && window.ToolboxCovertCamera && window.ToolboxCovertCamera.onTabEnter) {
+      window.ToolboxCovertCamera.onTabEnter();
+    }
+  }
+
+  var nav = document.querySelector('nav.tab-bar');
+  if (nav && nav.dataset.tabsBound !== '1') {
+    nav.dataset.tabsBound = '1';
+    nav.addEventListener('click', function (event) {
+      var btn = event.target.closest('.tab-bar-item');
+      if (!btn || !nav.contains(btn) || btn.classList.contains('tab-bar-item--disabled')) return;
+      var id = btn.dataset.tab;
+      if (id) switchTab(id);
+    });
+  }
+
+  applyBarState();
+  if (!isEnabled(activeTabId())) switchTab('calculator');
+
+  document.documentElement.setAttribute('data-tabs-core', '1');
+
+  window.__toolboxTabsCore = {
+    policy: TAB_POLICY,
+    setPolicy: function (map) {
+      TAB_POLICY.hotels = map.hotels === true;
+      TAB_POLICY.requests = map.requests === true;
+      TAB_POLICY.camera = map.camera === true;
+      applyBarState();
+      if (!isEnabled(activeTabId())) switchTab('calculator');
+    },
+    switchTab: switchTab,
+    applyBarState: applyBarState,
+    isEnabled: isEnabled,
+  };
+})();
+</script>
 
 <div class="settings-overlay hidden" id="settingsOverlay" aria-hidden="true">
   <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settingsHeroTitle">
@@ -2230,7 +2334,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=158" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=160" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2252,8 +2356,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.27';
-  const BUNDLED_PWA_CACHE_VERSION = 'v158';
+  const BUNDLED_APP_VERSION = '3.5.29';
+  const BUNDLED_PWA_CACHE_VERSION = 'v160';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2263,6 +2367,8 @@
   let remoteLatestBuild = '';
   const DEVELOPER_PASSWORD = 'dev1-toolb0x';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
+  /** Keep in sync with tab-policy.json — used when fetch fails or before policy loads. */
+  const BUNDLED_TAB_POLICY = { hotels: false, requests: false, camera: true };
   const DEFAULT_TAB_PREF_KEY = 'toolboxDefaultTab';
   const LAST_TAB_PREF_KEY = 'toolboxLastTab';
   const HAPTIC_PREF_KEY = 'toolboxHaptic';
@@ -4107,7 +4213,16 @@
   }
 
   function getDefaultTabVisibility() {
-    return { hotels: true, requests: true, camera: true };
+    return { ...BUNDLED_TAB_POLICY };
+  }
+
+  function coerceTabPolicyMap(map) {
+    if (!map || typeof map !== 'object') return { ...BUNDLED_TAB_POLICY };
+    return {
+      hotels: map.hotels === true,
+      requests: map.requests === true,
+      camera: map.camera === true,
+    };
   }
 
   let remoteTabPolicyMap = null;
@@ -4115,11 +4230,7 @@
 
   function normalizeTabAccess(source) {
     if (!source || typeof source !== 'object') return null;
-    return {
-      hotels: source.hotels !== false,
-      requests: source.requests !== false,
-      camera: source.camera !== false,
-    };
+    return coerceTabPolicyMap(source);
   }
 
   function parseTabPolicyPayload(data) {
@@ -4132,22 +4243,24 @@
   }
 
   function loadTabVisibility() {
-    if (remoteTabPolicyMap) return { ...getDefaultTabVisibility(), ...remoteTabPolicyMap };
+    if (remoteTabPolicyMap) return coerceTabPolicyMap(remoteTabPolicyMap);
+    return coerceTabPolicyMap(BUNDLED_TAB_POLICY);
+  }
+
+  /** Drop pre-v160 localStorage tab flags that forced every tab on and undid grey-out. */
+  function migrateStaleTabPolicyCache() {
     try {
-      const raw = localStorage.getItem(TAB_VISIBILITY_KEY);
-      if (!raw) return getDefaultTabVisibility();
-      const parsed = JSON.parse(raw);
-      return { ...getDefaultTabVisibility(), ...parsed };
-    } catch {
-      return getDefaultTabVisibility();
-    }
+      localStorage.removeItem(TAB_VISIBILITY_KEY);
+    } catch {}
   }
 
   function applyRemoteTabPolicy(parsed) {
     if (!parsed?.map) return false;
-    remoteTabPolicyMap = parsed.map;
-    try { localStorage.setItem(TAB_VISIBILITY_KEY, JSON.stringify(parsed.map)); } catch {}
-    window.ToolboxTabs?.applyVisibility?.(parsed.map);
+    const map = coerceTabPolicyMap(parsed.map);
+    remoteTabPolicyMap = map;
+    try { localStorage.setItem(TAB_VISIBILITY_KEY, JSON.stringify(map)); } catch {}
+    window.__toolboxTabsCore?.setPolicy?.(map);
+    window.ToolboxTabs?.applyVisibility?.(map);
     return true;
   }
 
@@ -4637,6 +4750,7 @@ $('summaryNote').textContent =
     setTrip('oneway');
   }
 
+  initTabBar();
   applyTheme(getThemePreference());
   applyAllPersonalizationPrefs();
   bindToggleStateLabels();
@@ -4957,85 +5071,36 @@ $('summaryNote').textContent =
   function initTabBar() {
     if (tabBarInitialized) return;
     tabBarInitialized = true;
+    migrateStaleTabPolicyCache();
     resetStuckCovertOverlay();
-    tabVisibilityState = loadTabVisibility();
-    const tabPanels = qsa('.tab-panel');
-    const tabButtons = qsa('.tab-bar-item');
-    const appContent = $('appContent');
+
+    const core = window.__toolboxTabsCore;
+    tabVisibilityState = coerceTabPolicyMap(loadTabVisibility());
 
     function isTabEnabled(tabId) {
       if (tabId === 'calculator') return true;
-      return tabVisibilityState[tabId] !== false;
+      return tabVisibilityState[tabId] === true;
     }
 
-    function syncPanelVisibility(activeTabId) {
-      tabPanels.forEach((panel) => {
-        const tabId = panel.dataset.tab;
-        if (!tabId) return;
-        if (!isTabEnabled(tabId)) {
-          panel.classList.add('hidden');
-          return;
-        }
-        panel.classList.toggle('hidden', tabId !== activeTabId);
-      });
-    }
-
-    function applyTabButtonState() {
-      tabButtons.forEach((btn) => {
-        const tabId = btn.dataset.tab;
-        if (!tabId || tabId === 'calculator') {
-          btn.classList.remove('tab-bar-item--disabled');
-          btn.removeAttribute('aria-disabled');
-          btn.removeAttribute('tabindex');
-          return;
-        }
-        const enabled = isTabEnabled(tabId);
-        btn.classList.toggle('tab-bar-item--disabled', !enabled);
-        if (enabled) {
-          btn.removeAttribute('aria-disabled');
-          btn.removeAttribute('tabindex');
-        } else {
-          btn.setAttribute('aria-disabled', 'true');
-          btn.setAttribute('tabindex', '-1');
-          btn.classList.remove('active');
-          btn.setAttribute('aria-selected', 'false');
-        }
-      });
-    }
-
-    function switchTab(tabId, opts) {
-      if (!tabId || !isTabEnabled(tabId)) return;
-      const prev = qs('.tab-bar-item.active')?.dataset.tab;
-      if (prev === tabId && !opts?.force) return;
-      if (prev === 'camera') window.ToolboxCovertCamera?.onTabLeave?.();
-      if (tabId !== 'camera') {
-        document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
-        $('tab-camera')?.classList.remove('tab-panel--camera-active');
+    function applyTabPolicy(map) {
+      tabVisibilityState = coerceTabPolicyMap(map);
+      if (core) {
+        core.setPolicy(tabVisibilityState);
+        return;
       }
+    }
+
+    function switchTab(tabId) {
+      if (!tabId || !isTabEnabled(tabId)) return;
       rememberLastTab(tabId);
       toolboxHaptic('light');
-      tabButtons.forEach((btn) => {
-        const isActive = btn.dataset.tab === tabId;
-        btn.classList.toggle('active', isActive);
-        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      });
-      syncPanelVisibility(tabId);
-      if (appContent) appContent.scrollTop = 0;
       const cityDrop = $('cityDropdown');
       if (cityDrop) cityDrop.hidden = true;
       qsa('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
       qsa('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
-      if (tabId === 'camera') window.ToolboxCovertCamera?.onTabEnter?.();
-    }
-
-    function applyTabPolicy(map) {
-      tabVisibilityState = { ...getDefaultTabVisibility(), ...map };
-      applyTabButtonState();
-      const activeId = qs('.tab-bar-item.active')?.dataset.tab;
-      if (activeId && isTabEnabled(activeId)) {
-        syncPanelVisibility(activeId);
-      } else {
-        switchTab('calculator');
+      if (core) {
+        core.switchTab(tabId);
+        return;
       }
     }
 
@@ -5048,34 +5113,21 @@ $('summaryNote').textContent =
       switchTab,
     };
 
-    if (!window.__toolboxTabClicksBound) {
-      window.__toolboxTabClicksBound = true;
-      document.addEventListener('click', (event) => {
-        const btn = event.target.closest('nav.tab-bar .tab-bar-item');
-        if (!btn) return;
-        if (btn.classList.contains('tab-bar-item--disabled')) return;
-        const tabId = btn.dataset.tab;
-        if (tabId) switchTab(tabId);
+    if (!window.__toolboxTabPageshowBound) {
+      window.__toolboxTabPageshowBound = true;
+      window.addEventListener('pageshow', () => {
+        resetStuckCovertOverlay();
+        applyTabPolicy(loadTabVisibility());
+      });
+      window.addEventListener('toolbox-tab-visibility', (event) => {
+        applyTabPolicy(event.detail || loadTabVisibility());
       });
     }
 
-    window.addEventListener('pageshow', () => {
-      resetStuckCovertOverlay();
-      tabVisibilityState = loadTabVisibility();
-      applyTabButtonState();
-      const activeId = qs('.tab-bar-item.active')?.dataset.tab;
-      if (!activeId || !isTabEnabled(activeId)) switchTab('calculator');
-      else syncPanelVisibility(activeId);
-    });
-
-    window.addEventListener('toolbox-tab-visibility', (event) => {
-      applyTabPolicy(event.detail || loadTabVisibility());
-    });
-
-    applyTabButtonState();
+    applyTabPolicy(tabVisibilityState);
     let initialTab = resolveInitialTabId();
     if (!isTabEnabled(initialTab)) initialTab = 'calculator';
-    switchTab(initialTab, { force: true });
+    switchTab(initialTab);
   }
 
   window.toolboxHaptic = toolboxHaptic;
@@ -5083,7 +5135,6 @@ $('summaryNote').textContent =
   window.syncToggleStateLabel = syncToggleStateLabel;
   window.openSettings = openSettings;
 
-  initTabBar();
   void bootstrapToolboxShell();
   bindViewportHeightSync();
   document.addEventListener('visibilitychange', () => {

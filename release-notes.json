@@ -1,11 +1,38 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v158",
-  "appVersion": "3.5.27",
+  "latest": "v160",
+  "appVersion": "3.5.29",
   "highlights": [
-    "Fix tab bar taps and tab-policy locks (tabs first)."
+    "Fix tabs: stop stale cache re-enabling all tabs after load."
   ],
   "builds": {
+    "v160": {
+      "intro": "Build v160 — tab policy cache fix.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Removed bug where old localStorage re-enabled Hotels/Requests after the tab bar initialized.",
+            "Inline tab script still runs first; verify html[data-tabs-core=\"1\"] in DevTools on v160.",
+            "Deploy surveillance-travel-calculator.html and service-worker.js (v160)."
+          ]
+        }
+      ]
+    },
+    "v159": {
+      "intro": "Build v159 — tabs restored.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Inline tab bar runs before the main script so taps and panel hiding always work.",
+            "Hotels and Requests default off (matches tab-policy.json) even if fetch fails.",
+            "Main script upgrades policy when tab-policy.json loads.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json (v159)."
+          ]
+        }
+      ]
+    },
     "v158": {
       "intro": "Build v158 — tab bar fix.",
       "sections": [

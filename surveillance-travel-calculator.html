@@ -2231,7 +2231,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=149" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=150" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2253,8 +2253,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.18';
-  const BUNDLED_PWA_CACHE_VERSION = 'v149';
+  const BUNDLED_APP_VERSION = '3.5.19';
+  const BUNDLED_PWA_CACHE_VERSION = 'v150';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2317,6 +2317,7 @@
   let suppressUpdatePromptOnLoad = false;
   let quietUpdateLoad = false;
   let applyingAppUpdate = false;
+  let postUpdateLaunchHandled = false;
   let displayProgress = 0;
   let targetProgress = 0;
   let progressRaf = null;
@@ -2849,6 +2850,43 @@
     } catch {}
     resetDisplayProgress();
     window.location.reload();
+  }
+
+  /** After an in-app update reload: uptodate UI + Settings → Software Update (not Calculator). */
+  function runPostUpdateLaunchIfNeeded() {
+    if (postUpdateLaunchHandled) return false;
+    try {
+      if (sessionStorage.getItem('toolboxJustUpdated') !== '1') return false;
+      postUpdateLaunchHandled = true;
+      sessionStorage.removeItem('toolboxJustUpdated');
+      sessionStorage.removeItem('toolboxReloadBuild');
+      sessionStorage.removeItem('toolboxShowUptodate');
+      const openUpdates = sessionStorage.getItem('toolboxOpenSettingsUpdates') === '1';
+      if (openUpdates) sessionStorage.removeItem('toolboxOpenSettingsUpdates');
+      suppressUpdatePromptOnLoad = true;
+      quietUpdateLoad = true;
+      waitingSW = null;
+      applyingAppUpdate = false;
+      showUptodateBanner();
+      initTabBar();
+      if (openUpdates) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => openSettings('updates'));
+        });
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function bootstrapAppShellAfterPolicy() {
+    try {
+      await syncBuildLabelFromReleaseNotes();
+    } catch {}
+    refreshAllVersionDisplays();
+    if (runPostUpdateLaunchIfNeeded()) return;
+    initTabBar();
   }
 
   function syncViewportHeight() {
@@ -5052,7 +5090,7 @@ $('summaryNote').textContent =
   window.syncToggleStateLabel = syncToggleStateLabel;
   window.openSettings = openSettings;
 
-  fetchRemoteTabPolicy().finally(() => initTabBar());
+  fetchRemoteTabPolicy().finally(() => bootstrapAppShellAfterPolicy());
   bindViewportHeightSync();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
@@ -5076,22 +5114,9 @@ $('summaryNote').textContent =
         quietUpdateLoad = true;
         suppressUpdatePromptOnLoad = true;
       }
-      if (sessionStorage.getItem('toolboxJustUpdated') === '1') {
-        sessionStorage.removeItem('toolboxJustUpdated');
-        sessionStorage.removeItem('toolboxReloadBuild');
-        sessionStorage.removeItem('toolboxShowUptodate');
-        suppressUpdatePromptOnLoad = true;
-        quietUpdateLoad = true;
-        waitingSW = null;
-        applyingAppUpdate = false;
-        showUptodateBanner();
-        if (sessionStorage.getItem('toolboxOpenSettingsUpdates') === '1') {
-          sessionStorage.removeItem('toolboxOpenSettingsUpdates');
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => openSettings('updates'));
-          });
-        }
-      } else if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
+      if (!postUpdateLaunchHandled && sessionStorage.getItem('toolboxJustUpdated') === '1') {
+        runPostUpdateLaunchIfNeeded();
+      } else if (!postUpdateLaunchHandled && sessionStorage.getItem('toolboxShowUptodate') === '1') {
         sessionStorage.removeItem('toolboxShowUptodate');
         suppressUpdatePromptOnLoad = true;
         quietUpdateLoad = true;

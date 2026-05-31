@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v149",
-  "appVersion": "3.5.18",
+  "latest": "v150",
+  "appVersion": "3.5.19",
   "highlights": [
-    "Fix tab bar not responding after camera (stuck fullscreen overlay)."
+    "Restore normal post-update flow: Settings → Software Update after reload."
   ],
   "builds": {
+    "v150": {
+      "intro": "Build v150 — post-update Settings flow restored.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "After installing an update, the app again opens Settings → Software Update with the up-to-date screen (not Calculator).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v150)."
+          ]
+        }
+      ]
+    },
     "v149": {
       "intro": "Build v149 — tab bar touch fix after camera.",
       "sections": [

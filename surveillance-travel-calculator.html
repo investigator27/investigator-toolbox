@@ -46,6 +46,17 @@
     window.__BASE_PATH__ = path.endsWith('/') ? path : `${path}/`;
   })();
   </script>
+  <script>
+  (function () {
+    try {
+      var q = location.search || '';
+      var pending = sessionStorage.getItem('toolboxJustUpdated') === '1'
+        || localStorage.getItem('toolboxJustUpdated') === '1'
+        || /(?:\?|&)postUpdate=1(?:&|$)/.test(q);
+      if (pending) document.documentElement.setAttribute('data-post-update', '1');
+    } catch (e) {}
+  })();
+  </script>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
   <style>
@@ -2334,7 +2345,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=162" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=163" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2356,8 +2367,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.31';
-  const BUNDLED_PWA_CACHE_VERSION = 'v162';
+  const BUNDLED_APP_VERSION = '3.5.32';
+  const BUNDLED_PWA_CACHE_VERSION = 'v163';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2367,6 +2378,7 @@
   let remoteLatestBuild = '';
   const DEVELOPER_PASSWORD = 'dev1-toolb0x';
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
+  const POST_UPDATE_LAUNCH_KEY = 'toolboxJustUpdated';
   /** Keep in sync with tab-policy.json — used when fetch fails or before policy loads. */
   const BUNDLED_TAB_POLICY = { hotels: false, requests: false, camera: true };
   const DEFAULT_TAB_PREF_KEY = 'toolboxDefaultTab';
@@ -2973,16 +2985,54 @@
     return Notification.requestPermission();
   }
 
-  function finishAppUpdateReload() {
+  function markPendingPostUpdateLaunch() {
     try {
-      sessionStorage.setItem('toolboxJustUpdated', '1');
+      sessionStorage.setItem(POST_UPDATE_LAUNCH_KEY, '1');
+      localStorage.setItem(POST_UPDATE_LAUNCH_KEY, '1');
+    } catch {}
+  }
+
+  function consumePostUpdateLaunchPending() {
+    let pending = false;
+    try {
+      pending = sessionStorage.getItem(POST_UPDATE_LAUNCH_KEY) === '1'
+        || localStorage.getItem(POST_UPDATE_LAUNCH_KEY) === '1';
+    } catch {}
+    if (!pending && /(?:\?|&)postUpdate=1(?:&|$)/.test(location.search || '')) {
+      pending = true;
+    }
+    if (!pending) return false;
+    try {
+      sessionStorage.removeItem(POST_UPDATE_LAUNCH_KEY);
+      localStorage.removeItem(POST_UPDATE_LAUNCH_KEY);
+      sessionStorage.removeItem('toolboxOpenSettingsUpdates');
+      sessionStorage.removeItem('toolboxReloadBuild');
+      sessionStorage.removeItem('toolboxShowUptodate');
+      sessionStorage.removeItem('toolboxUpdateReady');
+    } catch {}
+    try {
+      const url = new URL(location.href);
+      if (url.searchParams.has('postUpdate')) {
+        url.searchParams.delete('postUpdate');
+        const next = url.pathname + url.search + url.hash;
+        history.replaceState(null, '', next || url.pathname);
+      }
+    } catch {}
+    return true;
+  }
+
+  function finishAppUpdateReload() {
+    markPendingPostUpdateLaunch();
+    try {
       sessionStorage.removeItem('toolboxUpdateReady');
       sessionStorage.removeItem('toolboxShowUptodate');
       sessionStorage.removeItem('toolboxReloadBuild');
       sessionStorage.removeItem('toolboxQuietLoad');
     } catch {}
     resetDisplayProgress();
-    window.location.reload();
+    const url = new URL(location.href);
+    url.searchParams.set('postUpdate', '1');
+    window.location.replace(url.toString());
   }
 
   /** After Update Now + reload: Software Update screen, up-to-date UI, badges cleared. Does not touch tabs. */
@@ -2992,14 +3042,17 @@
     clearUpdateReadyMark();
     suppressUpdatePromptOnLoad = true;
     quietUpdateLoad = false;
-    await registerForCurrentBuild();
-    refreshAllVersionDisplays();
     showUptodateBanner();
-    suppressUpdatePromptOnLoad = false;
-    refreshSettingsUpdateBadge();
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => openSettings('updates'));
-    });
+    openSettings('updates');
+    try {
+      await registerForCurrentBuild();
+      refreshAllVersionDisplays();
+      showUptodateBanner();
+    } finally {
+      suppressUpdatePromptOnLoad = false;
+      document.documentElement.removeAttribute('data-post-update');
+      refreshSettingsUpdateBadge();
+    }
   }
 
   async function registerServiceWorkerOnStartup() {
@@ -3040,25 +3093,20 @@
     }
     if (!('serviceWorker' in navigator)) return;
 
-    let justUpdated = false;
     let showUptodateOnly = false;
     try {
       if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
         sessionStorage.removeItem('toolboxQuietLoad');
         quietUpdateLoad = true;
         suppressUpdatePromptOnLoad = true;
-      }
-      justUpdated = sessionStorage.getItem('toolboxJustUpdated') === '1';
-      if (justUpdated) {
-        sessionStorage.removeItem('toolboxJustUpdated');
-        sessionStorage.removeItem('toolboxOpenSettingsUpdates');
-        sessionStorage.removeItem('toolboxReloadBuild');
-        sessionStorage.removeItem('toolboxShowUptodate');
       } else {
         showUptodateOnly = sessionStorage.getItem('toolboxShowUptodate') === '1';
         if (showUptodateOnly) sessionStorage.removeItem('toolboxShowUptodate');
       }
     } catch {}
+
+    const justUpdated = consumePostUpdateLaunchPending()
+      || document.documentElement.getAttribute('data-post-update') === '1';
 
     if (justUpdated) {
       await runPostUpdateLaunchFlow();
@@ -3284,10 +3332,11 @@
     }
     if (updateUIState === 'downloading') return true;
     if (updateUIState === 'ready') {
+      if (waitingSW) return true;
       return !!(reg && isWaitingWorkerActionable(reg));
     }
-    if (waitingSW && reg && isWaitingWorkerActionable(reg)) return true;
-    if (isUpdateReadyInSession() && reg && isWaitingWorkerActionable(reg)) return true;
+    if (waitingSW) return true;
+    if (reg && isWaitingWorkerActionable(reg)) return true;
     return false;
   }
 
@@ -3744,6 +3793,11 @@
       if (reloaded) return;
       reloaded = true;
       reloadAfterUpdate = false;
+      await renderSoftwareUpdateUi('installing', { statusLine: 'Restarting Toolbox…' });
+      if (swUpdateStatusLine) {
+        swUpdateStatusLine.classList.remove('hidden');
+        swUpdateStatusLine.textContent = 'Restarting Toolbox…';
+      }
       await animateProgressTo(100, 1400);
       await new Promise((r) => setTimeout(r, 400));
       finishAppUpdateReload();
@@ -3752,6 +3806,7 @@
     const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
     const waiting = waitingSW || reg?.waiting;
     if (!waiting) {
+      await renderSoftwareUpdateUi('installing', { statusLine: 'Restarting Toolbox…' });
       await animateProgressTo(100, 1200);
       reloadOnce();
       return;
@@ -4265,9 +4320,11 @@
     paintSettingsScreens();
     if (screenId === 'updates') {
       bindSoftwareUpdateActions();
-      if (updateUIState === 'uptodate') renderSoftwareUpdateUi('uptodate');
-      else if (updateUIState === 'ready' && (waitingSW || isUpdateReadyInSession())) renderSoftwareUpdateUi('ready');
-      else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
+      if (updateUIState === 'uptodate' || document.documentElement.getAttribute('data-post-update') === '1') {
+        renderSoftwareUpdateUi('uptodate');
+      } else if (updateUIState === 'ready' && (waitingSW || isUpdateReadyInSession())) {
+        renderSoftwareUpdateUi('ready');
+      } else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (updateUIState === 'downloading' || updateUIState === 'installing') {
         renderSoftwareUpdateUi(updateUIState);
       } else if (!DEV_MODE && !isUpdateBusy()) runUpdateCheckFlow();

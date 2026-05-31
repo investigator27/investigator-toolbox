@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v177",
-  "appVersion": "3.5.46",
+  "latest": "v178",
+  "appVersion": "3.5.47",
   "highlights": [
-    "Camera tab Saved clips screen uses the same rounded card layout as Calculator and Hotels."
+    "Camera tab hub with slide-in Clip Library (by day) and Camera Settings; back returns to Camera tab."
   ],
   "builds": {
+    "v178": {
+      "intro": "Build v178 — Camera tab hub and clip library by day.",
+      "sections": [
+        {
+          "heading": "UI",
+          "items": [
+            "Covert Camera primary button on its own row; Clip Library and Camera Settings slide in like Settings (back returns to Camera tab).",
+            "Clip Library groups clips by calendar day with date headings; same clip cards and bulk actions.",
+            "Camera Settings on Camera tab mirrors Settings → Camera (shared prefs, no duplicate conflicts).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v178)."
+          ]
+        }
+      ]
+    },
     "v177": {
       "intro": "Build v177 — Camera tab card layout.",
       "sections": [

@@ -1157,14 +1157,14 @@
     });
   }
 
-  async function onTabEnter() {
+  async function onTabEnter(opts = {}) {
     bindUi();
     bindSettings();
     swipeUpCount = 0;
     clearTimeout(swipeUpResetTimer);
     await refreshClipSummary().catch(() => {});
 
-    if (userClosedSession) {
+    if (opts.coldStart || userClosedSession) {
       showClipsHub();
       return;
     }
@@ -1212,6 +1212,7 @@
     refreshClipSummary,
     renderClipsLibrary,
     showClipsHub,
+    forceExitCovertUi,
   };
 
   if (document.readyState === 'loading') {

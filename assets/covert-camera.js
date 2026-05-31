@@ -49,7 +49,21 @@
   }
 
   function haptic(style) {
-    if (typeof window.toolboxHaptic === 'function') window.toolboxHaptic(style);
+    const toolboxStyle = style === 'tap' ? 'medium' : style;
+    if (typeof window.toolboxHaptic === 'function') {
+      window.toolboxHaptic(toolboxStyle);
+      return;
+    }
+    if (typeof navigator.vibrate !== 'function') return;
+    const patterns = {
+      light: 22,
+      medium: [24, 58, 24],
+      success: [18, 72, 18],
+      tap: [16, 36, 16],
+    };
+    try {
+      navigator.vibrate(patterns[style] || patterns.tap);
+    } catch {}
   }
 
   function getPrefs() {
@@ -195,13 +209,20 @@
     const parts = [];
     if (durationSeconds > 0) parts.push(formatDuration(durationSeconds));
     if (clip.createdAt) parts.push(formatClipDate(clip.createdAt));
-    const loc =
-      clip.locationLabel ||
-      formatCoords(
-        Number.isFinite(clip.latitude) ? { lat: clip.latitude, lng: clip.longitude } : null
-      );
+    const loc = (clip.locationLabel || '').trim();
     parts.push(loc || 'Location unavailable');
     return parts.join(' · ');
+  }
+
+  async function resolveClipAddress(lat, lng) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
+    if (typeof window.toolboxReverseGeocode === 'function') {
+      try {
+        const label = await window.toolboxReverseGeocode(lat, lng);
+        if (label) return String(label).trim();
+      } catch {}
+    }
+    return '';
   }
 
   function probeBlobDuration(blob) {
@@ -226,17 +247,14 @@
     if (!navigator.geolocation) return Promise.resolve(null);
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          resolve({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            locationLabel: formatCoords({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            }),
-          }),
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const locationLabel = await resolveClipAddress(lat, lng);
+          resolve({ lat, lng, locationLabel });
+        },
         () => resolve(null),
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
       );
     });
   }
@@ -431,6 +449,13 @@
       clipPreviewUrls.set(clip.id, url);
       let durationSec = clip.durationSeconds || 0;
       if (!durationSec) durationSec = await probeBlobDuration(clip.blob);
+      if (
+        Number.isFinite(clip.latitude) &&
+        (!clip.locationLabel || String(clip.locationLabel).includes('°'))
+      ) {
+        const addr = await resolveClipAddress(clip.latitude, clip.longitude);
+        if (addr) clip.locationLabel = addr;
+      }
       const detailsLine = formatClipDetailsLine(clip, durationSec);
       const card = document.createElement('article');
       card.className = 'camera-clip-card';
@@ -444,7 +469,7 @@
           <span class="camera-clip-card__id">${clip.id}</span>
           <span class="camera-clip-card__size">${formatBytes(clip.size || 0)}</span>
         </div>
-        <p class="camera-clip-card__details">${detailsLine}</p>
+        <p class="camera-clip-card__sub">${detailsLine}</p>
         <button type="button" class="camera-clip-card__play" data-clip-id="${clip.id}">View</button>`;
 
       const check = card.querySelector('.camera-clip-card__check');
@@ -557,7 +582,7 @@
   async function lockLandscape() {
     if (!cameraSessionActive) return false;
     const orient = screen.orientation;
-    const lockTypes = ['landscape-primary', 'landscape', 'landscape-secondary'];
+    const lockTypes = ['landscape', 'landscape-primary', 'landscape-secondary'];
 
     const tryLock = async () => {
       if (!orient?.lock) return false;
@@ -827,12 +852,16 @@
           1,
           Math.round((Date.now() - (recordingStartedAt || Date.now())) / 1000)
         );
+        let locationLabel = recordingGeo?.locationLabel || '';
+        if (recordingGeo && !locationLabel) {
+          locationLabel = await resolveClipAddress(recordingGeo.lat, recordingGeo.lng);
+        }
         await saveClip(blob, mediaRecorder.mimeType || mimeType, {
           durationSeconds,
           recordedAt: recordingStartedAt || Date.now(),
           latitude: recordingGeo?.lat,
           longitude: recordingGeo?.lng,
-          locationLabel: recordingGeo?.locationLabel || '',
+          locationLabel,
         });
         recordingStartedAt = 0;
         recordingGeo = null;
@@ -888,7 +917,7 @@
 
   function onTapZone() {
     if ($('covertCamera')?.classList.contains('covert-camera--gate-open')) return;
-    haptic('light');
+    haptic('tap');
     tapCount += 1;
     clearTimeout(tapResetTimer);
     tapResetTimer = setTimeout(() => {
@@ -897,6 +926,7 @@
     if (tapCount >= TAP_REQUIRED) {
       tapCount = 0;
       clearTimeout(tapResetTimer);
+      haptic('medium');
       onTripleTap();
     }
   }

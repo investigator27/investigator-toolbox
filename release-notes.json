@@ -3,7 +3,7 @@
   "latest": "v192",
   "appVersion": "3.5.61",
   "highlights": [
-    "Camera: optional date & time stamp burned onto your video (with format, position and size), a discreet camera-access screen with a Close button, and an Airplane/Do Not Disturb reminder for silent recording."
+    "Camera: smoother, sharper video (steady 30fps + higher bitrate), optional on-video date & time stamp, a discreet camera-access screen with a Close button, an Airplane mode reminder when you open the camera, swipe-up peek while recording, and an offline upload warning."
   ],
   "builds": {
     "v192": {
@@ -15,8 +15,11 @@
             "New Time & date stamp: turn it on in Camera Settings to burn the date and time into the recorded video (choose date format, 12/24-hour, top/bottom position and size). Off by default, so normal recording is unchanged.",
             "When you upload a clip, a matching .txt sidecar with the exact recorded time and GPS coordinates is included so other software / an investigator can confirm when and where it was shot. Clip filenames now include the date, time and location.",
             "The camera-access screen is now discreet (no red button) and has a Close button to instantly drop back to the Camera tab.",
-            "Optional reminder to switch on Airplane mode or Do Not Disturb before recording. Note: a web app cannot silence calls or texts by itself, so this is a reminder you action on the phone.",
+            "Opening the camera now shows a quick Airplane mode reminder (with how-to steps) so you can go fully silent before recording — a web app can't block calls/texts itself, so this prompts you to do it. The old, misleading in-app toggle was removed.",
+            "If you try to upload clips while still offline (e.g. Airplane mode left on), the app now warns you instead of failing silently.",
+            "You can now swipe up to peek at the live view while recording, then swipe down to go back to black — handy for a quick aim check without stopping the clip.",
             "The record-start haptic now fires the instant recording begins, instead of waiting for orientation/timestamp setup (haptics still require the Haptic feedback toggle under Personalization, and Android only — iPhone has no web vibration).",
+            "Smoother, sharper video: recording now asks the camera for a steady 30fps, uses a higher resolution-aware bitrate (up to ~12 Mbps) for clearer motion, and — when the timestamp overlay is on — redraws in sync with each camera frame to remove stutter.",
             "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v192)."
           ]
         }

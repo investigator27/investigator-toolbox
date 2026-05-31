@@ -522,6 +522,46 @@
       max-width:18rem;
       line-height:1.4;
     }
+    .covert-reminder{
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:var(--space-5);
+      background:rgba(0,0,0,0.82);
+      -webkit-backdrop-filter:blur(2px);
+      backdrop-filter:blur(2px);
+    }
+    .covert-reminder.hidden{display:none!important}
+    .covert-reminder__card{
+      width:100%;
+      max-width:20rem;
+      background:var(--color-surface);
+      border:1px solid var(--color-border);
+      border-radius:var(--radius-xl);
+      padding:var(--space-5);
+      text-align:center;
+      box-shadow:var(--shadow-md);
+    }
+    .covert-reminder__icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:48px;height:48px;
+      margin-bottom:var(--space-3);
+      border-radius:999px;
+      background:color-mix(in srgb,var(--color-primary) 16%,transparent);
+      color:var(--color-primary);
+    }
+    .covert-reminder__icon svg{width:26px;height:26px}
+    .covert-reminder__title{margin:0 0 var(--space-2);font-size:var(--text-lg);font-weight:800;color:var(--color-text)}
+    .covert-reminder__text,
+    .covert-reminder__steps,
+    .covert-reminder__note{margin:0 0 var(--space-3);font-size:var(--text-sm);line-height:1.5;color:var(--color-text)}
+    .covert-reminder__note{color:var(--color-text-muted);font-size:var(--text-xs);margin-bottom:var(--space-4)}
+    .covert-reminder__actions{display:grid;gap:var(--space-2)}
     .covert-camera video{
       position:absolute;
       inset:0;
@@ -1704,6 +1744,21 @@
           <button type="button" class="btn covert-gate-btn covert-gate-btn--close" id="covertCloseGateBtn">Close</button>
         </div>
       </div>
+      <div class="covert-reminder hidden" id="covertAirplaneReminder" role="dialog" aria-modal="true" aria-labelledby="covertAirplaneReminderTitle" aria-hidden="true">
+        <div class="covert-reminder__card">
+          <span class="covert-reminder__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5S18 3 16.5 4.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+          </span>
+          <h2 class="covert-reminder__title" id="covertAirplaneReminderTitle">Turn on Airplane mode</h2>
+          <p class="covert-reminder__text">For a fully discreet recording, enable <strong>Airplane mode</strong> so no calls, texts or notifications come through while you record.</p>
+          <p class="covert-reminder__steps">Swipe down from the top of the screen and tap the <strong>✈ Airplane</strong> icon. (Or use <strong>Do Not Disturb</strong> if you need to stay reachable.)</p>
+          <p class="covert-reminder__note">Remember to turn Airplane mode off afterwards to upload clips.</p>
+          <div class="covert-reminder__actions">
+            <button type="button" class="btn btn-primary" id="covertAirplaneContinueBtn">Open camera</button>
+            <button type="button" class="btn btn-secondary" id="covertAirplaneCancelBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2253,12 +2308,8 @@
                 <span class="settings-row__label">Strong haptic on start/stop</span>
                 <label class="settings-switch"><input type="checkbox" id="cameraStrongHapticSwitch" data-cam-pref="strongHapticOnRecord" checked aria-label="Stronger haptic on record start and stop" /><span class="settings-switch__track"></span></label>
               </div>
-              <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Airplane / Do Not Disturb reminder</span>
-                <label class="settings-switch"><input type="checkbox" id="cameraAirplaneReminderSwitch" data-cam-pref="airplaneReminder" checked aria-label="Show reminder to enable Airplane mode or Do Not Disturb" /><span class="settings-switch__track"></span></label>
-              </div>
             </div>
-            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">A phone web app can't silence calls or texts on its own. For fully silent recording, turn on Airplane mode or Do Not Disturb before you record.</p>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">For full discreetness, turn on Airplane mode (or Do Not Disturb) before recording so no calls, texts or notifications come through. A reminder appears each time you open the camera. Turn Airplane mode off afterwards to upload clips.</p>
             <h2 class="settings-section-title">Time &amp; date stamp</h2>
             <div class="settings-group" role="group" aria-label="Time and date stamp">
               <div class="settings-row settings-row--toggle">

@@ -152,6 +152,23 @@
   function setBlackVisible(visible) {
     const black = $('covertBlack');
     if (black) black.classList.toggle('covert-camera__black--hidden', !visible);
+    document.documentElement.style.backgroundColor = visible ? '#000' : '';
+  }
+
+  function enterCovertMode() {
+    document.querySelector('.app-shell')?.classList.add('app-shell--covert-camera');
+    setBlackVisible(true);
+  }
+
+  function leaveCovertMode() {
+    document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+    document.documentElement.style.backgroundColor = '';
+    setBlackVisible(false);
+    $('covertPermissionGate')?.classList.remove('hidden');
+  }
+
+  function showPermissionGate(show) {
+    $('covertPermissionGate')?.classList.toggle('hidden', !show);
   }
 
   function setPreviewVisible(visible) {
@@ -198,9 +215,12 @@
   async function startCameraStream() {
     if (mediaStream) return true;
     if (!navigator.mediaDevices?.getUserMedia) {
+      showPermissionGate(true);
       setStatus('Camera not supported in this browser.');
       return false;
     }
+    showPermissionGate(true);
+    setStatus('Allow camera & microphone when Android asks…');
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia(getVideoConstraints());
     } catch (err) {
@@ -210,10 +230,12 @@
           video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
         });
       } catch (err2) {
-        setStatus('Allow camera access in Android settings, then reopen Camera.');
+        showPermissionGate(true);
+        setStatus('Camera blocked — tap Allow or fix permissions in Settings.');
         return false;
       }
     }
+    showPermissionGate(false);
     const video = $('covertVideoPreview');
     if (video) {
       video.srcObject = mediaStream;
@@ -476,20 +498,32 @@
     zone?.addEventListener('touchstart', onTouchStart, { passive: true });
     zone?.addEventListener('touchend', onTouchEnd, { passive: true });
 
-    $('covertUploadBtn')?.addEventListener('click', () => uploadClips());
-    $('covertOpenCameraSettingsBtn')?.addEventListener('click', () => {
+    $('covertAllowCameraBtn')?.addEventListener('click', async () => {
       haptic('light');
-      if (typeof window.openSettings === 'function') window.openSettings('camera-settings');
+      stopCameraStream();
+      const ok = await startCameraStream();
+      if (ok) {
+        try {
+          if (screen.orientation?.lock) await screen.orientation.lock('landscape');
+        } catch {}
+      }
     });
+  }
+
+  async function requestCameraOnTabOpen() {
+    stopCameraStream();
+    return startCameraStream();
   }
 
   async function onTabEnter() {
     bindUi();
     bindSettings();
-    setBlackVisible(true);
+    enterCovertMode();
     hidePreview();
     await refreshClipSummary();
-    const ok = await startCameraStream();
+    setStatus('Allow camera & microphone when Android asks…');
+    showPermissionGate(true);
+    const ok = await requestCameraOnTabOpen();
     if (ok) {
       try {
         if (screen.orientation?.lock) await screen.orientation.lock('landscape');
@@ -501,6 +535,7 @@
     if (isRecording) stopRecording();
     stopCameraStream();
     releaseWakeLock();
+    leaveCovertMode();
     try {
       screen.orientation?.unlock?.();
     } catch {}

@@ -1,6 +1,6 @@
 /* sw-revision: 27 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v136';
+let activeCacheName = 'surveillance-travel-pwa-v137';
 
 const CORE_ASSETS = [
   BASE + 'index.html',
@@ -12,6 +12,7 @@ const CORE_ASSETS = [
 ];
 
 const OPTIONAL_ASSETS = [
+  BASE + 'assets/covert-camera.js',
   BASE + 'assets/icon-192.png',
   BASE + 'assets/icon-512.png',
   BASE + 'assets/maskable_icon_x192.png',

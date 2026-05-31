@@ -1,11 +1,28 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v136",
-  "appVersion": "3.5.5",
+  "latest": "v137",
+  "appVersion": "3.5.6",
   "highlights": [
-    "Version label now bumps with each deploy (3.5.5 · v136); keep appVersion, latest, HTML bundled constants, and service worker cache in sync."
+    "Covert Camera tab (v1): landscape 1080p rear video, black screen, 3-tap record/stop, swipe preview, manual upload."
   ],
   "builds": {
+    "v137": {
+      "intro": "Build v137 — Covert Camera tab (first release).",
+      "sections": [
+        {
+          "heading": "Camera",
+          "items": [
+            "Camera tab: rear camera, landscape 1080p, black screen while recording.",
+            "3 taps to start/stop · swipe up for preview · swipe down to hide · haptics on taps.",
+            "Clips saved as 00000, 00001, … in Toolbox storage on the device.",
+            "Upload clips button (Share sheet → OneDrive) — manual only.",
+            "Settings → Camera for permissions, wake lock, max length, clear clips.",
+            "Enable Camera tab in Developer or tab-policy.json when ready to roll out.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v137)."
+          ]
+        }
+      ]
+    },
     "v136": {
       "intro": "Build v136 — version 3.5.5 synced with deploy.",
       "sections": [

@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v139",
-  "appVersion": "3.5.8",
+  "latest": "v140",
+  "appVersion": "3.5.9",
   "highlights": [
-    "Fix version display (3.5.x vs build v###) and Camera Allow button on Android."
+    "Fix Allow camera access on Android (permission gesture + fallback binding)."
   ],
   "builds": {
+    "v140": {
+      "intro": "Build v140 — Allow camera access works on Android.",
+      "sections": [
+        {
+          "heading": "Camera",
+          "items": [
+            "Allow camera access now triggers getUserMedia from your tap (required on Android).",
+            "Progressive camera constraints if 1080p rear camera is not available.",
+            "Red error text on the permission screen when something blocks access.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v140)."
+          ]
+        }
+      ]
+    },
     "v139": {
       "intro": "Build v139 — version label fix + camera permission button.",
       "sections": [

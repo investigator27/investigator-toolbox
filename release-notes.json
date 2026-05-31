@@ -1,10 +1,23 @@
 {
-  "latest": "v120",
+  "latest": "v121",
   "appVersion": "3.5.4",
   "highlights": [
-    "Fix red strip at top of installed PWA; smaller Calculator and Hotel Finder section titles."
+    "Install landing page with QR at investigator27.github.io/investigator-toolbox/."
   ],
   "builds": {
+    "v121": {
+      "intro": "Investigator Toolbox 3.5.4 — install page for company rollout.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "New index.html install page with QR and platform steps at your GitHub Pages folder URL.",
+            "Share https://investigator27.github.io/investigator-toolbox/ for posters and onboarding (not index.html in the link).",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, release-notes.json, manifest.webmanifest, tab-policy.json, and assets/ (v121)."
+          ]
+        }
+      ]
+    },
     "v120": {
       "intro": "Investigator Toolbox 3.5.4 — PWA chrome and section title sizing.",
       "sections": [

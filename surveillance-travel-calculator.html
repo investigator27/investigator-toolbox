@@ -1600,10 +1600,10 @@
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li>Tap the menu (☰) at the top right to open <strong>Toolbox Settings</strong>.</li>
-                <li>On Android Chrome: browser menu → <strong>Add to Home screen</strong> → <strong>Install</strong>.</li>
-                <li>On iPhone Safari: <strong>Share</strong> → <strong>Add to Home Screen</strong>.</li>
-                <li>Open the app from your home screen for the full experience.</li>
+                <li>Open the <a id="howInstallPageLink" href="#">install page</a> (QR for new phones) or this app in Chrome / Safari.</li>
+                <li>On Android Chrome: tap <strong>Install app</strong> on the install page, or browser menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
+                <li>On iPhone Safari: <strong>Share</strong> → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+                <li>Open <strong>Toolbox</strong> from your home screen.</li>
               </ol>
             </div>
           </div>
@@ -1837,13 +1837,16 @@
             <div class="settings-body-text">
               <p>Upload to your GitHub Pages folder (<strong id="developerDeployPath">…</strong>):</p>
               <ul class="settings-file-list">
+                <li>index.html</li>
                 <li>surveillance-travel-calculator.html</li>
                 <li>service-worker.js</li>
                 <li>release-notes.json</li>
                 <li>tab-policy.json</li>
                 <li>manifest.webmanifest</li>
+                <li>assets/ (icons)</li>
               </ul>
-              <p style="margin-top:var(--space-3)">Use <strong>Developer Tools</strong> for live build checks before you upload.</p>
+              <p style="margin-top:var(--space-3)">Install / QR page: <a id="developerInstallUrl" href="#" rel="noopener">…</a></p>
+              <p style="margin-top:var(--space-2)">Use <strong>Developer Tools</strong> for live build checks before you upload.</p>
             </div>
           </div>
         </div>
@@ -1908,7 +1911,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v120';
+  const BUNDLED_PWA_CACHE_VERSION = 'v121';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -1927,7 +1930,9 @@
   const LOCATION_PREF_KEY = 'toolboxLocationEnabled';
   const NOTIFICATIONS_PREF_KEY = 'toolboxNotificationsEnabled';
   const DEV_UNLOCK_KEY = 'toolboxDevUnlocked';
-  const BASE_PATH = window.__BASE_PATH__ || '/dev1-toolb0x/';
+  const BASE_PATH = window.__BASE_PATH__ || '/investigator-toolbox/';
+  /** Company install / QR landing page (keep in sync with index.html CANONICAL_INSTALL_URL). */
+  const PUBLIC_INSTALL_URL = 'https://investigator27.github.io/investigator-toolbox/';
   const UPDATE_BANNER_TRANSITION_MS = 2400;
   const UPDATE_BANNER_HIDE_MS = UPDATE_BANNER_TRANSITION_MS;
   /** Visible time before slide-up; + transition ≈ 5–6s total for “up to date” banner */
@@ -3783,6 +3788,13 @@
       const path = (BASE_PATH || '/').replace(/\/$/, '') || '/';
       pathEl.textContent = path === '/' ? '(site root)' : path;
     }
+    const installUrl = (PUBLIC_INSTALL_URL || '').replace(/\/?$/, '/');
+    ['developerInstallUrl', 'howInstallPageLink'].forEach((id) => {
+      const link = $(id);
+      if (!link || !installUrl) return;
+      link.href = installUrl;
+      link.textContent = installUrl;
+    });
     const verEl = $('developerGuideVersion');
     if (verEl) verEl.textContent = `${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
   }

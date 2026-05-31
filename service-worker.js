@@ -1,8 +1,9 @@
 /* sw-revision: 27 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v120';
+let activeCacheName = 'surveillance-travel-pwa-v121';
 
 const CORE_ASSETS = [
+  BASE + 'index.html',
   BASE + 'surveillance-travel-calculator.html',
   BASE + 'manifest.webmanifest',
   BASE + 'release-notes.json',
@@ -20,6 +21,7 @@ const OPTIONAL_ASSETS = [
 const ASSETS = CORE_ASSETS.concat(OPTIONAL_ASSETS);
 
 const NETWORK_FIRST = new Set([
+  BASE + 'index.html',
   BASE + 'surveillance-travel-calculator.html',
   BASE + 'manifest.webmanifest',
   BASE + 'release-notes.json',

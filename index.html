@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+  (function () {
+    var theme = 'light';
+    try {
+      var saved = localStorage.getItem('travelCalcTheme');
+      if (saved === 'dark' || saved === 'light') theme = saved;
+      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+    } catch (e) {}
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.backgroundColor = theme === 'dark' ? '#171614' : '#ffffff';
+    document.documentElement.style.colorScheme = theme;
+    var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = theme === 'dark' ? '#171614' : '#ffffff';
+  })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="Install Toolbox on your phone — travel calculator, hotels, and field tools." />
+  <title>Install Toolbox</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon-192.png" />
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-surface: #ffffff;
+      --color-surface-offset: #f4f4f5;
+      --color-border: #e4e4e7;
+      --color-text: #18181b;
+      --color-text-muted: #71717a;
+      --color-primary: #dc2626;
+      --color-primary-hover: #b91c1c;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614;
+      --color-surface: #1c1b19;
+      --color-surface-offset: #22211f;
+      --color-border: #393836;
+      --color-text: #e2e0db;
+      --color-text-muted: #aaa8a2;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font: 400 var(--text-base) / 1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100dvh;
+      padding: max(env(safe-area-inset-top), var(--space-4)) var(--space-4) max(env(safe-area-inset-bottom), var(--space-6));
+    }
+    .wrap { max-width: 28rem; margin: 0 auto; display: grid; gap: var(--space-5); }
+    .hero { text-align: center; display: grid; gap: var(--space-3); justify-items: center; }
+    .logo {
+      width: 72px; height: 72px; border-radius: 18px;
+      background: var(--color-surface) url('./assets/icon-192.png') center/130% no-repeat;
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+    h1 { font-size: var(--text-lg); font-weight: 700; line-height: 1.2; }
+    .tagline { font-size: var(--text-sm); color: var(--color-text-muted); max-width: 22rem; }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      display: grid;
+      gap: var(--space-4);
+      justify-items: center;
+      text-align: center;
+    }
+    .card h2 { font-size: var(--text-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); }
+    #qrCanvas { display: block; border-radius: var(--radius-lg); background: #fff; padding: var(--space-3); max-width: 100%; height: auto; }
+    .install-url {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      word-break: break-all;
+      line-height: 1.4;
+      user-select: all;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 52px; width: 100%; padding: 0 var(--space-4);
+      border-radius: var(--radius-lg); font-weight: 700; font-size: var(--text-base);
+      text-decoration: none; border: none; cursor: pointer;
+    }
+    .btn-primary { background: var(--color-primary); color: #fff; }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--color-surface-offset);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .steps { text-align: left; font-size: var(--text-sm); color: var(--color-text-muted); padding-left: 1.2rem; display: grid; gap: var(--space-2); }
+    .steps strong { color: var(--color-text); }
+    details {
+      background: var(--color-surface-offset);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+    }
+    details + details { margin-top: var(--space-2); }
+    summary { font-weight: 700; cursor: pointer; font-size: var(--text-sm); }
+    details .steps { margin-top: var(--space-3); }
+    .hint { font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; line-height: 1.5; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <div class="logo" role="img" aria-label="Toolbox"></div>
+      <h1>Toolbox</h1>
+      <p class="tagline">Travel calculator, hotel finder, and field tools. Install once, then open from your home screen.</p>
+    </header>
+
+    <section class="card" aria-labelledby="qr-heading">
+      <h2 id="qr-heading">Scan to install</h2>
+      <canvas id="qrCanvas" width="240" height="240" aria-label="QR code for install link"></canvas>
+      <p class="install-url" id="installUrl"></p>
+      <p class="hint">Print this page or save the QR for posters and onboarding. The link should stay the same for company-wide rollout.</p>
+    </section>
+
+    <div class="actions" style="display:grid;gap:var(--space-3);">
+      <button type="button" class="btn btn-primary hidden" id="installBtn">Install app</button>
+      <a class="btn btn-primary" id="openAppBtn" href="surveillance-travel-calculator.html">Open Toolbox</a>
+      <button type="button" class="btn btn-secondary hidden" id="copyLinkBtn" type="button">Copy install link</button>
+    </div>
+
+    <section aria-label="Install instructions">
+      <details open>
+        <summary>Android (Chrome)</summary>
+        <ol class="steps">
+          <li>Scan the QR or open this page in <strong>Chrome</strong>.</li>
+          <li>Tap <strong>Install app</strong> above, or the menu → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
+          <li>Open <strong>Toolbox</strong> from your home screen.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>iPhone (Safari)</summary>
+        <ol class="steps">
+          <li>Scan the QR or open this link in <strong>Safari</strong> (not Chrome).</li>
+          <li>Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+          <li>Open <strong>Toolbox</strong> from your home screen.</li>
+        </ol>
+      </details>
+    </section>
+
+    <p class="hint">After installing, allow <strong>Notifications</strong> and <strong>Location</strong> when prompted if you use Hotel Finder.</p>
+  </main>
+
+  <script type="module">
+    /**
+     * Set this to your permanent GitHub Pages URL before printing QR posters
+     * (e.g. https://investigator27.github.io/investigator-toolbox/).
+     * Leave empty to use the current page URL (fine for testing).
+     */
+    const CANONICAL_INSTALL_URL = 'https://investigator27.github.io/investigator-toolbox/';
+
+    function normalizeInstallBase(url) {
+      const u = (url || '').trim().replace(/\/?index\.html$/i, '');
+      return u.endsWith('/') ? u : `${u}/`;
+    }
+
+    const path = location.pathname.replace(/\/?index\.html$/i, '');
+    const pageBase = path.endsWith('/') ? path : `${path}/`;
+    const installUrl = CANONICAL_INSTALL_URL
+      ? normalizeInstallBase(CANONICAL_INSTALL_URL)
+      : normalizeInstallBase(location.origin + pageBase);
+
+    document.getElementById('installUrl').textContent = installUrl;
+    document.getElementById('openAppBtn').href = `${installUrl}surveillance-travel-calculator.html`;
+
+    const canvas = document.getElementById('qrCanvas');
+    try {
+      const { default: QRCode } = await import('https://esm.sh/qrcode@1.5.4');
+      await QRCode.toCanvas(canvas, installUrl, {
+        width: 240,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: { dark: '#18181b', light: '#ffffff' },
+      });
+    } catch {
+      canvas.replaceWith(Object.assign(document.createElement('p'), {
+        className: 'hint',
+        textContent: 'QR preview unavailable offline. Use the link above or open this page on Wi‑Fi.',
+      }));
+    }
+
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.classList.remove('hidden');
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.classList.add('hidden');
+    });
+
+    document.getElementById('copyLinkBtn').classList.remove('hidden');
+    document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(installUrl);
+        document.getElementById('copyLinkBtn').textContent = 'Copied!';
+        setTimeout(() => { document.getElementById('copyLinkBtn').textContent = 'Copy install link'; }, 2000);
+      } catch {
+        window.prompt('Copy this link:', installUrl);
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register(base + 'service-worker.js', { scope: base }).catch(() => {});
+    }
+  </script>
+</body>
+</html>

@@ -1666,7 +1666,7 @@
         clearChunkStore().catch(() => {});
         currentRecordingId = null;
         autoStopReason = '';
-        clearHud();
+        showBriefHud('Stopped', 0);
         haptic('medium');
         return;
       }
@@ -1699,7 +1699,7 @@
         await refreshClipSummary();
         if (isClipLibraryScreen(getActiveCameraScreenId())) void renderClipsLibrary();
       } catch {
-        clearHud();
+        showBriefHud('Stopped', 0);
         haptic('medium');
       }
     };
@@ -1732,13 +1732,18 @@
     if (lowStorage) warnings.push('low storage');
     if (criticalBattery) warnings.push('battery critical');
     else if (lowBattery) warnings.push('low battery');
-    showBriefHud(warnings.length ? `Recording · ${warnings.join(' & ')}` : 'Recording', HUD_RECORDING_MS);
+    // Persistent indicator (no auto-hide) so it can't flash-and-vanish while recording.
+    const recordingHudText = warnings.length ? `● Recording · ${warnings.join(' & ')}` : '● Recording';
+    showBriefHud(recordingHudText, 0);
     if (getPrefs().strongHapticOnRecord) haptic('success');
     else haptic('medium');
     startResourceWatch();
     await acquireWakeLock();
     await prepareLandscapeCapture();
     await enforceLandscapeVideoTrack(mediaStream);
+    // Fullscreen + orientation lock above can blow away the overlay text, so re-assert it
+    // once that work is done (only if we're still recording).
+    if (isRecording) showBriefHud(recordingHudText, 0);
 
     const mins = getPrefs().maxClipMinutes;
     if (mins > 0) {

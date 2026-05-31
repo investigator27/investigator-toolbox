@@ -18,6 +18,12 @@
     wakeLock: true,
     maxClipMinutes: 10,
     strongHapticOnRecord: true,
+    timestampEnabled: false,
+    timestampDateFormat: 'YYYY-MM-DD',
+    timestampClock24: true,
+    timestampPosition: 'bottom',
+    timestampSize: 'medium',
+    airplaneReminder: true,
   };
 
   let mediaStream = null;
@@ -43,6 +49,10 @@
   let usedFullscreenForOrientation = false;
   let recordingStartedAt = 0;
   let recordingGeo = null;
+  // Timestamp burn-in pipeline (only used when prefs.timestampEnabled is on).
+  let tsDrawHandle = null;
+  let tsSourceVideo = null;
+  let tsCanvasStream = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -434,6 +444,139 @@
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
       );
     });
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function formatStampDate(date, fmt) {
+    const y = date.getFullYear();
+    const mo = pad2(date.getMonth() + 1);
+    const d = pad2(date.getDate());
+    switch (fmt) {
+      case 'MM/DD/YYYY':
+        return `${mo}/${d}/${y}`;
+      case 'DD/MM/YYYY':
+        return `${d}/${mo}/${y}`;
+      case 'MON-DD-YYYY':
+        return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      case 'YYYY-MM-DD':
+      default:
+        return `${y}-${mo}-${d}`;
+    }
+  }
+
+  function formatStampTime(date, clock24) {
+    const s = pad2(date.getSeconds());
+    if (clock24) return `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${s}`;
+    let h = date.getHours();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${pad2(h)}:${pad2(date.getMinutes())}:${s} ${ampm}`;
+  }
+
+  /** Draw the dashcam-style stamp: date on one side, time on the other, along one edge. */
+  function drawTimestampOnCanvas(ctx, w, h, prefs) {
+    const now = new Date();
+    const dateStr = formatStampDate(now, prefs.timestampDateFormat);
+    const timeStr = formatStampTime(now, prefs.timestampClock24 !== false);
+    const scale = prefs.timestampSize === 'small' ? 0.026 : prefs.timestampSize === 'large' ? 0.05 : 0.036;
+    const fontPx = Math.max(12, Math.round(h * scale));
+    const pad = Math.round(fontPx * 0.7);
+    ctx.save();
+    ctx.font = `600 ${fontPx}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = Math.max(2, Math.round(fontPx * 0.22));
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = '#ffffff';
+    const onTop = prefs.timestampPosition === 'top';
+    ctx.textBaseline = onTop ? 'top' : 'alphabetic';
+    const y = onTop ? pad : h - pad;
+    ctx.textAlign = 'left';
+    ctx.fillText(dateStr, pad, y);
+    ctx.textAlign = 'right';
+    ctx.fillText(timeStr, w - pad, y);
+    ctx.restore();
+  }
+
+  /**
+   * Build a canvas-backed stream that burns the timestamp into every frame, then record THAT.
+   * Returns the new stream or null on any failure (caller falls back to the raw stream so
+   * recording can never break). Audio tracks are carried over so clips keep sound.
+   */
+  async function buildTimestampedStream(srcStream) {
+    try {
+      const videoTrack = srcStream.getVideoTracks?.()[0];
+      if (!videoTrack || typeof HTMLCanvasElement === 'undefined') return null;
+      const v = document.createElement('video');
+      v.muted = true;
+      v.defaultMuted = true;
+      v.setAttribute('playsinline', '');
+      v.setAttribute('webkit-playsinline', '');
+      v.playsInline = true;
+      // Keep on-screen-but-invisible (NOT display:none) so iOS keeps decoding frames.
+      v.style.cssText = 'position:fixed;left:-10000px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
+      v.srcObject = srcStream;
+      document.body.appendChild(v);
+      await v.play().catch(() => {});
+      // Wait briefly for dimensions.
+      for (let i = 0; i < 20 && (!v.videoWidth || !v.videoHeight); i++) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      const settings = videoTrack.getSettings?.() || {};
+      const w = settings.width || v.videoWidth || 1280;
+      const h = settings.height || v.videoHeight || 720;
+      if (typeof document.createElement('canvas').captureStream !== 'function') {
+        v.remove();
+        return null;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        v.remove();
+        return null;
+      }
+      const fps = Math.min(30, Math.round(settings.frameRate || 30));
+      const draw = () => {
+        try {
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+          if (getPrefs().timestampEnabled) drawTimestampOnCanvas(ctx, canvas.width, canvas.height, getPrefs());
+        } catch {}
+        tsDrawHandle = requestAnimationFrame(draw);
+      };
+      draw();
+      const out = canvas.captureStream(fps);
+      srcStream.getAudioTracks().forEach((t) => out.addTrack(t));
+      tsSourceVideo = v;
+      tsCanvasStream = out;
+      return out;
+    } catch {
+      cleanupTimestampPipeline();
+      return null;
+    }
+  }
+
+  function cleanupTimestampPipeline() {
+    if (tsDrawHandle) {
+      cancelAnimationFrame(tsDrawHandle);
+      tsDrawHandle = null;
+    }
+    if (tsCanvasStream) {
+      tsCanvasStream.getVideoTracks().forEach((t) => t.stop());
+      tsCanvasStream = null;
+    }
+    if (tsSourceVideo) {
+      try {
+        tsSourceVideo.pause();
+        tsSourceVideo.srcObject = null;
+        tsSourceVideo.remove();
+      } catch {}
+      tsSourceVideo = null;
+    }
   }
 
   function pickMimeType() {
@@ -883,6 +1026,9 @@
     enterCovertMode();
     hidePreview();
     clearHud();
+    if (getPrefs().airplaneReminder) {
+      showBriefHud('Tip: turn on Airplane mode or Do Not Disturb for fully silent recording', 4500);
+    }
     void prepareLandscapeCapture();
   }
 
@@ -1179,6 +1325,7 @@
         mediaRecorder.stop();
       } catch {}
     }
+    cleanupTimestampPipeline();
     mediaStream?.getTracks().forEach((t) => t.stop());
     mediaStream = null;
     const video = $('covertVideoPreview');
@@ -1200,19 +1347,29 @@
       return;
     }
     recordedChunks = [];
+    cleanupTimestampPipeline();
+    // Default path is the raw stream (unchanged). Only when the stamp is enabled do we route
+    // through a canvas; if that fails for any reason we fall back so recording never breaks.
+    let recordStream = mediaStream;
+    if (getPrefs().timestampEnabled) {
+      const stamped = await buildTimestampedStream(mediaStream);
+      if (stamped) recordStream = stamped;
+      else cleanupTimestampPipeline();
+    }
     try {
-      mediaRecorder = new MediaRecorder(mediaStream, {
+      mediaRecorder = new MediaRecorder(recordStream, {
         mimeType,
         videoBitsPerSecond: 2500000,
       });
     } catch {
-      mediaRecorder = new MediaRecorder(mediaStream);
+      mediaRecorder = new MediaRecorder(recordStream);
     }
     mediaRecorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) recordedChunks.push(e.data);
     };
     mediaRecorder.onstop = async () => {
       clearMaxClipTimer();
+      cleanupTimestampPipeline();
       await releaseWakeLock();
       const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || mimeType });
       recordedChunks = [];
@@ -1264,12 +1421,13 @@
     $('covertCamera')?.classList.add('covert-camera--recording');
     setBlackVisible(true);
     hidePreview();
-    await acquireWakeLock();
-    await prepareLandscapeCapture();
-    await enforceLandscapeVideoTrack(mediaStream);
+    // Confirm the instant recording starts — don't let landscape/timestamp setup delay the buzz.
     showBriefHud('Recording', HUD_RECORDING_MS);
     if (getPrefs().strongHapticOnRecord) haptic('success');
     else haptic('medium');
+    await acquireWakeLock();
+    await prepareLandscapeCapture();
+    await enforceLandscapeVideoTrack(mediaStream);
 
     const mins = getPrefs().maxClipMinutes;
     if (mins > 0) {
@@ -1359,6 +1517,39 @@
     }
   }
 
+  function buildClipBaseName(clip) {
+    const d = new Date(clip.createdAt || Date.now());
+    const stamp =
+      `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}` +
+      `_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+    let geo = '';
+    if (Number.isFinite(clip.latitude) && Number.isFinite(clip.longitude)) {
+      geo = `_${clip.latitude.toFixed(5)}_${clip.longitude.toFixed(5)}`;
+    }
+    return `covert_${stamp}${geo}`;
+  }
+
+  /** Sidecar text so other software / an investigator can read time + GPS for the clip. */
+  function buildClipSidecar(clip, videoFileName) {
+    const d = new Date(clip.createdAt || Date.now());
+    const lines = [
+      'Investigator Toolbox — Covert Clip',
+      `File: ${videoFileName}`,
+      `Recorded (local): ${d.toLocaleString()}`,
+      `Recorded (ISO 8601): ${d.toISOString()}`,
+      `Duration (seconds): ${clip.durationSeconds || 0}`,
+    ];
+    if (Number.isFinite(clip.latitude) && Number.isFinite(clip.longitude)) {
+      lines.push(`Latitude: ${clip.latitude}`);
+      lines.push(`Longitude: ${clip.longitude}`);
+      lines.push(`Map: https://maps.google.com/?q=${clip.latitude},${clip.longitude}`);
+    } else {
+      lines.push('Location: not available (device location was off or unavailable)');
+    }
+    if (clip.locationLabel) lines.push(`Location: ${clip.locationLabel}`);
+    return `${lines.join('\n')}\n`;
+  }
+
   async function uploadClips(clipIds) {
     let clips = await getAllClips();
     if (clipIds?.length) {
@@ -1368,7 +1559,12 @@
     if (!clips.length) return;
     haptic('light');
     const ext = (mime) => (mime && mime.includes('mp4') ? '.mp4' : '.webm');
-    const files = clips.map((c) => new File([c.blob], `${c.id}${ext(c.mimeType)}`, { type: c.blob.type || 'video/webm' }));
+    const files = [];
+    clips.forEach((c) => {
+      const videoName = `${buildClipBaseName(c)}${ext(c.mimeType)}`;
+      files.push(new File([c.blob], videoName, { type: c.blob.type || 'video/webm' }));
+      files.push(new File([buildClipSidecar(c, videoName)], `${buildClipBaseName(c)}.txt`, { type: 'text/plain' }));
+    });
     if (navigator.share && navigator.canShare?.({ files })) {
       try {
         await navigator.share({
@@ -1442,6 +1638,30 @@
       });
     });
 
+    ['timestampEnabled', 'timestampClock24', 'airplaneReminder'].forEach((key) => {
+      document.querySelectorAll(`[data-cam-pref="${key}"]`).forEach((input) => {
+        input.addEventListener('change', (e) => {
+          const prefs = getPrefs();
+          prefs[key] = e.target.checked;
+          savePrefs(prefs);
+          syncCameraSettingsUi();
+          haptic('light');
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-cam-select]').forEach((select) => {
+      select.addEventListener('change', (e) => {
+        const key = e.target.getAttribute('data-cam-select');
+        if (!key) return;
+        const prefs = getPrefs();
+        prefs[key] = e.target.value;
+        savePrefs(prefs);
+        syncCameraSettingsUi();
+        haptic('light');
+      });
+    });
+
     document.querySelectorAll('[data-cam-max-minutes]').forEach((select) => {
       select.addEventListener('change', (e) => {
         const prefs = getPrefs();
@@ -1481,6 +1701,20 @@
     document.querySelectorAll('[data-cam-max-minutes]').forEach((select) => {
       select.value = String(prefs.maxClipMinutes ?? 10);
     });
+    [
+      ['timestampEnabled', !!prefs.timestampEnabled],
+      ['timestampClock24', prefs.timestampClock24 !== false],
+      ['airplaneReminder', prefs.airplaneReminder !== false],
+    ].forEach(([key, checked]) => {
+      document.querySelectorAll(`[data-cam-pref="${key}"]`).forEach((input) => {
+        input.checked = checked;
+        if (typeof window.syncToggleStateLabel === 'function') window.syncToggleStateLabel(input);
+      });
+    });
+    document.querySelectorAll('[data-cam-select]').forEach((select) => {
+      const key = select.getAttribute('data-cam-select');
+      if (key && prefs[key] != null) select.value = String(prefs[key]);
+    });
   }
 
   async function refreshCameraSettingsUi() {
@@ -1513,6 +1747,11 @@
       },
       { capture: true }
     );
+
+    $('covertCloseGateBtn')?.addEventListener('click', () => {
+      haptic('light');
+      closeCameraSession();
+    });
 
     $('covertOpenCameraBtn')?.addEventListener('click', () => {
       haptic('light');

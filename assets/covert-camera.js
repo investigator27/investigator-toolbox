@@ -155,10 +155,38 @@
     if (el) el.textContent = text || '';
   }
 
-  function describeMediaError(err) {
+  async function queryMediaPermissionState() {
+    if (!navigator.permissions?.query) return { camera: 'unknown', microphone: 'unknown' };
+    try {
+      const [cam, mic] = await Promise.all([
+        navigator.permissions.query({ name: 'camera' }).catch(() => null),
+        navigator.permissions.query({ name: 'microphone' }).catch(() => null),
+      ]);
+      return {
+        camera: cam?.state || 'unknown',
+        microphone: mic?.state || 'unknown',
+      };
+    } catch {
+      return { camera: 'unknown', microphone: 'unknown' };
+    }
+  }
+
+  function describeMediaError(err, permState) {
     const name = err?.name || '';
     if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-      return 'Permission denied — tap Allow below, or enable Camera & Microphone for Toolbox in Android Settings.';
+      const camBlocked = permState?.camera === 'denied';
+      const micBlocked = permState?.microphone === 'denied';
+      if (camBlocked || micBlocked) {
+        return (
+          'Camera or microphone is blocked for Toolbox — Android will not show a popup until you reset it. ' +
+          'Chrome: ⋮ → Settings → Site settings → Camera (and Microphone) → Allow for this site. ' +
+          'Or Android Settings → Apps → Toolbox or Chrome → Permissions → allow Camera and Microphone.'
+        );
+      }
+      return (
+        'Permission denied. If you never saw an Android popup, access was blocked earlier — reset site permissions ' +
+        '(Chrome ⋮ → Site settings) or use Settings → Camera → permission help.'
+      );
     }
     if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
       return 'No camera found on this device.';
@@ -229,42 +257,47 @@
     wakeLockSentinel = null;
   }
 
+  async function tryAttachMicrophone(stream) {
+    if (stream.getAudioTracks().length > 0) return stream;
+    try {
+      const audioOnly = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioOnly.getAudioTracks().forEach((t) => stream.addTrack(t));
+      audioOnly.getVideoTracks().forEach((t) => t.stop());
+    } catch {}
+    return stream;
+  }
+
   async function tryGetUserMediaCascade() {
+    // Video-only first so Android shows the camera popup (mic+audio together can fail with no prompt).
     const attempts = [
+      { video: { facingMode: 'environment' }, audio: false },
+      { video: { facingMode: { ideal: 'environment' } }, audio: false },
+      { video: true, audio: false },
+      { audio: true, video: { facingMode: 'environment' } },
       {
         audio: true,
         video: {
           facingMode: { ideal: 'environment' },
           width: { ideal: 1920 },
           height: { ideal: 1080 },
-          aspectRatio: { ideal: 16 / 9 },
         },
       },
-      {
-        audio: true,
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
-      },
-      {
-        audio: true,
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      },
-      { audio: true, video: { facingMode: 'environment' } },
       { audio: true, video: true },
-      { audio: false, video: { facingMode: 'environment' } },
     ];
 
     let lastErr = null;
+    let stream = null;
     for (const constraints of attempts) {
       try {
-        return await navigator.mediaDevices.getUserMedia(constraints);
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        lastErr = null;
+        break;
       } catch (err) {
         lastErr = err;
-        if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
-          throw err;
-        }
       }
     }
-    throw lastErr || new Error('getUserMedia failed');
+    if (!stream) throw lastErr || new Error('getUserMedia failed');
+    return tryAttachMicrophone(stream);
   }
 
   function streamIsLive() {
@@ -293,13 +326,14 @@
       return false;
     }
 
-    setStatus('Allow camera & microphone when Android asks…');
+    setStatus('Look for the Android Camera / Microphone popup — tap Allow on both.');
 
     try {
       mediaStream = await tryGetUserMediaCascade();
     } catch (err) {
       showPermissionGate(true);
-      const msg = describeMediaError(err);
+      const permState = await queryMediaPermissionState();
+      const msg = describeMediaError(err, permState);
       setPermissionError(msg);
       setStatus(msg);
       return false;
@@ -330,33 +364,36 @@
     return true;
   }
 
-  async function requestCameraAccess() {
-    if (allowInFlight) return false;
+  function requestCameraAccess() {
+    if (allowInFlight) return Promise.resolve(false);
     allowInFlight = true;
 
     const allowBtn = $('covertAllowCameraBtn');
-    try {
-      setPermissionError('');
-      if (allowBtn) {
-        allowBtn.disabled = true;
-        allowBtn.textContent = 'Requesting…';
-      }
-      haptic('light');
-
-      const ok = await startCameraStream(true);
-      if (ok) {
-        try {
-          if (screen.orientation?.lock) await screen.orientation.lock('landscape');
-        } catch {}
-      }
-      return ok;
-    } finally {
-      allowInFlight = false;
-      if (allowBtn) {
-        allowBtn.disabled = false;
-        allowBtn.textContent = 'Allow camera access';
-      }
+    setPermissionError('');
+    if (allowBtn) {
+      allowBtn.disabled = true;
+      allowBtn.textContent = 'Requesting…';
     }
+    haptic('light');
+    setStatus('Look for the Android popup — tap Allow for Camera and Microphone.');
+
+    // Start getUserMedia in this same tap (do not await anything before the cascade).
+    return startCameraStream(true)
+      .then((ok) => {
+        if (ok) {
+          try {
+            if (screen.orientation?.lock) screen.orientation.lock('landscape');
+          } catch {}
+        }
+        return ok;
+      })
+      .finally(() => {
+        allowInFlight = false;
+        if (allowBtn) {
+          allowBtn.disabled = false;
+          allowBtn.textContent = 'Allow camera access';
+        }
+      });
   }
 
   function stopCameraStream() {
@@ -613,15 +650,15 @@
     zone?.addEventListener('touchstart', onTouchStart, { passive: true });
     zone?.addEventListener('touchend', onTouchEnd, { passive: true });
 
-    const gate = $('covertPermissionGate');
-    const onAllowPointer = (e) => {
-      if (!e.target.closest('#covertAllowCameraBtn')) return;
-      e.preventDefault();
-      e.stopPropagation();
-      requestCameraAccess();
-    };
-    gate?.addEventListener('pointerup', onAllowPointer, { capture: true });
-    gate?.addEventListener('click', onAllowPointer, { capture: true });
+    const allowBtn = $('covertAllowCameraBtn');
+    allowBtn?.addEventListener(
+      'pointerdown',
+      (e) => {
+        e.preventDefault();
+        requestCameraAccess();
+      },
+      { capture: true }
+    );
   }
 
   async function onTabEnter() {
@@ -637,7 +674,7 @@
     }
     showPermissionGate(true);
     setPermissionError('');
-    setStatus('Tap Allow camera access — Android will ask for permission.');
+    setStatus('Tap Allow — you should get an Android popup for Camera (then Microphone).');
   }
 
   function onTabLeave() {

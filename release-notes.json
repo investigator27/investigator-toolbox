@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v187",
-  "appVersion": "3.5.56",
+  "latest": "v188",
+  "appVersion": "3.5.57",
   "highlights": [
-    "Software Update is more reliable: an interrupted update can no longer leave the app stuck on an old build, and the Notifications toggle now also controls update notifications."
+    "Update recovery is now bulletproof: an interrupted update self-heals at the earliest startup point and can never leave the app stuck on an old build."
   ],
   "builds": {
+    "v188": {
+      "intro": "Build v188 — Earliest-possible self-heal so updates can never get permanently stuck.",
+      "sections": [
+        {
+          "heading": "Software Update",
+          "items": [
+            "A leftover post-update marker is now cleared before any update logic runs, so an interrupted update never wedges the app in quiet mode.",
+            "Developer → Clear session data now also clears the persistent markers and post-update state.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v188)."
+          ]
+        }
+      ]
+    },
     "v187": {
       "intro": "Build v187 — Update reliability + notification toggle now governs update alerts.",
       "sections": [

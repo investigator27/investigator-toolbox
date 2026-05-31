@@ -50,10 +50,20 @@
   (function () {
     try {
       var q = location.search || '';
-      var pending = sessionStorage.getItem('toolboxJustUpdated') === '1'
-        || localStorage.getItem('toolboxJustUpdated') === '1'
-        || /(?:\?|&)postUpdate=1(?:&|$)/.test(q);
-      if (pending) document.documentElement.setAttribute('data-post-update', '1');
+      var hasParam = /(?:\?|&)postUpdate=1(?:&|$)/.test(q);
+      var sess = sessionStorage.getItem('toolboxJustUpdated') === '1';
+      var local = localStorage.getItem('toolboxJustUpdated') === '1';
+      // A genuine post-update reload always carries ?postUpdate=1 (set right before
+      // the reload) plus the short-lived sessionStorage marker. The localStorage
+      // marker persists across app restarts; if it is the ONLY thing left, a prior
+      // update was interrupted (app killed mid-update). Clearing it here — before
+      // any update logic runs — guarantees we never get permanently stuck in
+      // quiet/post-update mode, which silently blocks all future update checks.
+      if (local && !hasParam && !sess) {
+        localStorage.removeItem('toolboxJustUpdated');
+        local = false;
+      }
+      if (sess || local || hasParam) document.documentElement.setAttribute('data-post-update', '1');
     } catch (e) {}
   })();
   </script>
@@ -2502,7 +2512,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=187" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=188" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2524,8 +2534,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.56';
-  const BUNDLED_PWA_CACHE_VERSION = 'v187';
+  const BUNDLED_APP_VERSION = '3.5.57';
+  const BUNDLED_PWA_CACHE_VERSION = 'v188';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5129,6 +5139,15 @@
         sessionStorage.removeItem(key);
       } catch {}
     });
+    // Also drop the persistent markers — these are the ones that can wedge the app
+    // across restarts if an update is interrupted.
+    ['toolboxJustUpdated', 'toolboxLauncherBadgeBuild'].forEach((key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch {}
+    });
+    try { sessionStorage.removeItem('toolboxBlockUpdateUntil'); } catch {}
+    document.documentElement.removeAttribute('data-post-update');
     refreshSettingsUpdateBadge();
     void refreshDeveloperTools();
     alert('Cleared update flags and last hotel search log from this session.');

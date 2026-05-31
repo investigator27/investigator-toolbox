@@ -35,7 +35,10 @@
     var base = path.endsWith('/') ? path : path + '/';
     window.__TOOLBOX_PAGE_BASE__ = base;
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register(base + 'service-worker.js', { scope: base }).catch(function () {});
+      // updateViaCache:'none' — never serve the worker script from the HTTP cache,
+      // so the install page always checks the network for a newer build (matches
+      // the main app's registration).
+      navigator.serviceWorker.register(base + 'service-worker.js', { scope: base, updateViaCache: 'none' }).catch(function () {});
     }
   })();
   </script>

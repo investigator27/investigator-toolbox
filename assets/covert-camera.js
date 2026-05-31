@@ -1669,7 +1669,7 @@
         clearChunkStore().catch(() => {});
         currentRecordingId = null;
         autoStopReason = '';
-        showBriefHud('Stopped', 0);
+        showBriefHud('Stopped', HUD_RECORDING_MS);
         haptic('medium');
         return;
       }
@@ -1695,14 +1695,14 @@
         currentRecordingId = null;
         recordingStartedAt = 0;
         recordingGeo = null;
-        showBriefHud(autoStopReason || 'Stopped', autoStopReason ? 4200 : 0);
+        showBriefHud(autoStopReason || 'Stopped', HUD_RECORDING_MS);
         autoStopReason = '';
         if (getPrefs().strongHapticOnRecord) haptic('success');
         else haptic('medium');
         await refreshClipSummary();
         if (isClipLibraryScreen(getActiveCameraScreenId())) void renderClipsLibrary();
       } catch {
-        showBriefHud('Stopped', 0);
+        showBriefHud('Stopped', HUD_RECORDING_MS);
         haptic('medium');
       }
     };
@@ -1735,18 +1735,16 @@
     if (lowStorage) warnings.push('low storage');
     if (criticalBattery) warnings.push('battery critical');
     else if (lowBattery) warnings.push('low battery');
-    // Persistent indicator (no auto-hide) so it can't flash-and-vanish while recording.
     const recordingHudText = warnings.length ? `● Recording · ${warnings.join(' & ')}` : '● Recording';
-    showBriefHud(recordingHudText, 0);
+    showBriefHud(recordingHudText, HUD_RECORDING_MS);
     if (getPrefs().strongHapticOnRecord) haptic('success');
     else haptic('medium');
     startResourceWatch();
     await acquireWakeLock();
     await prepareLandscapeCapture();
     await enforceLandscapeVideoTrack(mediaStream);
-    // Fullscreen + orientation lock above can blow away the overlay text, so re-assert it
-    // once that work is done (only if we're still recording).
-    if (isRecording) showBriefHud(recordingHudText, 0);
+    // Re-assert after fullscreen/orientation work, then let it auto-hide after a few seconds.
+    if (isRecording) showBriefHud(recordingHudText, HUD_RECORDING_MS);
 
     const mins = getPrefs().maxClipMinutes;
     if (mins > 0) {
@@ -1762,7 +1760,7 @@
     try {
       if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     } catch {}
-    showBriefHud('Stopped', 0);
+    showBriefHud('Stopped', HUD_RECORDING_MS);
   }
 
   function onTripleTap() {

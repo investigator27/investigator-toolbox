@@ -3,10 +3,17 @@
  */
 (function () {
   const DB_NAME = 'toolbox-covert';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const STORE = 'clips';
+  const CHUNK_STORE = 'chunks';
   const PREFS_KEY = 'toolboxCameraPrefs';
   const INDEX_KEY = 'toolboxCovertClipIndex';
+  // Resource fail-safe thresholds.
+  const LOW_BATTERY = 0.20;
+  const CRITICAL_BATTERY = 0.05;
+  const LOW_STORAGE_BYTES = 300 * 1024 * 1024;
+  const CRITICAL_STORAGE_BYTES = 150 * 1024 * 1024;
+  const STORAGE_WATCH_MS = 8000;
   const TAP_REQUIRED = 3;
   const TAP_RESET_MS = 700;
   const SWIPE_CLOSE_REQUIRED = 2;
@@ -48,6 +55,13 @@
   let usedFullscreenForOrientation = false;
   let recordingStartedAt = 0;
   let recordingGeo = null;
+  // Crash-safe recording + resource fail-safes.
+  let currentRecordingId = null;
+  let currentChunkSeq = 0;
+  let autoStopReason = '';
+  let batteryRef = null;
+  let storageWatchTimer = null;
+  let batteryWatchHandler = null;
   // Timestamp burn-in pipeline (only used when prefs.timestampEnabled is on).
   let tsDrawHandle = null;
   let tsSourceVideo = null;
@@ -114,6 +128,10 @@
         if (!db.objectStoreNames.contains(STORE)) {
           db.createObjectStore(STORE, { keyPath: 'id' });
         }
+        if (!db.objectStoreNames.contains(CHUNK_STORE)) {
+          const cs = db.createObjectStore(CHUNK_STORE, { autoIncrement: true });
+          cs.createIndex('clipId', 'clipId', { unique: false });
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -121,26 +139,220 @@
     return dbPromise;
   }
 
-  async function saveClip(blob, mimeType, meta) {
-    const id = nextClipId();
-    const m = meta || {};
+  async function putClipRecord(record) {
     const db = await openDb();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put({
-        id,
-        blob,
-        mimeType: mimeType || blob.type,
-        createdAt: m.recordedAt || Date.now(),
-        size: blob.size,
-        durationSeconds: m.durationSeconds || 0,
-        latitude: m.latitude,
-        longitude: m.longitude,
-        locationLabel: m.locationLabel || '',
-      });
-      tx.oncomplete = () => resolve(id);
+      tx.objectStore(STORE).put(record);
+      tx.oncomplete = () => resolve(record.id);
       tx.onerror = () => reject(tx.error);
     });
+  }
+
+  async function getClipRecord(id) {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /** Write the finished clip under its reserved id (used on stop and on crash recovery). */
+  async function finalizeClip(id, blob, mimeType, meta) {
+    const m = meta || {};
+    return putClipRecord({
+      id,
+      blob,
+      mimeType: mimeType || blob.type,
+      createdAt: m.recordedAt || Date.now(),
+      size: blob.size,
+      durationSeconds: m.durationSeconds || 0,
+      latitude: m.latitude,
+      longitude: m.longitude,
+      locationLabel: m.locationLabel || '',
+      status: 'complete',
+    });
+  }
+
+  async function appendChunk(clipId, seq, blob) {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CHUNK_STORE, 'readwrite');
+      tx.objectStore(CHUNK_STORE).add({ clipId, seq, blob });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function getChunkBlobs(clipId) {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CHUNK_STORE, 'readonly');
+      const req = tx.objectStore(CHUNK_STORE).index('clipId').getAll(IDBKeyRange.only(clipId));
+      req.onsuccess = () => {
+        const list = (req.result || []).sort((a, b) => (a.seq || 0) - (b.seq || 0));
+        resolve(list.map((r) => r.blob).filter(Boolean));
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function clearChunkStore() {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CHUNK_STORE, 'readwrite');
+      tx.objectStore(CHUNK_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function deleteChunks(clipId) {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CHUNK_STORE, 'readwrite');
+      const req = tx.objectStore(CHUNK_STORE).index('clipId').openCursor(IDBKeyRange.only(clipId));
+      req.onsuccess = () => {
+        const cursor = req.result;
+        if (cursor) {
+          cursor.delete();
+          cursor.continue();
+        }
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  function isQuotaError(err) {
+    if (!err) return false;
+    const name = err.name || '';
+    return (
+      name === 'QuotaExceededError' ||
+      name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      /quota|storage/i.test(err.message || '')
+    );
+  }
+
+  /** Ask the browser to keep clips from being evicted when the device fills up. */
+  async function requestPersistentStorage() {
+    try {
+      if (!navigator.storage?.persist) return;
+      const already = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+      if (!already) await navigator.storage.persist();
+    } catch {}
+  }
+
+  async function getFreeStorageBytes() {
+    try {
+      if (navigator.storage?.estimate) {
+        const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+        return Math.max(0, quota - usage);
+      }
+    } catch {}
+    return null;
+  }
+
+  async function initBattery() {
+    try {
+      if (typeof navigator.getBattery === 'function') {
+        batteryRef = await navigator.getBattery();
+      }
+    } catch {
+      batteryRef = null;
+    }
+  }
+
+  function batteryIsLow() {
+    return !!batteryRef && !batteryRef.charging && batteryRef.level <= LOW_BATTERY;
+  }
+
+  function batteryIsCritical() {
+    return !!batteryRef && !batteryRef.charging && batteryRef.level <= CRITICAL_BATTERY;
+  }
+
+  function onStorageCritical() {
+    if (!isRecording) return;
+    autoStopReason = 'Stopped — storage low (clip saved)';
+    stopRecording();
+  }
+
+  function onBatteryCritical() {
+    if (!isRecording) return;
+    autoStopReason = 'Stopped — battery critical (clip saved)';
+    stopRecording();
+  }
+
+  /** Auto-stop + save before the device dies or fills up. */
+  function startResourceWatch() {
+    stopResourceWatch();
+    storageWatchTimer = setInterval(async () => {
+      if (!isRecording) return;
+      const free = await getFreeStorageBytes();
+      if (free != null && free < CRITICAL_STORAGE_BYTES) onStorageCritical();
+    }, STORAGE_WATCH_MS);
+    if (batteryRef) {
+      batteryWatchHandler = () => {
+        if (isRecording && batteryIsCritical()) onBatteryCritical();
+      };
+      try {
+        batteryRef.addEventListener('levelchange', batteryWatchHandler);
+        batteryRef.addEventListener('chargingchange', batteryWatchHandler);
+      } catch {}
+      batteryWatchHandler();
+    }
+  }
+
+  function stopResourceWatch() {
+    if (storageWatchTimer) {
+      clearInterval(storageWatchTimer);
+      storageWatchTimer = null;
+    }
+    if (batteryRef && batteryWatchHandler) {
+      try {
+        batteryRef.removeEventListener('levelchange', batteryWatchHandler);
+        batteryRef.removeEventListener('chargingchange', batteryWatchHandler);
+      } catch {}
+      batteryWatchHandler = null;
+    }
+  }
+
+  /** On launch, rescue any clip that was mid-recording when the app/phone was interrupted. */
+  async function recoverInterruptedClips() {
+    let records = [];
+    try {
+      const db = await openDb();
+      records = await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return;
+    }
+    const orphans = records.filter((r) => r && r.status === 'recording');
+    for (const r of orphans) {
+      try {
+        const blobs = await getChunkBlobs(r.id);
+        const blob = blobs.length ? new Blob(blobs, { type: r.mimeType || 'video/webm' }) : null;
+        if (blob && blob.size >= 1000) {
+          await finalizeClip(r.id, blob, r.mimeType, {
+            recordedAt: r.createdAt,
+            durationSeconds: blobs.length, // ~1s per chunk
+            latitude: r.latitude,
+            longitude: r.longitude,
+            locationLabel: r.locationLabel || '',
+          });
+          await deleteChunks(r.id).catch(() => {});
+        } else {
+          await deleteClips([r.id]);
+          await deleteChunks(r.id).catch(() => {});
+        }
+      } catch {}
+    }
   }
 
   async function getAllClips() {
@@ -149,7 +361,9 @@
       const tx = db.transaction(STORE, 'readonly');
       const req = tx.objectStore(STORE).getAll();
       req.onsuccess = () => {
-        const list = (req.result || []).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        const list = (req.result || [])
+          .filter((c) => c && c.blob && c.status !== 'recording')
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         resolve(list);
       };
       req.onerror = () => reject(req.error);
@@ -1103,13 +1317,6 @@
     $('covertCamera')?.classList.toggle('covert-camera--gate-open', !!show);
   }
 
-  function showAirplaneReminder(show) {
-    const modal = $('covertAirplaneReminder');
-    if (!modal) return;
-    modal.classList.toggle('hidden', !show);
-    modal.setAttribute('aria-hidden', show ? 'false' : 'true');
-  }
-
   function setPreviewVisible(visible) {
     previewVisible = visible;
     const root = $('covertCamera');
@@ -1394,6 +1601,13 @@
       if (stamped) recordStream = stamped;
       else cleanupTimestampPipeline();
     }
+
+    // Resource snapshot for the start warning (we warn but still record).
+    const freeBytes = await getFreeStorageBytes();
+    const lowStorage = freeBytes != null && freeBytes < LOW_STORAGE_BYTES;
+    const lowBattery = batteryIsLow();
+    const criticalBattery = batteryIsCritical();
+
     const videoBitsPerSecond = computeVideoBitrate(mediaStream.getVideoTracks?.()[0]);
     try {
       mediaRecorder = new MediaRecorder(recordStream, {
@@ -1403,13 +1617,44 @@
     } catch {
       mediaRecorder = new MediaRecorder(recordStream);
     }
+
+    recordingStartedAt = Date.now();
+    recordingGeo = null;
+    autoStopReason = '';
+    currentRecordingId = nextClipId();
+    currentChunkSeq = 0;
+    // Crash-safe marker so an interrupted clip can be rescued on next launch.
+    putClipRecord({
+      id: currentRecordingId,
+      status: 'recording',
+      createdAt: recordingStartedAt,
+      mimeType,
+      size: 0,
+      durationSeconds: 0,
+      latitude: undefined,
+      longitude: undefined,
+      locationLabel: '',
+    }).catch(() => {});
+
     mediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+      if (!e.data || e.data.size <= 0) return;
+      recordedChunks.push(e.data);
+      const id = currentRecordingId;
+      const seq = currentChunkSeq++;
+      if (id != null) {
+        // Persist each ~1s chunk so a power-loss/crash only costs the last second.
+        appendChunk(id, seq, e.data).catch((err) => {
+          if (isQuotaError(err)) onStorageCritical();
+        });
+      }
     };
+
     mediaRecorder.onstop = async () => {
       clearMaxClipTimer();
       cleanupTimestampPipeline();
+      stopResourceWatch();
       await releaseWakeLock();
+      const finishedId = currentRecordingId;
       const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || mimeType });
       recordedChunks = [];
       isRecording = false;
@@ -1417,6 +1662,10 @@
       setBlackVisible(true);
       hidePreview();
       if (blob.size < 1000) {
+        if (finishedId != null) deleteClips([finishedId]).catch(() => {});
+        clearChunkStore().catch(() => {});
+        currentRecordingId = null;
+        autoStopReason = '';
         clearHud();
         haptic('medium');
         return;
@@ -1430,16 +1679,21 @@
         if (recordingGeo && !locationLabel) {
           locationLabel = await resolveClipAddress(recordingGeo.lat, recordingGeo.lng);
         }
-        await saveClip(blob, mediaRecorder.mimeType || mimeType, {
+        // Free the on-disk chunk backup BEFORE writing the final clip so we never need 2x space
+        // (the full clip is already assembled in memory at this point).
+        await clearChunkStore().catch(() => {});
+        await finalizeClip(finishedId != null ? finishedId : nextClipId(), blob, mediaRecorder.mimeType || mimeType, {
           durationSeconds,
           recordedAt: recordingStartedAt || Date.now(),
           latitude: recordingGeo?.lat,
           longitude: recordingGeo?.lng,
           locationLabel,
         });
+        currentRecordingId = null;
         recordingStartedAt = 0;
         recordingGeo = null;
-        showBriefHud('Stopped', 0);
+        showBriefHud(autoStopReason || 'Stopped', autoStopReason ? 4200 : 0);
+        autoStopReason = '';
         if (getPrefs().strongHapticOnRecord) haptic('success');
         else haptic('medium');
         await refreshClipSummary();
@@ -1449,10 +1703,23 @@
         haptic('medium');
       }
     };
-    recordingStartedAt = Date.now();
-    recordingGeo = null;
+
     captureRecordingGeo().then((geo) => {
-      if (geo) recordingGeo = geo;
+      if (!geo) return;
+      recordingGeo = geo;
+      const id = currentRecordingId;
+      if (id == null) return;
+      // Stamp geo onto the crash marker so a recovered clip keeps its location.
+      getClipRecord(id)
+        .then((rec) => {
+          if (rec && rec.status === 'recording') {
+            rec.latitude = geo.lat;
+            rec.longitude = geo.lng;
+            rec.locationLabel = geo.locationLabel || '';
+            putClipRecord(rec).catch(() => {});
+          }
+        })
+        .catch(() => {});
     });
 
     mediaRecorder.start(1000);
@@ -1461,9 +1728,14 @@
     setBlackVisible(true);
     hidePreview();
     // Confirm the instant recording starts — don't let landscape/timestamp setup delay the buzz.
-    showBriefHud('Recording', HUD_RECORDING_MS);
+    const warnings = [];
+    if (lowStorage) warnings.push('low storage');
+    if (criticalBattery) warnings.push('battery critical');
+    else if (lowBattery) warnings.push('low battery');
+    showBriefHud(warnings.length ? `Recording · ${warnings.join(' & ')}` : 'Recording', HUD_RECORDING_MS);
     if (getPrefs().strongHapticOnRecord) haptic('success');
     else haptic('medium');
+    startResourceWatch();
     await acquireWakeLock();
     await prepareLandscapeCapture();
     await enforceLandscapeVideoTrack(mediaStream);
@@ -1771,8 +2043,10 @@
     syncCameraSettingsUi();
     await refreshCameraPermissionUi();
     const summary = await getStorageSummary();
+    const free = await getFreeStorageBytes();
+    const freeText = free != null ? ` · ${formatBytes(free)} free on device` : '';
     const storageText =
-      `${summary.count} clip(s) · ${formatBytes(summary.bytes)} — Clip Library on Camera tab for view & OneDrive.`;
+      `${summary.count} clip(s) · ${formatBytes(summary.bytes)} used${freeText} — view & upload in Clip Library.`;
     document.querySelectorAll('[data-cam-storage-summary]').forEach((el) => {
       el.textContent = storageText;
     });
@@ -1805,20 +2079,9 @@
 
     $('covertOpenCameraBtn')?.addEventListener('click', () => {
       haptic('light');
-      showAirplaneReminder(true);
-    });
-
-    $('covertAirplaneContinueBtn')?.addEventListener('click', () => {
-      haptic('light');
-      showAirplaneReminder(false);
       userClosedSession = false;
       cameraSessionActive = true;
       resumeCameraSession();
-    });
-
-    $('covertAirplaneCancelBtn')?.addEventListener('click', () => {
-      haptic('light');
-      showAirplaneReminder(false);
     });
 
     $('covertClipsSelectAllBtn')?.addEventListener('click', () => {
@@ -1862,6 +2125,8 @@
   async function onTabEnter() {
     bindUi();
     bindSettings();
+    void requestPersistentStorage();
+    if (!batteryRef) void initBattery();
     swipeUpCount = 0;
     clearTimeout(swipeUpResetTimer);
     await refreshClipSummary().catch(() => {});
@@ -1897,9 +2162,12 @@
     resetCameraNav('root');
   }
 
-  function init() {
+  async function init() {
     bindUi();
     bindSettings();
+    void requestPersistentStorage();
+    void initBattery();
+    await recoverInterruptedClips().catch(() => {});
     refreshClipSummary().catch(() => {});
   }
 

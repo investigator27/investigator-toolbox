@@ -1,10 +1,22 @@
 {
-  "latest": "v127",
+  "latest": "v128",
   "appVersion": "3.5.4",
   "highlights": [
-    "After Android install, Toolbox opens automatically (or tap Open Toolbox)."
+    "Install page QR code renders reliably again (CDN + fallback image)."
   ],
   "builds": {
+    "v128": {
+      "intro": "Investigator Toolbox 3.5.4 — install QR fix.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Install page QR draws locally when possible; otherwise shows a backup QR image so the white box is never empty.",
+            "Deploy index.html, service-worker.js, and release-notes.json (v128)."
+          ]
+        }
+      ]
+    },
     "v127": {
       "intro": "Investigator Toolbox 3.5.4 — launch after PWA install.",
       "sections": [

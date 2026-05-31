@@ -98,7 +98,22 @@
       text-align: center;
     }
     .card h2 { font-size: var(--text-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); }
-    #qrCanvas { display: block; border-radius: var(--radius-lg); background: #fff; padding: var(--space-3); max-width: 100%; height: auto; }
+    .qr-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:240px;
+      width:100%;
+      padding:var(--space-3);
+      border-radius:var(--radius-lg);
+      background:#fff;
+    }
+    #qrCanvas, .qr-img{
+      display:block;
+      width:240px;
+      max-width:100%;
+      aspect-ratio:1;
+    }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       min-height: 52px; width: 100%; padding: 0 var(--space-4);
@@ -164,7 +179,9 @@
 
     <section class="card" aria-labelledby="qr-heading">
       <h2 id="qr-heading">Scan to install</h2>
-      <canvas id="qrCanvas" width="240" height="240" aria-label="QR code for install link"></canvas>
+      <div class="qr-wrap" id="qrWrap">
+        <canvas id="qrCanvas" width="240" height="240" aria-label="QR code for install link"></canvas>
+      </div>
     </section>
 
     <p class="install-callout" id="installCallout" role="status"></p>
@@ -379,27 +396,66 @@
     }
 
     window.__TOOLBOX_INSTALL_URL__ = installUrl;
-  })();
-  </script>
-  <script type="module">
-    const installUrl = window.__TOOLBOX_INSTALL_URL__
-      || (location.origin + (window.__TOOLBOX_PAGE_BASE__ || '/'));
-    const canvas = document.getElementById('qrCanvas');
-    if (!canvas) return;
-    try {
-      const { default: QRCode } = await import('https://esm.sh/qrcode@1.5.4');
-      await QRCode.toCanvas(canvas, installUrl, {
+
+    (function renderInstallQr() {
+      var canvas = document.getElementById('qrCanvas');
+      if (!canvas) return;
+
+      function showQrImage() {
+        var img = document.createElement('img');
+        img.className = 'qr-img';
+        img.width = 240;
+        img.height = 240;
+        img.alt = 'QR code — scan to install Toolbox';
+        img.decoding = 'async';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data='
+          + encodeURIComponent(installUrl);
+        canvas.replaceWith(img);
+      }
+
+      var qrOptions = {
         width: 240,
         margin: 2,
         errorCorrectionLevel: 'M',
         color: { dark: '#18181b', light: '#ffffff' },
-      });
-    } catch {
-      canvas.replaceWith(Object.assign(document.createElement('p'), {
-        className: 'hint',
-        textContent: 'QR unavailable offline.',
-      }));
-    }
+      };
+
+      var fallbackTimer = window.setTimeout(showQrImage, 5000);
+
+      function drawWithModule(mod) {
+        var QRCode = mod.default || mod;
+        return QRCode.toCanvas(canvas, installUrl, qrOptions);
+      }
+
+      var cdnUrls = [
+        'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm',
+        'https://esm.sh/qrcode@1.5.4?bundle',
+      ];
+
+      function tryCdn(index) {
+        if (index >= cdnUrls.length) {
+          window.clearTimeout(fallbackTimer);
+          showQrImage();
+          return;
+        }
+        import(cdnUrls[index])
+          .then(drawWithModule)
+          .then(function () {
+            window.clearTimeout(fallbackTimer);
+          })
+          .catch(function () {
+            tryCdn(index + 1);
+          });
+      }
+
+      try {
+        tryCdn(0);
+      } catch (err) {
+        window.clearTimeout(fallbackTimer);
+        showQrImage();
+      }
+    })();
+  })();
   </script>
 </body>
 </html>

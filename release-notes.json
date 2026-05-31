@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v189",
-  "appVersion": "3.5.58",
+  "latest": "v190",
+  "appVersion": "3.5.59",
   "highlights": [
-    "Fixed a startup crash that was silently disabling automatic update checks and notifications — the core reason updates weren't being detected on launch."
+    "Hotel Finder: \"Hotels & Motels only\" now correctly hides homes, cottages and other non-hotel stays that were slipping through."
   ],
   "builds": {
+    "v190": {
+      "intro": "Build v190 — Hotel Finder filter fix + optional ScraperAPI reliability lever.",
+      "sections": [
+        {
+          "heading": "Hotel Finder",
+          "items": [
+            "\"Hotels & Motels only\" no longer shows waterfront homes, cottages and other rentals: the filter stopped treating Booking.com's \"/hotel/\" link prefix as proof of a hotel and now reads the actual property name.",
+            "Same fix applied to the Cloudflare worker so both copies stay consistent (booking-worker-74).",
+            "New optional BOOKING_ULTRA_PREMIUM=1 Worker variable can reduce ScraperAPI HTTP 500s on Booking.com (uses more credits — off by default).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v190). Deploy cloudflare/booking-worker.js to Cloudflare for the worker-side changes."
+          ]
+        }
+      ]
+    },
     "v189": {
       "intro": "Build v189 — Critical fix: startup script no longer aborts before the update flow runs.",
       "sections": [

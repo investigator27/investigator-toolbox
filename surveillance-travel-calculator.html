@@ -2512,7 +2512,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=189" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=190" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2534,8 +2534,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.58';
-  const BUNDLED_PWA_CACHE_VERSION = 'v189';
+  const BUNDLED_APP_VERSION = '3.5.59';
+  const BUNDLED_PWA_CACHE_VERSION = 'v190';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -6963,6 +6963,21 @@ textarea:focus, textarea:focus-visible {
     );
   }
 
+  /**
+   * Booking.com puts EVERY listing under /hotel/<cc>/<slug>, so the literal "hotel"
+   * in the path is never proof of a hotel. Pull out just the property slug so keyword
+   * checks look at the real name (e.g. "the-waterfront-home"), not the path prefix.
+   */
+  function bookingListingSlug(url) {
+    const m = String(url || '').toLowerCase().match(/\/hotel\/[a-z]{2}\/([^/?#]+)/);
+    if (!m) return '';
+    return m[1]
+      .replace(/\.html.*$/i, '')
+      .replace(/\.[a-z]{2}(?:-[a-z]{2,})?$/i, '')
+      .replace(/[-_]+/g, ' ')
+      .trim();
+  }
+
   /** Canadian property pages only — drops US/MX listings near the border. */
   function isCanadianBookingListing(hotel) {
     const raw = String(hotel?.url || hotel?.bookingPropertyUrl || '').trim();
@@ -6996,7 +7011,9 @@ textarea:focus, textarea:focus-visible {
       return false;
     }
     if (isLikelyNonHotelFromUrl(url)) return false;
-    if (/\b(hotel|motel|inn|resort|lodge|suites?)\b/i.test(url) && !isLikelyNonHotelFromUrl(url)) return true;
+    // Test the property slug, NOT the whole URL — every Booking link contains "/hotel/".
+    const slug = bookingListingSlug(url);
+    if (slug && /\b(hotel|motel|inn|resort|lodge|suites?)\b/i.test(slug)) return true;
 
     if (/\b(hotel|motel)\b/i.test(name)) return true;
     if (/\b(inn|lodge|resort)\b/i.test(name)) return true;

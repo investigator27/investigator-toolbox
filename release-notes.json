@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v155",
-  "appVersion": "3.5.24",
+  "latest": "v156",
+  "appVersion": "3.5.25",
   "highlights": [
-    "Restore update badges and post-install Software Update / up-to-date flow."
+    "Revert update and tab startup to the last stable pattern; keep camera tab fixes."
   ],
   "builds": {
+    "v156": {
+      "intro": "Build v156 — stable update flow and tabs restored.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Reverted experimental post-update and bootstrap changes (v150–v155) to the simpler flow that worked before.",
+            "Tab bar initializes immediately; camera no longer auto-fullscreens on open.",
+            "suppressUpdatePromptOnLoad clears after reload so update badges work again.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v156)."
+          ]
+        }
+      ]
+    },
     "v155": {
       "intro": "Build v155 — Software Update and badges restored.",
       "sections": [

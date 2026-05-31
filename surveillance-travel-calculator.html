@@ -2231,7 +2231,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=155" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=156" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2253,8 +2253,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.24';
-  const BUNDLED_PWA_CACHE_VERSION = 'v155';
+  const BUNDLED_APP_VERSION = '3.5.25';
+  const BUNDLED_PWA_CACHE_VERSION = 'v156';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2317,8 +2317,7 @@
   let quietUpdateLoad = false;
   let applyingAppUpdate = false;
   let tabBarInitialized = false;
-  let postUpdateReloadPass = false;
-  let tabPolicyReady = null;
+  let suppressUpdatePromptOnLoad = false;
   let displayProgress = 0;
   let targetProgress = 0;
   let progressRaf = null;
@@ -2848,44 +2847,12 @@
       sessionStorage.removeItem('toolboxUpdateReady');
       sessionStorage.removeItem('toolboxShowUptodate');
       sessionStorage.removeItem('toolboxReloadBuild');
-      localStorage.removeItem('toolboxPostUpdatePending');
     } catch {}
     resetDisplayProgress();
     window.location.reload();
   }
 
-  function shouldIgnoreBackgroundUpdateEvents() {
-    return applyingAppUpdate || quietUpdateLoad || postUpdateReloadPass;
-  }
-
-  /** After reload from Update Now: open Settings → Software Update with up-to-date UI. */
-  function runPostUpdateReloadFlow() {
-    try {
-      if (sessionStorage.getItem('toolboxJustUpdated') !== '1') return false;
-      sessionStorage.removeItem('toolboxJustUpdated');
-      sessionStorage.removeItem('toolboxOpenSettingsUpdates');
-      sessionStorage.removeItem('toolboxReloadBuild');
-      sessionStorage.removeItem('toolboxShowUptodate');
-      localStorage.removeItem('toolboxPostUpdatePending');
-      waitingSW = null;
-      applyingAppUpdate = false;
-      postUpdateReloadPass = true;
-      clearUpdateReadyMark();
-      showUptodateBanner();
-      ensureInteractiveShell();
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          openSettings('updates');
-          renderSoftwareUpdateUi('uptodate');
-        });
-      });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /** Remove stuck fullscreen camera / settings layers that block the tab bar. */
+  /** Remove stuck fullscreen camera layer that blocks the tab bar. */
   function ensureInteractiveShell() {
     window.ToolboxCovertCamera?.forceExitCovertUi?.();
     document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
@@ -2897,16 +2864,6 @@
       if (!tabId) return;
       panel.classList.toggle('hidden', tabId !== activeId);
     });
-  }
-
-  async function finishAppShellAfterPolicy() {
-    try {
-      await syncBuildLabelFromReleaseNotes();
-    } catch {}
-    refreshAllVersionDisplays();
-    if (remoteTabPolicyMap && window.ToolboxTabs?.applyVisibility) {
-      window.ToolboxTabs.applyVisibility(remoteTabPolicyMap);
-    }
   }
 
   function syncViewportHeight() {
@@ -3361,7 +3318,7 @@
   }
 
   function finishDownloadAndShowReady(versionHint) {
-    if (shouldIgnoreBackgroundUpdateEvents()) return;
+    if (applyingAppUpdate || quietUpdateLoad) return;
     stopWaitingReadyPoll();
     updateProgressValue = 100;
     pendingUpdateBuild = parseBuildFromCacheName(versionHint) || PWA_CACHE_VERSION;
@@ -3372,7 +3329,7 @@
   }
 
   function handleDownloadProgress(data) {
-    if (shouldIgnoreBackgroundUpdateEvents()) return;
+    if (applyingAppUpdate || quietUpdateLoad) return;
     const pct = Number(data.percent) || 0;
     const label = String(data.label || '').trim();
     const done = Number(data.done) || 0;
@@ -3419,7 +3376,7 @@
       refreshSettingsUpdateBadge();
       return;
     }
-    if (shouldIgnoreBackgroundUpdateEvents()) return;
+    if (applyingAppUpdate || quietUpdateLoad) return;
     if (data.type === 'UPDATE_PROGRESS') {
       handleDownloadProgress(data);
       return;
@@ -3446,7 +3403,7 @@
           refreshSettingsUpdateBadge();
         }
       });
-      if (shouldIgnoreBackgroundUpdateEvents()) return;
+      if (applyingAppUpdate || quietUpdateLoad) return;
       renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
       startWaitingReadyPoll();
       sw.addEventListener('statechange', () => {
@@ -3595,29 +3552,14 @@
       || parseBuildFromCacheName(pendingUpdateBuild)
       || resolveTargetBuild();
     markUpdateReadyForBanner();
-    const showUi = !quietUpdateLoad
-      && !postUpdateReloadPass
-      && (opts.showBanner ?? shouldAutoPromptUpdate());
-    if (showUi) {
+    const showBanner = !quietUpdateLoad && (opts.showBanner ?? shouldAutoPromptUpdate());
+    if (showBanner) {
       showUpdateReadyBanner();
     } else {
       updateUIState = 'ready';
       refreshSettingsUpdateBadge();
     }
     return true;
-  }
-
-  async function refreshPendingUpdateUi(registration, opts = {}) {
-    if (postUpdateReloadPass || updateUIState === 'uptodate' || applyingAppUpdate) return;
-    const reg = registration
-      || swRegistration
-      || await navigator.serviceWorker.getRegistration(BASE_PATH);
-    if (!reg?.waiting || !navigator.serviceWorker.controller) {
-      if (isUpdateReadyInSession() && updateUIState !== 'ready') showUpdateReadyBanner();
-      else refreshSettingsUpdateBadge();
-      return;
-    }
-    bindWaitingWorker(reg, { showBanner: opts.showBanner ?? false });
   }
 
   function watchInstallingWorker(registration) {
@@ -5149,11 +5091,12 @@ $('summaryNote').textContent =
   window.syncToggleStateLabel = syncToggleStateLabel;
   window.openSettings = openSettings;
 
-  ensureInteractiveShell();
   initTabBar();
-  try { localStorage.removeItem('toolboxPostUpdatePending'); } catch {}
-  tabPolicyReady = fetchRemoteTabPolicy();
-  tabPolicyReady.finally(() => finishAppShellAfterPolicy());
+  fetchRemoteTabPolicy().finally(() => {
+    if (remoteTabPolicyMap && window.ToolboxTabs?.applyVisibility) {
+      window.ToolboxTabs.applyVisibility(remoteTabPolicyMap);
+    }
+  });
   bindViewportHeightSync();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
@@ -5164,16 +5107,10 @@ $('summaryNote').textContent =
 
   window.addEventListener('load', async () => {
     syncViewportHeight();
-    ensureInteractiveShell();
-    if (tabPolicyReady) await tabPolicyReady;
-    else {
-      await syncBuildLabelFromReleaseNotes();
-      await fetchRemoteTabPolicy();
-    }
+    await syncBuildLabelFromReleaseNotes();
+    await fetchRemoteTabPolicy();
     refreshAllVersionDisplays();
     if (!tabBarInitialized) initTabBar();
-    ensureInteractiveShell();
-    runPostUpdateReloadFlow();
     try {
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
@@ -5182,6 +5119,29 @@ $('summaryNote').textContent =
       if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
         sessionStorage.removeItem('toolboxQuietLoad');
         quietUpdateLoad = true;
+        suppressUpdatePromptOnLoad = true;
+      }
+      if (sessionStorage.getItem('toolboxJustUpdated') === '1') {
+        sessionStorage.removeItem('toolboxJustUpdated');
+        sessionStorage.removeItem('toolboxReloadBuild');
+        sessionStorage.removeItem('toolboxShowUptodate');
+        suppressUpdatePromptOnLoad = true;
+        quietUpdateLoad = true;
+        waitingSW = null;
+        applyingAppUpdate = false;
+        showUptodateBanner();
+        if (sessionStorage.getItem('toolboxOpenSettingsUpdates') === '1') {
+          sessionStorage.removeItem('toolboxOpenSettingsUpdates');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => openSettings('updates'));
+          });
+        }
+      } else if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
+        sessionStorage.removeItem('toolboxShowUptodate');
+        suppressUpdatePromptOnLoad = true;
+        quietUpdateLoad = true;
+        waitingSW = null;
+        showUptodateBanner();
       }
     } catch {}
 
@@ -5195,16 +5155,10 @@ $('summaryNote').textContent =
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 
     runUpdateFlowTask(async () => {
-      if (quietUpdateLoad && !postUpdateReloadPass) {
+      if (suppressUpdatePromptOnLoad) {
         await registerForCurrentBuild();
+        suppressUpdatePromptOnLoad = false;
         quietUpdateLoad = false;
-        refreshSettingsVersionLabel();
-        return;
-      }
-
-      if (postUpdateReloadPass) {
-        await registerForCurrentBuild();
-        postUpdateReloadPass = false;
         refreshSettingsVersionLabel();
         return;
       }
@@ -5214,26 +5168,24 @@ $('summaryNote').textContent =
       if (!navigator.serviceWorker.controller) return;
 
       if (registration.waiting) {
-        bindWaitingWorker(registration, { showBanner: true });
+        bindWaitingWorker(registration);
         return;
       }
       if (registration.installing) {
         watchInstallingWorker(registration);
         await waitForServiceWorkerSettle(registration, 10000);
-        bindWaitingWorker(registration, { showBanner: true });
+        bindWaitingWorker(registration);
         return;
       }
       if (!registration.installing && !registration.waiting) {
         await registration.update();
       }
       if (registration.waiting) {
-        bindWaitingWorker(registration, { showBanner: true });
+        bindWaitingWorker(registration);
       } else if (registration.installing) {
         watchInstallingWorker(registration);
         await waitForServiceWorkerSettle(registration, 10000);
-        bindWaitingWorker(registration, { showBanner: true });
-      } else {
-        await refreshPendingUpdateUi(registration);
+        bindWaitingWorker(registration);
       }
     })
       .catch(() => {})
@@ -5246,14 +5198,14 @@ $('summaryNote').textContent =
       refreshSettingsUpdateBadge();
       if (isUpdateBusy()) return;
       checkForAppUpdate({ showCheckingUi: false }).then((status) => {
-        if (status === 'available') bindWaitingWorker(swRegistration, { showBanner: true });
+        if (status === 'available') bindWaitingWorker(swRegistration);
         else refreshSettingsUpdateBadge();
       });
     });
     setInterval(() => {
       if (isUpdateBusy()) return;
       checkForAppUpdate({ showCheckingUi: false }).then((status) => {
-        if (status === 'available') bindWaitingWorker(swRegistration, { showBanner: true });
+        if (status === 'available') bindWaitingWorker(swRegistration);
       });
     }, 30 * 60 * 1000);
   });

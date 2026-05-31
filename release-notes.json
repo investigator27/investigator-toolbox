@@ -3,7 +3,7 @@
   "latest": "v192",
   "appVersion": "3.5.61",
   "highlights": [
-    "Camera: smoother, sharper video (steady 30fps + higher bitrate), optional on-video date & time stamp, a discreet camera-access screen with a Close button, an Airplane mode reminder when you open the camera, swipe-up peek while recording, and an offline upload warning."
+    "Camera: crash-safe recording with battery & storage fail-safes, smoother/sharper video (steady 30fps + higher bitrate), optional on-video date & time stamp, a discreet camera-access screen with a Close button, an Airplane mode reminder, swipe-up peek while recording, and an offline upload warning."
   ],
   "builds": {
     "v192": {
@@ -15,9 +15,11 @@
             "New Time & date stamp: turn it on in Camera Settings to burn the date and time into the recorded video (choose date format, 12/24-hour, top/bottom position and size). Off by default, so normal recording is unchanged.",
             "When you upload a clip, a matching .txt sidecar with the exact recorded time and GPS coordinates is included so other software / an investigator can confirm when and where it was shot. Clip filenames now include the date, time and location.",
             "The camera-access screen is now discreet (no red button) and has a Close button to instantly drop back to the Camera tab.",
-            "Opening the camera now shows a quick Airplane mode reminder (with how-to steps) so you can go fully silent before recording — a web app can't block calls/texts itself, so this prompts you to do it. The old, misleading in-app toggle was removed.",
+            "A clear Airplane mode reminder now sits right above the \"Open Covert Camera\" button (with how-to steps) so you can go fully silent before recording — a web app can't block calls/texts itself, so this prompts you to do it. The old, misleading in-app toggle was removed.",
             "If you try to upload clips while still offline (e.g. Airplane mode left on), the app now warns you instead of failing silently.",
             "You can now swipe up to peek at the live view while recording, then swipe down to go back to black — handy for a quick aim check without stopping the clip.",
+            "Crash-safe recording: video is now saved to the device every second as you record, so if the phone dies or the app is interrupted mid-clip, the footage is recovered automatically next time you open the app (instead of losing the whole clip).",
+            "Battery & storage fail-safes: you're warned at the start if battery or free space is low, and if either hits a critical level mid-recording the clip is auto-stopped and saved. Clips are also marked as persistent so the browser won't evict them when the device fills up. Camera Settings now shows free space. (Battery monitoring is Android-only — iPhone doesn't expose battery to web apps.)",
             "The record-start haptic now fires the instant recording begins, instead of waiting for orientation/timestamp setup (haptics still require the Haptic feedback toggle under Personalization, and Android only — iPhone has no web vibration).",
             "Smoother, sharper video: recording now asks the camera for a steady 30fps, uses a higher resolution-aware bitrate (up to ~12 Mbps) for clearer motion, and — when the timestamp overlay is on — redraws in sync with each camera frame to remove stutter.",
             "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v192)."

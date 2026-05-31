@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v166",
-  "appVersion": "3.5.35",
+  "latest": "v167",
+  "appVersion": "3.5.36",
   "highlights": [
-    "Fix real update detection: badge and Update Now when a newer build is waiting."
+    "Fix installed-build detection so updates are not hidden after opening the app."
   ],
   "builds": {
+    "v167": {
+      "intro": "Build v167 — installed build detection.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Stopped treating bundled/server latest as the build already running in the service worker.",
+            "Opening the app after a deploy should show Update ready when the offline pack is still older.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v167)."
+          ]
+        }
+      ]
+    },
     "v166": {
       "intro": "Build v166 — update detection fix.",
       "sections": [

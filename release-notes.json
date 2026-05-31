@@ -1,10 +1,25 @@
 {
-  "latest": "v135",
-  "appVersion": "3.5.4",
+  "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
+  "latest": "v136",
+  "appVersion": "3.5.5",
   "highlights": [
-    "After PWA install on Android, no longer jumps into the Chrome tab — wait for install, then open from home screen."
+    "Version label now bumps with each deploy (3.5.5 · v136); keep appVersion, latest, HTML bundled constants, and service worker cache in sync."
   ],
   "builds": {
+    "v136": {
+      "intro": "Build v136 — version 3.5.5 synced with deploy.",
+      "sections": [
+        {
+          "heading": "Release",
+          "items": [
+            "App version is now 3.5.5 (was stuck on 3.5.4 while only the build number changed).",
+            "Settings and update screens show Version 3.5.5 · v136 without repeating the build twice.",
+            "Each deploy: bump latest + appVersion in release-notes.json, BUNDLED_* in surveillance-travel-calculator.html, and activeCacheName in service-worker.js together.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v136)."
+          ]
+        }
+      ]
+    },
     "v135": {
       "intro": "Build v135 — install no longer opens browser tab after accept.",
       "sections": [

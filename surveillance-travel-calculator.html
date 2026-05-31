@@ -1917,8 +1917,9 @@
   const minutesInput = $('minutes');
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
-  const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v135';
+  /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
+  const BUNDLED_APP_VERSION = '3.5.5';
+  const BUNDLED_PWA_CACHE_VERSION = 'v136';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2130,7 +2131,7 @@
     if (state === 'uptodate') {
       showSwUpdatePanels('uptodate');
       if (swUpdateUptodateVersion) {
-        swUpdateUptodateVersion.textContent = `${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
+        swUpdateUptodateVersion.textContent = formatAppVersionLabel();
       }
       return;
     }
@@ -2559,11 +2560,11 @@
   }
 
   function getFriendlyUptodateStatus() {
-    return `You're on ${formatAppVersionLabel()} (build ${getDisplayUpdateBuild()}). Tap Details to see what's new.`;
+    return `You're on ${formatAppVersionLabel()}. Tap Details to see what's new.`;
   }
 
   function getFriendlyReleaseIntro() {
-    return `Here's what's included in ${formatAppVersionLabel()} (build ${getDisplayUpdateBuild()}).`;
+    return `Here's what's included in ${formatAppVersionLabel()}.`;
   }
 
   function normalizeReleaseNotesForDisplay(notes) {
@@ -2804,17 +2805,17 @@
         : 'Test update flow locally';
     }
     if (DEV_MODE) {
-      settingsVersionLine.textContent = `Fast dev (no service worker). ${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
+      settingsVersionLine.textContent = `Fast dev (no service worker). ${formatAppVersionLabel()}`;
       if (settingsCheckUpdateBtn) settingsCheckUpdateBtn.textContent = 'Reload latest';
       return;
     }
     if (settingsCheckUpdateBtn) settingsCheckUpdateBtn.textContent = 'Check for updates';
     const suffix = isUpdateMenuBadgeActive() ? ' · Update ready' : '';
     if (PWA_TEST_MODE && IS_LOCAL_DEV) {
-      settingsVersionLine.textContent = `Update testing · ${formatAppVersionLabel()} (build ${getDisplayUpdateBuild()})${suffix}`;
+      settingsVersionLine.textContent = `Update testing · ${formatAppVersionLabel()}${suffix}`;
       return;
     }
-    settingsVersionLine.textContent = `${formatAppVersionLabel()} · build ${getDisplayUpdateBuild()}${suffix}`;
+    settingsVersionLine.textContent = `${formatAppVersionLabel()}${suffix}`;
   }
 
   function reportLiveProgress(state, progress, statusLine) {
@@ -3803,7 +3804,7 @@
       link.textContent = installUrl;
     });
     const verEl = $('developerGuideVersion');
-    if (verEl) verEl.textContent = `${formatAppVersionLabel()} · build ${PWA_CACHE_VERSION}`;
+    if (verEl) verEl.textContent = formatAppVersionLabel();
   }
 
   const DEFAULT_BOOKING_API_URL = 'https://booking-lookup.investigator-toolbox.workers.dev';

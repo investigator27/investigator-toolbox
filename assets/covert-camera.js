@@ -216,19 +216,27 @@
   let cameraNavStack = ['root'];
 
   function paintCameraScreens() {
-    const stack = $('cameraStack');
+    const view = $('cameraTabView');
     const hub = $('covertClipsHub');
-    if (!stack) return;
+    if (!view) return;
     const activeId = cameraNavStack[cameraNavStack.length - 1] || 'root';
-    const isSub = cameraNavStack.length > 1;
-    hub?.classList.toggle('is-subpage', isSub);
-    stack.querySelectorAll('.camera-screen').forEach((screen) => {
-      const id = screen.dataset.cameraScreen || '';
-      const isActive = id === activeId;
-      const isBehind = isSub && cameraNavStack[cameraNavStack.length - 2] === id;
-      screen.classList.toggle('is-active', isActive);
-      screen.classList.toggle('is-behind', isBehind);
-      screen.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+    const isSub = activeId !== 'root';
+    view.classList.toggle('is-subpage', isSub);
+    if (hub) {
+      hub.classList.remove('hidden');
+      hub.setAttribute('aria-hidden', 'false');
+    }
+    document.querySelectorAll('[data-camera-panel]').forEach((panel) => {
+      const id = panel.dataset.cameraPanel || '';
+      const open = id === activeId;
+      panel.classList.toggle('is-open', open);
+      if (open) {
+        panel.removeAttribute('hidden');
+        panel.setAttribute('aria-hidden', 'false');
+      } else {
+        panel.setAttribute('hidden', '');
+        panel.setAttribute('aria-hidden', 'true');
+      }
     });
     if (activeId === 'clip-library') void renderClipsLibrary();
     if (activeId === 'camera-settings') void refreshCameraSettingsUi();
@@ -257,16 +265,17 @@
     if (window.__cameraNavBound) return;
     window.__cameraNavBound = true;
 
-    $('cameraHubBackBtn')?.addEventListener('click', () => {
-      haptic('light');
-      popCameraScreen();
-    });
-
-    $('cameraStack')?.addEventListener('click', (event) => {
-      const btn = event.target.closest('[data-camera-push]');
-      if (!btn) return;
-      pushCameraScreen(btn.dataset.cameraPush || '');
-      haptic('light');
+    $('cameraTabView')?.addEventListener('click', (event) => {
+      const pushBtn = event.target.closest('[data-camera-push]');
+      if (pushBtn) {
+        pushCameraScreen(pushBtn.dataset.cameraPush || '');
+        haptic('light');
+        return;
+      }
+      if (event.target.closest('[data-camera-pop]')) {
+        haptic('light');
+        popCameraScreen();
+      }
     });
   }
 
@@ -710,7 +719,7 @@
     clearTimeout(swipeUpResetTimer);
     hidePreview();
     unlockLandscape();
-    showClipsHub();
+    showCameraHubRoot();
     haptic('light');
   }
 

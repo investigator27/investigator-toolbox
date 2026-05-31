@@ -2345,7 +2345,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=164" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=166" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2367,8 +2367,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.33';
-  const BUNDLED_PWA_CACHE_VERSION = 'v164';
+  const BUNDLED_APP_VERSION = '3.5.35';
+  const BUNDLED_PWA_CACHE_VERSION = 'v166';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2718,27 +2718,25 @@
     return '';
   }
 
-  function isWaitingWorkerActionable(registration) {
-    if (!registration?.waiting || !navigator.serviceWorker.controller) return false;
+  /** True when waiting worker is same/older than the one currently running (phantom update). */
+  function isStaleWaitingWorker(registration) {
+    if (!registration?.waiting || !navigator.serviceWorker.controller) return true;
     const waitingBuild = parseBuildFromScriptUrl(registration.waiting.scriptURL);
     const activeBuild = getActiveSwBuild(registration);
-    const targetBuild = resolveTargetBuild();
-    if (waitingBuild && activeBuild && !isBuildNewer(waitingBuild, activeBuild)) return false;
-    if (waitingBuild && targetBuild && !isBuildNewer(waitingBuild, targetBuild)) return false;
-    if (!waitingBuild && activeBuild && targetBuild && !isBuildNewer(targetBuild, activeBuild)) return false;
-    return !!(waitingBuild || (targetBuild && isBuildNewer(targetBuild, activeBuild)));
+    if (!waitingBuild || !activeBuild) return false;
+    return !isBuildNewer(waitingBuild, activeBuild);
   }
 
-  function reconcileInstalledUpdateState(registration) {
+  function clearStaleUpdateUiIfCurrent(registration) {
     const reg = registration || swRegistration;
     if (!reg || !navigator.serviceWorker.controller) return;
-    if (isWaitingWorkerActionable(reg)) return;
+    if (reg.waiting && !isStaleWaitingWorker(reg)) return;
+    const activeBuild = getActiveSwBuild(reg);
+    const targetBuild = resolveTargetBuild();
+    if (activeBuild && targetBuild && isBuildNewer(targetBuild, activeBuild)) return;
     waitingSW = null;
     pendingUpdateBuild = '';
     clearUpdateReadyMark();
-    if (updateUIState === 'ready' || updateUIState === 'downloading' || updateUIState === 'installing') {
-      showUptodateBanner();
-    }
     refreshSettingsUpdateBadge();
   }
 
@@ -3081,7 +3079,7 @@
       await waitForServiceWorkerSettle(registration, 10000);
       bindWaitingWorker(registration);
     }
-    reconcileInstalledUpdateState(registration);
+    clearStaleUpdateUiIfCurrent(registration);
   }
 
   async function handleAppLoadUpdateSequence() {
@@ -3322,22 +3320,9 @@
 
   function isUpdateMenuBadgeActive() {
     if (updateUIState === 'installing' || updateUIState === 'uptodate') return false;
-    const reg = swRegistration;
-    if (reg && !isWaitingWorkerActionable(reg)) {
-      const activeBuild = getActiveSwBuild(reg);
-      const targetBuild = resolveTargetBuild();
-      if (activeBuild && targetBuild && !isBuildNewer(targetBuild, activeBuild)) {
-        return false;
-      }
-    }
-    if (updateUIState === 'downloading') return true;
-    if (updateUIState === 'ready') {
-      if (waitingSW) return true;
-      return !!(reg && isWaitingWorkerActionable(reg));
-    }
+    if (updateUIState === 'ready' || updateUIState === 'downloading') return true;
     if (waitingSW) return true;
-    if (reg && isWaitingWorkerActionable(reg)) return true;
-    return false;
+    return isUpdateReadyInSession();
   }
 
   async function postBadgeToServiceWorkers(count) {
@@ -3755,7 +3740,7 @@
     registeredBuild = targetBuild;
     swRegistration = registration;
     attachRegistrationListeners(registration);
-    reconcileInstalledUpdateState(registration);
+    clearStaleUpdateUiIfCurrent(registration);
     return registration;
   }
 
@@ -3773,26 +3758,8 @@
     return bindWaitingWorker(registration, { showBanner: false });
   }
 
-  async function finishApplyAsAlreadyCurrent(registration) {
-    applyingAppUpdate = false;
-    waitingSW = null;
-    clearUpdateReadyMark();
-    reconcileInstalledUpdateState(registration);
-    await renderSoftwareUpdateUi('uptodate');
-    refreshSettingsUpdateBadge();
-  }
-
   async function applyAppUpdate() {
     if (applyingAppUpdate) return;
-    const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
-    const waiting = waitingSW || reg?.waiting;
-
-    if (!waiting || !isWaitingWorkerActionable(reg)) {
-      await finishApplyAsAlreadyCurrent(reg);
-      return;
-    }
-
-    const previousBuild = getActiveSwBuild(reg);
     applyingAppUpdate = true;
     stopWaitingReadyPoll();
     clearUpdateReadyMark();
@@ -3820,6 +3787,15 @@
       await new Promise((r) => setTimeout(r, 600));
       finishAppUpdateReload();
     };
+
+    const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
+    const waiting = waitingSW || reg?.waiting;
+    if (!waiting) {
+      await renderSoftwareUpdateUi('installing', { statusLine: 'Restarting Toolbox…' });
+      await animateProgressTo(100, 1200);
+      await reloadOnce();
+      return;
+    }
 
     waitingSW = waiting;
     const previousController = navigator.serviceWorker.controller;
@@ -3855,14 +3831,6 @@
 
     setUpdateTargetProgress(92);
     await activationDone;
-
-    const regAfter = swRegistration || (await navigator.serviceWorker.getRegistration(BASE_PATH));
-    const newBuild = getActiveSwBuild(regAfter);
-    if (!isBuildNewer(newBuild, previousBuild)) {
-      await finishApplyAsAlreadyCurrent(regAfter);
-      return;
-    }
-
     if (swUpdateStatusLine) {
       swUpdateStatusLine.classList.remove('hidden');
       swUpdateStatusLine.textContent = 'Restarting Toolbox…';
@@ -3871,11 +3839,11 @@
   }
 
   function bindWaitingWorker(registration, opts = {}) {
-    if (!isWaitingWorkerActionable(registration)) {
-      reconcileInstalledUpdateState(registration);
-      return false;
-    }
+    if (!registration?.waiting || !navigator.serviceWorker.controller) return false;
+    if (isStaleWaitingWorker(registration)) return false;
     const waitingBuild = parseBuildFromScriptUrl(registration.waiting.scriptURL);
+    const activeBuild = getActiveSwBuild(registration);
+    if (activeBuild && waitingBuild && !isBuildNewer(waitingBuild, activeBuild)) return false;
     waitingSW = registration.waiting;
     pendingUpdateBuild = waitingBuild
       || parseBuildFromCacheName(pendingUpdateBuild)
@@ -3971,6 +3939,7 @@
           reportLiveProgress('checking', 100, 'Check complete.');
         }
         if (bindWaitingWorker(registration, { showBanner: true })) return 'available';
+        clearStaleUpdateUiIfCurrent(registration);
         const activeBuild = getActiveSwBuild(registration);
         const targetBuild = resolveTargetBuild();
         if (activeBuild && isBuildNewer(targetBuild, activeBuild)) return 'pending';
@@ -4537,6 +4506,7 @@
     const files = [
       'index.html',
       'surveillance-travel-calculator.html',
+      'assets/covert-camera.js',
       'service-worker.js',
       'release-notes.json',
       'tab-policy.json',

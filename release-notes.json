@@ -1,11 +1,38 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v164",
-  "appVersion": "3.5.33",
+  "latest": "v166",
+  "appVersion": "3.5.35",
   "highlights": [
-    "Update Now only reloads when a newer build actually installs."
+    "Fix real update detection: badge and Update Now when a newer build is waiting."
   ],
   "builds": {
+    "v166": {
+      "intro": "Build v166 — update detection fix.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Fixed bug that treated a valid newer waiting worker as stale when it matched the server latest build.",
+            "Red badge, Update Now, Restarting Toolbox, and post-update Software Update screen work again.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v166)."
+          ]
+        }
+      ]
+    },
+    "v165": {
+      "intro": "Build v165 — restore update flow.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Reverted over-strict update checks that hid badges and skipped Restarting Toolbox.",
+            "Update Now again runs full install + reload + Settings → Software Update up-to-date.",
+            "Stale same-version waiting workers no longer show a fake update.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json (v165)."
+          ]
+        }
+      ]
+    },
     "v164": {
       "intro": "Build v164 — Update Now fix.",
       "sections": [

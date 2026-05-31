@@ -2345,7 +2345,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=163" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=164" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2367,8 +2367,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.32';
-  const BUNDLED_PWA_CACHE_VERSION = 'v163';
+  const BUNDLED_APP_VERSION = '3.5.33';
+  const BUNDLED_PWA_CACHE_VERSION = 'v164';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2736,7 +2736,7 @@
     waitingSW = null;
     pendingUpdateBuild = '';
     clearUpdateReadyMark();
-    if (updateUIState === 'ready' || updateUIState === 'downloading') {
+    if (updateUIState === 'ready' || updateUIState === 'downloading' || updateUIState === 'installing') {
       showUptodateBanner();
     }
     refreshSettingsUpdateBadge();
@@ -3773,8 +3773,26 @@
     return bindWaitingWorker(registration, { showBanner: false });
   }
 
+  async function finishApplyAsAlreadyCurrent(registration) {
+    applyingAppUpdate = false;
+    waitingSW = null;
+    clearUpdateReadyMark();
+    reconcileInstalledUpdateState(registration);
+    await renderSoftwareUpdateUi('uptodate');
+    refreshSettingsUpdateBadge();
+  }
+
   async function applyAppUpdate() {
     if (applyingAppUpdate) return;
+    const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
+    const waiting = waitingSW || reg?.waiting;
+
+    if (!waiting || !isWaitingWorkerActionable(reg)) {
+      await finishApplyAsAlreadyCurrent(reg);
+      return;
+    }
+
+    const previousBuild = getActiveSwBuild(reg);
     applyingAppUpdate = true;
     stopWaitingReadyPoll();
     clearUpdateReadyMark();
@@ -3799,18 +3817,9 @@
         swUpdateStatusLine.textContent = 'Restarting Toolbox…';
       }
       await animateProgressTo(100, 1400);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 600));
       finishAppUpdateReload();
     };
-
-    const reg = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
-    const waiting = waitingSW || reg?.waiting;
-    if (!waiting) {
-      await renderSoftwareUpdateUi('installing', { statusLine: 'Restarting Toolbox…' });
-      await animateProgressTo(100, 1200);
-      reloadOnce();
-      return;
-    }
 
     waitingSW = waiting;
     const previousController = navigator.serviceWorker.controller;
@@ -3846,11 +3855,19 @@
 
     setUpdateTargetProgress(92);
     await activationDone;
+
+    const regAfter = swRegistration || (await navigator.serviceWorker.getRegistration(BASE_PATH));
+    const newBuild = getActiveSwBuild(regAfter);
+    if (!isBuildNewer(newBuild, previousBuild)) {
+      await finishApplyAsAlreadyCurrent(regAfter);
+      return;
+    }
+
     if (swUpdateStatusLine) {
       swUpdateStatusLine.classList.remove('hidden');
       swUpdateStatusLine.textContent = 'Restarting Toolbox…';
     }
-    reloadOnce();
+    await reloadOnce();
   }
 
   function bindWaitingWorker(registration, opts = {}) {

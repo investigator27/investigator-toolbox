@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v163",
-  "appVersion": "3.5.32",
+  "latest": "v164",
+  "appVersion": "3.5.33",
   "highlights": [
-    "After Update Now: Restarting message, then Software Update up-to-date screen."
+    "Update Now only reloads when a newer build actually installs."
   ],
   "builds": {
+    "v164": {
+      "intro": "Build v164 — Update Now fix.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Update Now no longer fakes a restart when you are already on the latest build.",
+            "Shows Restarting Toolbox and reload only when the waiting worker is a newer build.",
+            "Deploy surveillance-travel-calculator.html, service-worker.js, release-notes.json (v164)."
+          ]
+        }
+      ]
+    },
     "v163": {
       "intro": "Build v163 — post-update screen fix.",
       "sections": [

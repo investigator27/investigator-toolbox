@@ -2034,6 +2034,7 @@
     });
     document.querySelectorAll('[data-cam-max-minutes]').forEach((select) => {
       select.value = String(prefs.maxClipMinutes ?? 10);
+      syncPickerLabel(select);
     });
     [
       ['timestampEnabled', !!prefs.timestampEnabled],
@@ -2047,7 +2048,19 @@
     document.querySelectorAll('[data-cam-select]').forEach((select) => {
       const key = select.getAttribute('data-cam-select');
       if (key && prefs[key] != null) select.value = String(prefs[key]);
+      syncPickerLabel(select);
     });
+  }
+
+  // Keep the custom picker button label (shared app dropdown component) in sync with the
+  // hidden <select> value whenever prefs are applied programmatically.
+  function syncPickerLabel(select) {
+    if (!select) return;
+    const wrap = select.closest('.menu-wrap');
+    if (!wrap) return;
+    const labelSpan = wrap.querySelector('.city-btn span');
+    const option = select.options[select.selectedIndex];
+    if (labelSpan && option) labelSpan.textContent = option.textContent.trim();
   }
 
   async function refreshCameraSettingsUi() {

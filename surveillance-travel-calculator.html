@@ -2680,7 +2680,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=201" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=202" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2702,8 +2702,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.70';
-  const BUNDLED_PWA_CACHE_VERSION = 'v201';
+  const BUNDLED_APP_VERSION = '3.5.71';
+  const BUNDLED_PWA_CACHE_VERSION = 'v202';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5909,6 +5909,14 @@ $('summaryNote').textContent =
       let initialTab = resolveInitialTabId();
       if (!isTabEnabled(initialTab)) initialTab = 'calculator';
       switchTab(initialTab);
+    }
+    // Camera is the static-active tab, so core.switchTab() returns early without
+    // firing onTabEnter when it's also the launch tab. Paint the camera hub
+    // explicitly so launch always lands on the hub (Open Covert Camera + Clip
+    // Library) and never the permission gate. Harmless if a settings/update
+    // overlay is on top — the hub just sits underneath until it's closed.
+    if (document.querySelector('nav.tab-bar .tab-bar-item.active')?.dataset.tab === 'camera') {
+      window.ToolboxCovertCamera?.onTabEnter?.();
     }
   }
 

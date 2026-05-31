@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v201",
-  "appVersion": "3.5.70",
+  "latest": "v202",
+  "appVersion": "3.5.71",
   "highlights": [
-    "Renamed the clip export button to \"Download to device\" and clarified that clips are stored privately inside Toolbox, not in your gallery. Export now also works in Airplane mode."
+    "Fixed launch landing on the Allow Camera Access screen — the app now opens to the covert camera hub, and the permission screen only appears when you tap Open Covert Camera."
   ],
   "builds": {
+    "v202": {
+      "intro": "Build v202 — Camera tab launches on the hub, not the permission screen.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed: launching the app (which now opens to the Camera tab) was landing on the \"Allow camera access\" screen. It now opens to the covert camera hub (Open Covert Camera + Clip Library + Camera Settings). The permission screen only appears after you tap Open Covert Camera, as intended.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v202)."
+          ]
+        }
+      ]
+    },
     "v201": {
       "intro": "Build v201 — Clearer clip export: \"Download to device\".",
       "sections": [

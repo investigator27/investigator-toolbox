@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v137",
-  "appVersion": "3.5.6",
+  "latest": "v138",
+  "appVersion": "3.5.7",
   "highlights": [
-    "Covert Camera tab (v1): landscape 1080p rear video, black screen, 3-tap record/stop, swipe preview, manual upload."
+    "Covert Camera: full-screen black on Camera tab; camera permission requested when you open the tab."
   ],
   "builds": {
+    "v138": {
+      "intro": "Build v138 — full-screen covert camera + permission on tab open.",
+      "sections": [
+        {
+          "heading": "Camera",
+          "items": [
+            "Camera tab is full-screen black (header hidden); clips/upload live under Settings → Camera.",
+            "Opening Camera tab prompts for camera and microphone; Allow button if blocked.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v138)."
+          ]
+        }
+      ]
+    },
     "v137": {
       "intro": "Build v137 — Covert Camera tab (first release).",
       "sections": [

@@ -194,23 +194,61 @@
       margin:var(--space-6) auto 0;
     }
     .coming-soon-card .card-sub{margin-top:var(--space-2)}
-    #tab-camera{
-      margin:calc(-1 * var(--space-4));
-      width:calc(100% + 2 * var(--space-4));
-      display:flex;
-      flex-direction:column;
-      gap:var(--space-4);
-      padding-bottom:var(--space-4);
-    }
-    .covert-camera{
-      position:relative;
-      width:100%;
-      aspect-ratio:16/9;
+    .app-shell--covert-camera{background:#000}
+    .app-shell--covert-camera .app-header{display:none}
+    .app-shell--covert-camera .app-content{padding:0;overflow:hidden}
+    .app-shell--covert-camera .tab-bar{
       background:#000;
-      border-radius:var(--radius-xl);
+      border:none;
+      box-shadow:none;
+    }
+    .app-shell--covert-camera .tab-bar-item{color:#3f3f46}
+    .app-shell--covert-camera .tab-bar-item.active{color:#52525b}
+    #tab-camera{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      bottom:calc(4.25rem + env(safe-area-inset-bottom,0px));
+      margin:0;
+      width:100%;
+      padding:0;
+      z-index:180;
+      background:#000;
+      display:block;
+    }
+    #tab-camera.hidden{display:none!important}
+    .covert-camera{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      background:#000;
       overflow:hidden;
       touch-action:manipulation;
     }
+    .covert-permission-gate{
+      position:absolute;
+      inset:0;
+      z-index:6;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:var(--space-4);
+      padding:var(--space-5);
+      background:#000;
+      text-align:center;
+    }
+    .covert-permission-gate.hidden{display:none!important}
+    .covert-permission-gate p{
+      margin:0;
+      font-size:var(--text-sm);
+      color:#a1a1aa;
+      max-width:18rem;
+      line-height:1.5;
+    }
+    .covert-permission-gate .btn{max-width:16rem;width:100%}
     .covert-camera video{
       position:absolute;
       inset:0;
@@ -250,14 +288,6 @@
       pointer-events:none;
     }
     .covert-camera--recording .covert-camera__hud{color:#fca5a5}
-    .covert-clips-card .covert-stat-row{
-      display:flex;
-      justify-content:space-between;
-      font-size:var(--text-sm);
-      color:var(--color-text-muted);
-      padding:0 var(--space-4) var(--space-2);
-    }
-    .covert-clips-card .covert-stat-row strong{color:var(--color-text)}
     .tab-bar{
       grid-row:3;
       z-index:200;
@@ -1316,25 +1346,12 @@
         <video id="covertVideoPreview" playsinline muted autoplay></video>
         <div class="covert-camera__black" id="covertBlack"></div>
         <div class="covert-camera__tap" id="covertTapZone" aria-hidden="true"></div>
-        <div class="covert-camera__hud"><span id="covertStatus">Open Camera tab to start</span></div>
+        <div class="covert-camera__hud"><span id="covertStatus"></span></div>
+        <div class="covert-permission-gate" id="covertPermissionGate">
+          <p>Toolbox needs camera and microphone on this device. Tap below — Android will ask you to allow access.</p>
+          <button type="button" class="btn btn-primary" id="covertAllowCameraBtn">Allow camera access</button>
+        </div>
       </div>
-      <section class="card covert-clips-card" aria-labelledby="covert-clips-title">
-        <div>
-          <h2 id="covert-clips-title" class="card-title">Saved clips</h2>
-          <p class="card-sub">Stored on this device only. Upload when you are ready.</p>
-        </div>
-        <div class="covert-stat-row">
-          <span>Clips</span>
-          <strong id="covertClipCount">0</strong>
-        </div>
-        <div class="covert-stat-row">
-          <span>Storage</span>
-          <strong id="covertClipSize">0 B</strong>
-        </div>
-        <button type="button" class="btn btn-primary" id="covertUploadBtn" disabled>Upload clips</button>
-        <button type="button" class="btn btn-secondary" id="covertOpenCameraSettingsBtn">Camera settings</button>
-        <p class="hint">3 taps on the black area to start or stop · Swipe up for preview · Swipe down to hide · Landscape 1080p rear camera</p>
-      </section>
     </div>
   </div>
 
@@ -2072,8 +2089,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.6';
-  const BUNDLED_PWA_CACHE_VERSION = 'v137';
+  const BUNDLED_APP_VERSION = '3.5.7';
+  const BUNDLED_PWA_CACHE_VERSION = 'v138';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

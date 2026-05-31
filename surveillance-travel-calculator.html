@@ -2349,7 +2349,7 @@
               </div>
               <div class="settings-row settings-row--toggle">
                 <span class="settings-row__label">24-hour clock</span>
-                <label class="settings-switch"><input type="checkbox" id="cameraTimestampClockSwitch" data-cam-pref="timestampClock24" checked aria-label="Use 24-hour clock for the timestamp" /><span class="settings-switch__track"></span></label>
+                <label class="settings-switch"><input type="checkbox" id="cameraTimestampClockSwitch" data-cam-pref="timestampClock24" aria-label="Use 24-hour clock for the timestamp" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="field" style="padding:var(--space-3) var(--space-4)">
                 <label for="cameraTimestampPosition">Position</label>
@@ -2628,7 +2628,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=194" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=195" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2650,8 +2650,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.63';
-  const BUNDLED_PWA_CACHE_VERSION = 'v194';
+  const BUNDLED_APP_VERSION = '3.5.64';
+  const BUNDLED_PWA_CACHE_VERSION = 'v195';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4657,10 +4657,12 @@
 
   function toolboxHaptic(style) {
     if (!isHapticEnabled() || typeof navigator.vibrate !== 'function') return;
+    // Longer pulses than before — sub-20ms vibrations are rounded down to nothing on many
+    // Android devices, so they were imperceptible. (iOS has no web vibration API at all.)
     const patterns = {
-      light: 18,
-      medium: [20, 52, 20],
-      success: [12, 64, 12],
+      light: 40,
+      medium: [50, 50, 50],
+      success: [60, 60, 120],
     };
     try {
       navigator.vibrate(patterns[style] || patterns.light);

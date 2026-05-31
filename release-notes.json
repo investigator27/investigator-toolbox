@@ -1,11 +1,26 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v194",
-  "appVersion": "3.5.63",
+  "latest": "v195",
+  "appVersion": "3.5.64",
   "highlights": [
-    "Camera: fixed the on-screen status — \"Recording\" now stays visible the whole time you record (it no longer flashes for a second and vanishes), and \"Stopped\" reliably appears every time you triple-tap to stop. Plus the new \"How To Use\" guide page on the Camera tab."
+    "Camera: fixed recordings that started and instantly stopped (so clips now record properly and save to the Clip Library), stronger tap vibration on Android, and the timestamp clock now defaults to 12-hour."
   ],
   "builds": {
+    "v195": {
+      "intro": "Build v195 — Covert Camera: reliable recording, stronger haptics, 12-hour timestamp default.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed the big one: a duplicated tap could stop a recording the instant it started, producing an empty clip that was discarded — which is why some recordings showed \"Stopped\" immediately and never appeared in the Clip Library. A stop is now ignored if it lands within 1.2s of starting, so triple-tap reliably records and saves.",
+            "A failed crash-backup write can no longer stop a live recording — the clip is kept in memory and saved on stop regardless, and genuine out-of-space is still caught by the periodic storage check.",
+            "Stronger tap vibration on Android (the old pulses were too short to feel on many phones). Note: iPhone/iOS has no web vibration API, so haptics are Android-only.",
+            "The on-video timestamp now defaults to a 12-hour clock (AM/PM). You can switch it back to 24-hour in Camera Settings.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v195)."
+          ]
+        }
+      ]
+    },
     "v194": {
       "intro": "Build v194 — Covert Camera: reliable on-screen Recording / Stopped status.",
       "sections": [

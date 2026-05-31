@@ -1,11 +1,30 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v195",
-  "appVersion": "3.5.64",
+  "latest": "v196",
+  "appVersion": "3.5.65",
   "highlights": [
-    "Camera: fixed recordings that started and instantly stopped (so clips now record properly and save to the Clip Library), stronger tap vibration on Android, and the timestamp clock now defaults to 12-hour."
+    "Camera tab moved to the first position in the bottom bar (Calculator moved to the last). Plus the on-screen Recording / Stopped status now clears itself after a few seconds like it should."
   ],
   "builds": {
+    "v196": {
+      "intro": "Build v196 — Camera tab moved to the front; tidier on-screen recording status.",
+      "sections": [
+        {
+          "heading": "Layout",
+          "items": [
+            "The Camera tab is now the first icon in the bottom tab bar, and the Calculator tab is now the last. Nothing else about the tabs changed — Calculator is still the tab that opens on launch (you can change the launch tab under Settings → Personalization)."
+          ]
+        },
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "The \"● Recording\" and \"Stopped\" status text now automatically clears after about 5 seconds instead of staying on screen.",
+            "Reminder: tap vibration only works on Android — iPhone/iOS does not expose a vibration API to web apps — and it requires Settings → Personalization → Haptic feedback to be ON.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v196)."
+          ]
+        }
+      ]
+    },
     "v195": {
       "intro": "Build v195 — Covert Camera: reliable recording, stronger haptics, 12-hour timestamp default.",
       "sections": [

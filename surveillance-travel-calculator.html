@@ -1785,9 +1785,9 @@
   </div>
 
   <nav class="tab-bar" role="tablist" aria-label="Main navigation">
-    <button type="button" class="tab-bar-item active" id="tab-btn-calculator" data-tab="calculator" role="tab" aria-selected="true" aria-controls="tab-calculator">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg>
-      <span>Calculator</span>
+    <button type="button" class="tab-bar-item" id="tab-btn-camera" data-tab="camera" role="tab" aria-selected="false" aria-controls="tab-camera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+      <span>Camera</span>
     </button>
     <button type="button" class="tab-bar-item" id="tab-btn-hotels" data-tab="hotels" role="tab" aria-selected="false" aria-controls="tab-hotels">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>
@@ -1797,9 +1797,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
       <span>Requests</span>
     </button>
-    <button type="button" class="tab-bar-item" id="tab-btn-camera" data-tab="camera" role="tab" aria-selected="false" aria-controls="tab-camera">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-      <span>Camera</span>
+    <button type="button" class="tab-bar-item active" id="tab-btn-calculator" data-tab="calculator" role="tab" aria-selected="true" aria-controls="tab-calculator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg>
+      <span>Calculator</span>
     </button>
   </nav>
 </div>
@@ -2628,7 +2628,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=195" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=196" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2650,8 +2650,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.64';
-  const BUNDLED_PWA_CACHE_VERSION = 'v195';
+  const BUNDLED_APP_VERSION = '3.5.65';
+  const BUNDLED_PWA_CACHE_VERSION = 'v196';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

@@ -974,6 +974,8 @@
       padding-top:var(--space-3);
       padding-bottom:var(--space-3);
     }
+    .settings-page-intro__text .settings-permission-hint{margin-top:var(--space-2)}
+    .settings-install-fallback{margin:0;padding:0 var(--space-4) var(--space-4);font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.5}
     #developerPanel > .settings-group + .settings-group{
       margin-top:var(--space-5);
     }
@@ -1562,14 +1564,14 @@
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
               <div class="settings-page-intro__text">
                 <h1 class="settings-page-intro__title" id="how-menu-intro-title">How to Use</h1>
-                <p class="settings-page-intro__blurb">Calculator, Hotels, Camera, and install (phone or computer).</p>
+                <p class="settings-page-intro__blurb">Calculator, Hotels, Camera, and Install App.</p>
               </div>
             </div>
           </section>
           <div class="settings-group">
             <button type="button" class="settings-row settings-row--nav" data-settings-push="how-install">
               <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
-              <span class="settings-row__label">Install Icon</span>
+              <span class="settings-row__label">Install App</span>
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
             <button type="button" class="settings-row settings-row--nav" data-settings-push="how-calculator">
@@ -1597,19 +1599,19 @@
             <div class="settings-page-intro__inner">
               <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span>
               <div class="settings-page-intro__text">
-                <h1 class="settings-page-intro__title" id="how-install-intro-title">Install Icon</h1>
-                <p class="settings-page-intro__blurb">Install on an Android phone or on a computer (Chrome or Edge).</p>
+                <h1 class="settings-page-intro__title" id="how-install-intro-title">Install App</h1>
+                <p class="settings-page-intro__blurb">Add Toolbox to your home screen or desktop.</p>
+                <p class="settings-permission-hint" id="settingsInstallDevice" aria-live="polite"></p>
               </div>
             </div>
           </section>
           <div class="settings-group">
+            <p class="settings-permission-hint" id="settingsInstallStatus" aria-live="polite"></p>
+            <div class="settings-actions">
+              <button type="button" class="btn btn-primary" id="settingsInstallBtn">Install app</button>
+            </div>
             <div class="settings-body-text">
-              <ol class="steps-list">
-                <li><strong>Android:</strong> Scan the install QR (<a id="howInstallPageLink" href="#">install page</a>) in Chrome — the button shows <strong>Install on Android</strong>.</li>
-                <li><strong>Windows / Mac:</strong> Open the install page in Chrome or Edge — the button shows <strong>Install on Windows</strong> or <strong>Install on Mac</strong>.</li>
-                <li><strong>No install:</strong> Tap <strong>Try without installing</strong> on the install page.</li>
-                <li>Toolbox opens automatically after install when Chrome allows it.</li>
-              </ol>
+              <p class="settings-install-fallback">If the button does not open a prompt, use your browser menu (<strong>⋮</strong> or <strong>…</strong>) → <strong>Install app</strong>. Chrome or Edge works best.</p>
             </div>
           </div>
         </div>
@@ -1916,7 +1918,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v133';
+  const BUNDLED_PWA_CACHE_VERSION = 'v134';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3657,6 +3659,9 @@
       bindPermissionSettings();
       refreshPermissionSettingsUi();
     }
+    if (screenId === 'how-install') {
+      syncInstallUi();
+    }
     if (screenId === 'developer-tools') {
       bindDeveloperToolActions();
       refreshDeveloperTools();
@@ -3791,7 +3796,7 @@
       pathEl.textContent = path === '/' ? '(site root)' : path;
     }
     const installUrl = (PUBLIC_INSTALL_URL || '').replace(/\/?$/, '/');
-    ['developerInstallUrl', 'howInstallPageLink'].forEach((id) => {
+    ['developerInstallUrl'].forEach((id) => {
       const link = $(id);
       if (!link || !installUrl) return;
       link.href = installUrl;
@@ -4393,15 +4398,108 @@ $('summaryNote').textContent =
   });
 
   const pwaInstallBanner = $('pwaInstallBanner');
+  const settingsInstallBtn = $('settingsInstallBtn');
+  const settingsInstallStatus = $('settingsInstallStatus');
+  const settingsInstallDevice = $('settingsInstallDevice');
   let pwaLaunchScheduled = false;
+
+  function isStandalonePwa() {
+    return window.matchMedia('(display-mode: standalone)').matches;
+  }
+
+  function isPhoneSizedScreen() {
+    const w = window.screen?.width || 0;
+    const h = window.screen?.height || 0;
+    const minDim = Math.min(w, h);
+    return minDim > 0 && minDim <= 520;
+  }
+
+  function isLikelyAndroidPhone() {
+    const ua = navigator.userAgent || '';
+    if (/Android/i.test(ua)) return true;
+    const uad = navigator.userAgentData;
+    if (uad?.platform === 'Android') return true;
+    if (/iPhone|iPad|iPod|Macintosh|Mac OS X/i.test(ua)) return false;
+    const touch = navigator.maxTouchPoints > 0;
+    if (uad?.mobile && /Mobile|Android/i.test(ua)) return true;
+    if (touch && isPhoneSizedScreen()) {
+      if (/Windows/i.test(ua) || uad?.platform === 'Windows') return true;
+      if (/Linux/i.test(ua) && /Mobile/i.test(ua)) return true;
+    }
+    return false;
+  }
+
+  function detectInstallPlatform() {
+    const ua = navigator.userAgent || '';
+    const uad = navigator.userAgentData;
+    const platformName = uad?.platform ? String(uad.platform) : '';
+    if (isLikelyAndroidPhone()) {
+      return { id: 'android', label: 'Install on Android', tagline: 'You’re on Android' };
+    }
+    if (/iPhone|iPad|iPod/i.test(ua) || platformName === 'iOS') {
+      return { id: 'ios', label: 'Install not available', tagline: 'You’re on iPhone' };
+    }
+    if (/CrOS/i.test(ua) || platformName === 'Chrome OS') {
+      return { id: 'chromeos', label: 'Install on Chromebook', tagline: 'You’re on Chromebook' };
+    }
+    if (/Windows/i.test(ua) || platformName === 'Windows') {
+      return { id: 'windows', label: 'Install on Windows', tagline: 'You’re on Windows' };
+    }
+    if (/Macintosh|Mac OS X/i.test(ua) || platformName === 'macOS') {
+      return { id: 'mac', label: 'Install on Mac', tagline: 'You’re on Mac' };
+    }
+    if (/Linux/i.test(ua) || platformName === 'Linux') {
+      return { id: 'linux', label: 'Install on Linux', tagline: 'You’re on Linux' };
+    }
+    return { id: 'unknown', label: 'Install App', tagline: 'Install Toolbox on this device' };
+  }
+
+  const installPlatform = detectInstallPlatform();
+
+  function getInstallPrimaryLabel() {
+    if (isStandalonePwa()) return 'Installed';
+    if (installPlatform.id === 'ios') return 'Install not available';
+    return installPlatform.label;
+  }
+
+  function getInstallStatusMessage() {
+    if (isStandalonePwa()) {
+      return 'Toolbox is already installed. Open it from your home screen or app list.';
+    }
+    if (installPlatform.id === 'ios') {
+      return 'Install from this page is not supported on iPhone. Use Android or Chrome/Edge on Windows or Mac.';
+    }
+    if (deferredPrompt) {
+      return 'Ready — tap the button below to start the install prompt.';
+    }
+    return `Tap ${installPlatform.label}, or use the browser menu (⋮) → Install app.`;
+  }
+
+  function syncInstallUi() {
+    const label = getInstallPrimaryLabel();
+    const status = getInstallStatusMessage();
+    const disabled = isStandalonePwa() || installPlatform.id === 'ios';
+    if (settingsInstallDevice) settingsInstallDevice.textContent = installPlatform.tagline;
+    if (settingsInstallStatus) settingsInstallStatus.textContent = status;
+    [installBtn, settingsInstallBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.textContent = label;
+      btn.disabled = disabled;
+    });
+  }
 
   function launchToolboxAfterInstall() {
     if (pwaLaunchScheduled) return;
     pwaLaunchScheduled = true;
     hidePwaInstallBanner();
+    syncInstallUi();
     if (installBtn) {
       installBtn.textContent = 'Open Toolbox';
       installBtn.disabled = false;
+    }
+    if (settingsInstallBtn) {
+      settingsInstallBtn.textContent = 'Open Toolbox';
+      settingsInstallBtn.disabled = false;
     }
     const target = new URL(window.location.href);
     target.searchParams.delete('install');
@@ -4411,8 +4509,7 @@ $('summaryNote').textContent =
   }
 
   function shouldShowPwaInstallBanner() {
-    if (!/Android/i.test(navigator.userAgent)) return false;
-    if (window.matchMedia('(display-mode: standalone)').matches) return false;
+    if (isStandalonePwa() || installPlatform.id === 'ios') return false;
     try {
       if (sessionStorage.getItem('toolboxPwaInstall') === '1') return true;
     } catch {}
@@ -4421,6 +4518,7 @@ $('summaryNote').textContent =
 
   function revealPwaInstallBanner() {
     pwaInstallBanner?.classList.remove('hidden');
+    syncInstallUi();
   }
 
   function hidePwaInstallBanner() {
@@ -4428,25 +4526,8 @@ $('summaryNote').textContent =
     try { sessionStorage.removeItem('toolboxPwaInstall'); } catch {}
   }
 
-  if (shouldShowPwaInstallBanner()) {
-    revealPwaInstallBanner();
-    try { sessionStorage.removeItem('toolboxPwaInstall'); } catch {}
-  }
-
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    revealPwaInstallBanner();
-    installBtn?.classList.remove('hidden');
-    if (installBtn) installBtn.disabled = false;
-  });
-
-  installBtn?.addEventListener('click', () => {
-    if (installBtn?.textContent === 'Open Toolbox') {
-      launchToolboxAfterInstall();
-      return;
-    }
-    if (!deferredPrompt) return;
+  function runInstallPrompt() {
+    if (!deferredPrompt) return false;
     deferredPrompt.prompt();
     deferredPrompt.userChoice
       .then((choice) => {
@@ -4458,12 +4539,40 @@ $('summaryNote').textContent =
       })
       .finally(() => {
         deferredPrompt = null;
+        syncInstallUi();
         if (!pwaLaunchScheduled) hidePwaInstallBanner();
       });
+    return true;
+  }
+
+  function handleInstallButtonClick() {
+    if (installBtn?.textContent === 'Open Toolbox' || settingsInstallBtn?.textContent === 'Open Toolbox') {
+      launchToolboxAfterInstall();
+      return;
+    }
+    if (isStandalonePwa() || installPlatform.id === 'ios') return;
+    if (runInstallPrompt()) return;
+    syncInstallUi();
+  }
+
+  syncInstallUi();
+
+  if (shouldShowPwaInstallBanner()) {
+    revealPwaInstallBanner();
+    try { sessionStorage.removeItem('toolboxPwaInstall'); } catch {}
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    syncInstallUi();
+    if (shouldShowPwaInstallBanner()) revealPwaInstallBanner();
   });
 
+  installBtn?.addEventListener('click', handleInstallButtonClick);
+  settingsInstallBtn?.addEventListener('click', handleInstallButtonClick);
+
   window.addEventListener('appinstalled', () => {
-    if (!/Android/i.test(navigator.userAgent)) return;
     launchToolboxAfterInstall();
   });
 

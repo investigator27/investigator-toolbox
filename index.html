@@ -173,7 +173,7 @@
     <p class="install-callout" id="installCallout" role="status"></p>
 
     <div class="actions" style="display:grid;gap:var(--space-3);">
-      <button type="button" class="btn btn-primary" id="installBtn">Install app</button>
+      <button type="button" class="btn btn-primary" id="installBtn">Install App</button>
       <a class="btn btn-secondary" id="openAppBtn" href="surveillance-travel-calculator.html">Use without installing</a>
     </div>
 
@@ -245,7 +245,7 @@
       if (/Linux/i.test(ua) || platformName === 'Linux') {
         return { id: 'linux', label: 'Install on Linux', tagline: 'You’re on Linux', isMobile: false };
       }
-      return { id: 'unknown', label: 'Install app', tagline: 'Install Toolbox on this device', isMobile: /Mobile/i.test(ua) };
+      return { id: 'unknown', label: 'Install App', tagline: 'Install Toolbox on this device', isMobile: /Mobile/i.test(ua) };
     }
 
     var platform = detectInstallPlatform();

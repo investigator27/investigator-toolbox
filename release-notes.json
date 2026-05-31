@@ -1,10 +1,24 @@
 {
-  "latest": "v133",
+  "latest": "v134",
   "appVersion": "3.5.4",
   "highlights": [
-    "Install page fixes Android detection after QR scan; removed computer-only button; no more Preparing install on load."
+    "Settings → Install App: proper install screen with a button that opens the browser install prompt (no install-page links)."
   ],
   "builds": {
+    "v134": {
+      "intro": "Build v134 — Settings Install App screen.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "Renamed Install Icon to Install App in Settings → How to Use.",
+            "Install App page has Install on Android / Windows / Mac button that triggers the native install prompt when Chrome or Edge is ready.",
+            "Removed install-page link list; manual fallback is browser menu → Install app.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v134)."
+          ]
+        }
+      ]
+    },
     "v133": {
       "intro": "Build v133 — Android install page fixes.",
       "sections": [

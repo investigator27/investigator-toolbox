@@ -2502,7 +2502,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=185" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=187" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2524,8 +2524,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.54';
-  const BUNDLED_PWA_CACHE_VERSION = 'v185';
+  const BUNDLED_APP_VERSION = '3.5.56';
+  const BUNDLED_PWA_CACHE_VERSION = 'v187';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2874,6 +2874,21 @@
     );
   }
 
+  function getPendingWorkerBuild(reg) {
+    if (!reg) return '';
+    return (
+      parseBuildFromScriptUrl(reg.waiting?.scriptURL)
+      || parseBuildFromScriptUrl(reg.installing?.scriptURL)
+      || ''
+    );
+  }
+
+  /** Build from the live registration (not in-memory registeredBuild — that resets every page load). */
+  function getRegistrationScriptBuild(reg) {
+    if (!reg) return registeredBuild || '';
+    return getActiveSwBuild(reg) || getPendingWorkerBuild(reg) || registeredBuild || '';
+  }
+
   async function getHighestCacheBuild() {
     if (!('caches' in window)) return '';
     try {
@@ -2896,7 +2911,8 @@
     if (running) return running;
     const registration = reg || swRegistration;
     if (registration?.waiting || registration?.installing) return '';
-    return getHighestCacheBuild();
+    if (!navigator.serviceWorker?.controller) return getHighestCacheBuild();
+    return '';
   }
 
   /** True when waiting worker is same/older than the one currently running (phantom update). */
@@ -3049,6 +3065,7 @@
     $('prefNotificationsSwitch')?.addEventListener('change', async (event) => {
       const enabled = event.target.checked;
       setPermissionPref(NOTIFICATIONS_PREF_KEY, enabled);
+      void syncNotificationPrefToSw();
       if (!enabled) {
         void syncAppIconBadge(false);
       } else if ('Notification' in window && Notification.permission === 'default') {
@@ -3250,6 +3267,11 @@
   async function ensurePostUpdateLaunchFlow() {
     if (postUpdateLaunchStarted || !isPostUpdateLaunchPending()) return false;
     postUpdateLaunchStarted = true;
+    // One-shot guard: drop the persistent marker before the (awaited) flow runs.
+    // If this launch is interrupted (app force-closed mid-update), the next load
+    // must NOT re-enter quiet/post-update mode — that is what silently blocks all
+    // future update detection and leaves the app "stuck" on an old build.
+    try { localStorage.removeItem(POST_UPDATE_LAUNCH_KEY); } catch {}
     await runPostUpdateLaunchFlow();
     return true;
   }
@@ -3617,6 +3639,24 @@
         if (seen.has(worker)) return;
         seen.add(worker);
         worker.postMessage({ type: 'SET_APP_BADGE', count });
+      });
+    } catch {}
+  }
+
+  /** Keep the service worker's notification gate in sync with the in-app toggle. */
+  async function syncNotificationPrefToSw() {
+    if (!('serviceWorker' in navigator)) return;
+    const enabled = isNotificationsEnabledInApp();
+    try {
+      const reg = await navigator.serviceWorker.getRegistration(BASE_PATH);
+      const targets = [reg?.active, reg?.waiting, reg?.installing, navigator.serviceWorker.controller].filter(
+        Boolean
+      );
+      const seen = new Set();
+      targets.forEach((worker) => {
+        if (seen.has(worker)) return;
+        seen.add(worker);
+        worker.postMessage({ type: 'SET_NOTIF_PREF', enabled });
       });
     } catch {}
   }
@@ -3989,13 +4029,19 @@
     const swUrl = `${BASE_PATH}service-worker.js?build=${encodeURIComponent(targetBuild)}`;
     let registration = await navigator.serviceWorker.getRegistration(BASE_PATH);
 
-    const buildChanged = registration && registeredBuild && registeredBuild !== targetBuild;
-    const midDownload = registration && (registration.installing || registration.waiting);
+    const regBuild = getRegistrationScriptBuild(registration);
+    const activeBuild = getActiveSwBuild(registration);
+    const pendingBuild = getPendingWorkerBuild(registration);
+    const buildChanged = registration && regBuild && regBuild !== targetBuild;
+    const pendingIsNewer = !!(pendingBuild && activeBuild && isBuildNewer(pendingBuild, activeBuild));
 
-    if (buildChanged && !midDownload) {
-      await registration.unregister();
+    if (buildChanged && !pendingIsNewer) {
+      try {
+        await registration.unregister();
+      } catch {}
       registration = null;
       waitingSW = null;
+      registeredBuild = '';
     }
 
     if (!registration) {
@@ -4008,27 +4054,39 @@
         await fetch(swUrl, { cache: 'no-store' });
       } catch {}
       await registration.update();
+    } else if (registration.waiting && navigator.serviceWorker.controller && (await isStaleWaitingWorker(registration))) {
+      try {
+        await registration.unregister();
+      } catch {}
+      registration = await navigator.serviceWorker.register(swUrl, {
+        scope: BASE_PATH,
+        updateViaCache: 'none'
+      });
     }
 
     registeredBuild = targetBuild;
     swRegistration = registration;
     attachRegistrationListeners(registration);
+    void syncNotificationPrefToSw();
     await clearStaleUpdateUiIfCurrent(registration);
     return registration;
   }
 
   async function probeForRemoteUpdate(registration) {
-    if (!registration) return false;
-    const activeBuild = await resolveInstalledBuild(registration);
+    let reg = registration;
+    if (!reg) return false;
+    const activeBuild = await resolveInstalledBuild(reg);
     const targetBuild = resolveTargetBuild();
     if (activeBuild && !isBuildNewer(targetBuild, activeBuild)) return false;
     try {
-      if (!registration.installing && !registration.waiting) {
-        await registration.update();
+      if (reg.waiting && navigator.serviceWorker.controller && (await isStaleWaitingWorker(reg))) {
+        reg = await registerForCurrentBuild();
+      } else if (!reg.installing && !reg.waiting) {
+        await reg.update();
       }
-      await waitForServiceWorkerSettle(registration, 20000);
+      await waitForServiceWorkerSettle(reg, 20000);
     } catch {}
-    return await bindWaitingWorker(registration, { showBanner: false });
+    return await bindWaitingWorker(reg, { showBanner: false });
   }
 
   async function applyAppUpdate() {
@@ -5696,6 +5754,7 @@ $('summaryNote').textContent =
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState !== 'visible') return;
       refreshSettingsUpdateBadge();
+      void syncNotificationPrefToSw();
       if (isUpdateBusy()) return;
       checkForAppUpdate({ showCheckingUi: false }).then(async (status) => {
         if (status === 'available') {

@@ -1,6 +1,11 @@
-/* sw-revision: 27 — bump this comment when testing updates locally */
+/* sw-revision: 28 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v185';
+let activeCacheName = 'surveillance-travel-pwa-v187';
+
+// Mirrors the in-app "Notifications" toggle. The page pushes the current value
+// via SET_NOTIF_PREF so the worker never shows an update notification the user
+// has switched off. Defaults to true (matches a fresh install).
+let notificationsEnabled = true;
 
 const CORE_ASSETS = [
   BASE + 'index.html',
@@ -80,6 +85,7 @@ async function closeSwUpdateNotifications() {
 }
 
 async function showSwUpdateReadyNotification() {
+  if (!notificationsEnabled) return;
   if (!self.registration?.showNotification) return;
   try {
     const existing = await self.registration.getNotifications({ tag: UPDATE_NOTIFICATION_TAG });
@@ -210,6 +216,11 @@ self.addEventListener('message', (event) => {
   const data = event.data || {};
   if (data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+    return;
+  }
+  if (data.type === 'SET_NOTIF_PREF') {
+    notificationsEnabled = data.enabled !== false;
+    if (!notificationsEnabled) event.waitUntil(closeSwUpdateNotifications());
     return;
   }
   if (data.type === 'SET_APP_BADGE') {

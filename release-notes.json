@@ -1,11 +1,37 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v185",
-  "appVersion": "3.5.54",
+  "latest": "v187",
+  "appVersion": "3.5.56",
   "highlights": [
-    "Camera Settings from the Camera tab opens the full Settings overlay; Back returns to the Camera tab."
+    "Software Update is more reliable: an interrupted update can no longer leave the app stuck on an old build, and the Notifications toggle now also controls update notifications."
   ],
   "builds": {
+    "v187": {
+      "intro": "Build v187 — Update reliability + notification toggle now governs update alerts.",
+      "sections": [
+        {
+          "heading": "Software Update",
+          "items": [
+            "Interrupted updates no longer leave the app permanently in post-update mode (the cause of being stuck on an old build).",
+            "The in-app Notifications toggle now also silences the service worker's update notification.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v187)."
+          ]
+        }
+      ]
+    },
+    "v186": {
+      "intro": "Build v186 — Service worker re-registers on cold load when target build changed.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Detects installed SW build from the live registration URL, not session memory, so v183→v186 updates work after refresh.",
+            "Clears phantom waiting workers that blocked update checks.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v186)."
+          ]
+        }
+      ]
+    },
     "v185": {
       "intro": "Build v185 — Camera Settings opens Settings overlay from Camera tab.",
       "sections": [

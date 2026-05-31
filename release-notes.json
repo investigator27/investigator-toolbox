@@ -1,11 +1,37 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v150",
-  "appVersion": "3.5.19",
+  "latest": "v152",
+  "appVersion": "3.5.21",
   "highlights": [
-    "Restore normal post-update flow: Settings → Software Update after reload."
+    "Fix dead tab bar after update reload; tab policy (disabled tabs) applies correctly again."
   ],
   "builds": {
+    "v152": {
+      "intro": "Build v152 — tab bar works after update.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Tab bar always initializes after an update reload (clicks work again).",
+            "Remote tab policy again greys out Hotels/Requests when disabled.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v152)."
+          ]
+        }
+      ]
+    },
+    "v151": {
+      "intro": "Build v151 — post-update Settings flow (second fix).",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Stopped a second tab-policy fetch from resetting to Calculator after an update reload.",
+            "Post-update markers survive reload (URL, session, and local storage) so Software Update opens with the up-to-date screen.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v151)."
+          ]
+        }
+      ]
+    },
     "v150": {
       "intro": "Build v150 — post-update Settings flow restored.",
       "sections": [

@@ -23,6 +23,17 @@
     meta.content = theme === 'dark' ? '#171614' : '#ffffff';
   })();
   </script>
+  <script>
+  (function () {
+    try {
+      var q = location.search || '';
+      var pending = sessionStorage.getItem('toolboxJustUpdated') === '1'
+        || localStorage.getItem('toolboxPostUpdatePending')
+        || /(?:^|[?&])postUpdate=1(?:&|$)/.test(q);
+      if (pending) document.documentElement.setAttribute('data-toolbox-post-update', '1');
+    } catch (e) {}
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
@@ -2231,7 +2242,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=150" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=152" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2253,8 +2264,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.19';
-  const BUNDLED_PWA_CACHE_VERSION = 'v150';
+  const BUNDLED_APP_VERSION = '3.5.21';
+  const BUNDLED_PWA_CACHE_VERSION = 'v152';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2318,6 +2329,8 @@
   let quietUpdateLoad = false;
   let applyingAppUpdate = false;
   let postUpdateLaunchHandled = false;
+  let appShellBootstrapped = false;
+  let tabBarInitialized = false;
   let displayProgress = 0;
   let targetProgress = 0;
   let progressRaf = null;
@@ -2840,40 +2853,81 @@
     return Notification.requestPermission();
   }
 
-  function finishAppUpdateReload() {
+  function markPendingPostUpdateLaunch() {
     try {
       sessionStorage.setItem('toolboxJustUpdated', '1');
       sessionStorage.setItem('toolboxOpenSettingsUpdates', '1');
+      localStorage.setItem('toolboxPostUpdatePending', String(Date.now()));
+      document.documentElement.setAttribute('data-toolbox-post-update', '1');
       sessionStorage.removeItem('toolboxUpdateReady');
       sessionStorage.removeItem('toolboxShowUptodate');
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
+  }
+
+  function clearPendingPostUpdateLaunchMarkers() {
+    try {
+      sessionStorage.removeItem('toolboxJustUpdated');
+      sessionStorage.removeItem('toolboxOpenSettingsUpdates');
+      sessionStorage.removeItem('toolboxReloadBuild');
+      sessionStorage.removeItem('toolboxShowUptodate');
+      localStorage.removeItem('toolboxPostUpdatePending');
+      document.documentElement.removeAttribute('data-toolbox-post-update');
+    } catch {}
+    try {
+      const url = new URL(location.href);
+      if (!url.searchParams.has('postUpdate')) return;
+      url.searchParams.delete('postUpdate');
+      history.replaceState(null, '', url.toString());
+    } catch {}
+  }
+
+  function hasPostUpdatePending() {
+    if (postUpdateLaunchHandled) return false;
+    try {
+      if (document.documentElement.getAttribute('data-toolbox-post-update') === '1') return true;
+      if (new URL(location.href).searchParams.get('postUpdate') === '1') return true;
+      if (sessionStorage.getItem('toolboxJustUpdated') === '1') return true;
+      if (localStorage.getItem('toolboxPostUpdatePending')) return true;
+    } catch {}
+    return false;
+  }
+
+  function finishAppUpdateReload() {
+    markPendingPostUpdateLaunch();
     resetDisplayProgress();
+    try {
+      const url = new URL(location.href);
+      url.searchParams.set('postUpdate', '1');
+      url.searchParams.delete('_');
+      location.replace(url.toString());
+      return;
+    } catch {}
     window.location.reload();
   }
 
   /** After an in-app update reload: uptodate UI + Settings → Software Update (not Calculator). */
   function runPostUpdateLaunchIfNeeded() {
-    if (postUpdateLaunchHandled) return false;
+    if (postUpdateLaunchHandled || !hasPostUpdatePending()) return false;
     try {
-      if (sessionStorage.getItem('toolboxJustUpdated') !== '1') return false;
-      postUpdateLaunchHandled = true;
-      sessionStorage.removeItem('toolboxJustUpdated');
-      sessionStorage.removeItem('toolboxReloadBuild');
-      sessionStorage.removeItem('toolboxShowUptodate');
-      const openUpdates = sessionStorage.getItem('toolboxOpenSettingsUpdates') === '1';
-      if (openUpdates) sessionStorage.removeItem('toolboxOpenSettingsUpdates');
+      const openUpdates = (() => {
+        try {
+          return sessionStorage.getItem('toolboxOpenSettingsUpdates') === '1'
+            || new URL(location.href).searchParams.get('postUpdate') === '1'
+            || !!localStorage.getItem('toolboxPostUpdatePending')
+            || document.documentElement.getAttribute('data-toolbox-post-update') === '1';
+        } catch {
+          return true;
+        }
+      })();
+      clearPendingPostUpdateLaunchMarkers();
       suppressUpdatePromptOnLoad = true;
       quietUpdateLoad = true;
       waitingSW = null;
       applyingAppUpdate = false;
       showUptodateBanner();
-      initTabBar();
-      if (openUpdates) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => openSettings('updates'));
-        });
-      }
+      if (openUpdates) openSettings('updates');
+      postUpdateLaunchHandled = true;
       return true;
     } catch {
       return false;
@@ -2881,11 +2935,13 @@
   }
 
   async function bootstrapAppShellAfterPolicy() {
+    if (appShellBootstrapped) return;
+    appShellBootstrapped = true;
     try {
       await syncBuildLabelFromReleaseNotes();
     } catch {}
     refreshAllVersionDisplays();
-    if (runPostUpdateLaunchIfNeeded()) return;
+    runPostUpdateLaunchIfNeeded();
     initTabBar();
   }
 
@@ -4442,6 +4498,7 @@
       'toolboxUpdateReady',
       'toolboxJustUpdated',
       'toolboxOpenSettingsUpdates',
+      'toolboxPostUpdatePending',
       'toolboxShowUptodate',
       'toolboxReloadBuild',
       'toolboxQuietLoad',
@@ -4967,6 +5024,8 @@ $('summaryNote').textContent =
   });
 
   function initTabBar() {
+    if (tabBarInitialized) return;
+    tabBarInitialized = true;
     tabVisibilityState = loadTabVisibility();
     const tabPanels = qsa('.tab-panel');
     const tabButtons = qsa('.tab-bar-item');
@@ -4981,9 +5040,7 @@ $('summaryNote').textContent =
       tabPanels.forEach((panel) => {
         const tabId = panel.dataset.tab;
         if (!tabId || tabId === 'calculator') return;
-        if (!isTabEnabled(tabId)) {
-          panel.classList.add('hidden');
-        }
+        panel.classList.toggle('hidden', !isTabEnabled(tabId));
       });
       tabButtons.forEach((btn) => {
         const tabId = btn.dataset.tab;
@@ -5114,9 +5171,11 @@ $('summaryNote').textContent =
         quietUpdateLoad = true;
         suppressUpdatePromptOnLoad = true;
       }
-      if (!postUpdateLaunchHandled && sessionStorage.getItem('toolboxJustUpdated') === '1') {
+      if (!postUpdateLaunchHandled && hasPostUpdatePending()) {
         runPostUpdateLaunchIfNeeded();
-      } else if (!postUpdateLaunchHandled && sessionStorage.getItem('toolboxShowUptodate') === '1') {
+      }
+      if (!tabBarInitialized) initTabBar();
+      if (!postUpdateLaunchHandled && sessionStorage.getItem('toolboxShowUptodate') === '1') {
         sessionStorage.removeItem('toolboxShowUptodate');
         suppressUpdatePromptOnLoad = true;
         quietUpdateLoad = true;

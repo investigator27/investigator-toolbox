@@ -2231,7 +2231,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=153" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=155" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2253,8 +2253,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.22';
-  const BUNDLED_PWA_CACHE_VERSION = 'v153';
+  const BUNDLED_APP_VERSION = '3.5.24';
+  const BUNDLED_PWA_CACHE_VERSION = 'v155';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2314,7 +2314,6 @@
   let downloadStallTimer = null;
   let lastDownloadProgressAt = 0;
   let updateFlowChain = Promise.resolve();
-  let suppressUpdatePromptOnLoad = false;
   let quietUpdateLoad = false;
   let applyingAppUpdate = false;
   let tabBarInitialized = false;
@@ -2855,26 +2854,49 @@
     window.location.reload();
   }
 
-  /** After reload from Update Now: Software Update + up-to-date (once per reload). */
-  function finishPostUpdateLaunchUi() {
+  function shouldIgnoreBackgroundUpdateEvents() {
+    return applyingAppUpdate || quietUpdateLoad || postUpdateReloadPass;
+  }
+
+  /** After reload from Update Now: open Settings → Software Update with up-to-date UI. */
+  function runPostUpdateReloadFlow() {
     try {
       if (sessionStorage.getItem('toolboxJustUpdated') !== '1') return false;
       sessionStorage.removeItem('toolboxJustUpdated');
+      sessionStorage.removeItem('toolboxOpenSettingsUpdates');
       sessionStorage.removeItem('toolboxReloadBuild');
       sessionStorage.removeItem('toolboxShowUptodate');
       localStorage.removeItem('toolboxPostUpdatePending');
-      const openUpdates = sessionStorage.getItem('toolboxOpenSettingsUpdates') === '1';
-      sessionStorage.removeItem('toolboxOpenSettingsUpdates');
       waitingSW = null;
       applyingAppUpdate = false;
+      postUpdateReloadPass = true;
       clearUpdateReadyMark();
       showUptodateBanner();
-      if (openUpdates) openSettings('updates');
-      postUpdateReloadPass = true;
+      ensureInteractiveShell();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          openSettings('updates');
+          renderSoftwareUpdateUi('uptodate');
+        });
+      });
       return true;
     } catch {
       return false;
     }
+  }
+
+  /** Remove stuck fullscreen camera / settings layers that block the tab bar. */
+  function ensureInteractiveShell() {
+    window.ToolboxCovertCamera?.forceExitCovertUi?.();
+    document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+    const cameraTab = $('tab-camera');
+    cameraTab?.classList.remove('tab-panel--camera-active');
+    const activeId = qs('.tab-bar-item.active')?.dataset.tab || 'calculator';
+    qsa('.tab-panel').forEach((panel) => {
+      const tabId = panel.dataset.tab;
+      if (!tabId) return;
+      panel.classList.toggle('hidden', tabId !== activeId);
+    });
   }
 
   async function finishAppShellAfterPolicy() {
@@ -2885,7 +2907,6 @@
     if (remoteTabPolicyMap && window.ToolboxTabs?.applyVisibility) {
       window.ToolboxTabs.applyVisibility(remoteTabPolicyMap);
     }
-    finishPostUpdateLaunchUi();
   }
 
   function syncViewportHeight() {
@@ -3083,11 +3104,6 @@
   async function syncAppIconBadge(show) {
     const count = show ? 1 : 0;
 
-    if (count > 0 && !isNotificationsEnabledInApp()) {
-      recordBadgeAttempt({ action: 'skipped-notifications-off' });
-      return;
-    }
-
     if (!count) {
       await closeUpdateReadyNotifications();
       const tasks = [];
@@ -3122,12 +3138,16 @@
 
     await postBadgeToServiceWorkers(1);
 
-    if (isAndroidDevice()) {
-      const shown = await showUpdateReadyNotification();
-      result.methods.push(shown ? 'android-notification:shown' : `android-notification:${notifPerm}`);
-    } else if (notifPerm === 'granted' && (isAppleMobileDevice() || !result.methods.includes('setAppBadge(1):ok'))) {
-      const shown = await showUpdateReadyNotification();
-      if (shown) result.methods.push('notification:shown');
+    if (isNotificationsEnabledInApp()) {
+      if (isAndroidDevice()) {
+        const shown = await showUpdateReadyNotification();
+        result.methods.push(shown ? 'android-notification:shown' : `android-notification:${notifPerm}`);
+      } else if (notifPerm === 'granted' && (isAppleMobileDevice() || !result.methods.includes('setAppBadge(1):ok'))) {
+        const shown = await showUpdateReadyNotification();
+        if (shown) result.methods.push('notification:shown');
+      }
+    } else {
+      result.methods.push('notification:skipped-in-app-off');
     }
 
     recordBadgeAttempt(result);
@@ -3341,7 +3361,7 @@
   }
 
   function finishDownloadAndShowReady(versionHint) {
-    if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
+    if (shouldIgnoreBackgroundUpdateEvents()) return;
     stopWaitingReadyPoll();
     updateProgressValue = 100;
     pendingUpdateBuild = parseBuildFromCacheName(versionHint) || PWA_CACHE_VERSION;
@@ -3352,7 +3372,7 @@
   }
 
   function handleDownloadProgress(data) {
-    if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
+    if (shouldIgnoreBackgroundUpdateEvents()) return;
     const pct = Number(data.percent) || 0;
     const label = String(data.label || '').trim();
     const done = Number(data.done) || 0;
@@ -3399,7 +3419,7 @@
       refreshSettingsUpdateBadge();
       return;
     }
-    if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
+    if (shouldIgnoreBackgroundUpdateEvents()) return;
     if (data.type === 'UPDATE_PROGRESS') {
       handleDownloadProgress(data);
       return;
@@ -3426,7 +3446,7 @@
           refreshSettingsUpdateBadge();
         }
       });
-      if (applyingAppUpdate || suppressUpdatePromptOnLoad || quietUpdateLoad) return;
+      if (shouldIgnoreBackgroundUpdateEvents()) return;
       renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
       startWaitingReadyPoll();
       sw.addEventListener('statechange', () => {
@@ -3575,13 +3595,29 @@
       || parseBuildFromCacheName(pendingUpdateBuild)
       || resolveTargetBuild();
     markUpdateReadyForBanner();
-    const showBanner = !quietUpdateLoad && (opts.showBanner ?? shouldAutoPromptUpdate());
-    if (showBanner) {
+    const showUi = !quietUpdateLoad
+      && !postUpdateReloadPass
+      && (opts.showBanner ?? shouldAutoPromptUpdate());
+    if (showUi) {
       showUpdateReadyBanner();
     } else {
-      refreshSettingsVersionLabel();
+      updateUIState = 'ready';
+      refreshSettingsUpdateBadge();
     }
     return true;
+  }
+
+  async function refreshPendingUpdateUi(registration, opts = {}) {
+    if (postUpdateReloadPass || updateUIState === 'uptodate' || applyingAppUpdate) return;
+    const reg = registration
+      || swRegistration
+      || await navigator.serviceWorker.getRegistration(BASE_PATH);
+    if (!reg?.waiting || !navigator.serviceWorker.controller) {
+      if (isUpdateReadyInSession() && updateUIState !== 'ready') showUpdateReadyBanner();
+      else refreshSettingsUpdateBadge();
+      return;
+    }
+    bindWaitingWorker(reg, { showBanner: opts.showBanner ?? false });
   }
 
   function watchInstallingWorker(registration) {
@@ -4031,7 +4067,7 @@
     if (screenId === 'updates') {
       bindSoftwareUpdateActions();
       if (updateUIState === 'uptodate') renderSoftwareUpdateUi('uptodate');
-      else if (updateUIState === 'ready' && waitingSW) renderSoftwareUpdateUi('ready');
+      else if (updateUIState === 'ready' && (waitingSW || isUpdateReadyInSession())) renderSoftwareUpdateUi('ready');
       else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
       else if (updateUIState === 'downloading' || updateUIState === 'installing') {
         renderSoftwareUpdateUi(updateUIState);
@@ -4688,6 +4724,9 @@ $('summaryNote').textContent =
   openSettingsBtn?.addEventListener('click', () => {
     openSettings('root');
   });
+  settingsOverlay?.addEventListener('click', (event) => {
+    if (event.target === settingsOverlay) closeSettings();
+  });
   settingsBackBtn?.addEventListener('click', () => {
     if (settingsNavStack.length <= 1) closeSettings();
     else popSettingsScreen();
@@ -4967,16 +5006,36 @@ $('summaryNote').textContent =
     showInstallCompleteUi();
   });
 
+  function bindTabBarNavigation(nav, switchTabFn, isTabEnabledFn) {
+    if (!nav || nav.dataset.tabsBound === '1') return;
+    nav.dataset.tabsBound = '1';
+    nav.addEventListener('click', (event) => {
+      const btn = event.target.closest('.tab-bar-item');
+      if (!btn || !nav.contains(btn)) return;
+      if (btn.classList.contains('tab-bar-item--disabled')) {
+        event.preventDefault();
+        return;
+      }
+      const tabId = btn.dataset.tab;
+      if (tabId) switchTabFn(tabId);
+    });
+    nav.addEventListener('pointerdown', (event) => {
+      const btn = event.target.closest('.tab-bar-item--disabled');
+      if (btn && nav.contains(btn)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, { capture: true });
+  }
+
   function initTabBar() {
     if (tabBarInitialized) return;
     tabBarInitialized = true;
-    if (qs('#tab-camera')?.classList.contains('tab-panel--camera-active')) {
-      window.ToolboxCovertCamera?.onTabLeave?.();
-    }
-    document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+    ensureInteractiveShell();
     tabVisibilityState = loadTabVisibility();
     const tabPanels = qsa('.tab-panel');
     const tabButtons = qsa('.tab-bar-item');
+    const tabNav = qs('nav.tab-bar');
     const appContent = $('appContent');
 
     function isTabEnabled(tabId) {
@@ -4985,10 +5044,13 @@ $('summaryNote').textContent =
     }
 
     function applyTabBarState() {
+      const activeTabId = qs('.tab-bar-item.active')?.dataset.tab || 'calculator';
       tabPanels.forEach((panel) => {
         const tabId = panel.dataset.tab;
-        if (!tabId || tabId === 'calculator') return;
-        panel.classList.toggle('hidden', !isTabEnabled(tabId));
+        if (!tabId) return;
+        const enabled = isTabEnabled(tabId);
+        const isActive = tabId === activeTabId;
+        panel.classList.toggle('hidden', !enabled || !isActive);
       });
       tabButtons.forEach((btn) => {
         const tabId = btn.dataset.tab;
@@ -5032,7 +5094,10 @@ $('summaryNote').textContent =
       if (cityDrop) cityDrop.hidden = true;
       qsa('#tab-hotels .city-panel').forEach((panel) => { panel.hidden = true; });
       qsa('#tab-hotels .city-btn').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
-      if (tabId === 'camera') window.ToolboxCovertCamera?.onTabEnter?.();
+      if (tabId === 'camera') {
+        const cold = !!window.__toolboxTabColdStart;
+        window.ToolboxCovertCamera?.onTabEnter?.(cold ? { coldStart: true } : {});
+      }
     }
 
     window.ToolboxTabs = {
@@ -5050,24 +5115,10 @@ $('summaryNote').textContent =
       switchTab,
     };
 
-    tabButtons.forEach((btn) => {
-      const blockDisabled = (event) => {
-        if (!btn.classList.contains('tab-bar-item--disabled')) return;
-        event.preventDefault();
-        event.stopPropagation();
-      };
-      btn.addEventListener('pointerdown', blockDisabled, { capture: true });
-      btn.addEventListener('click', (event) => {
-        const tabId = btn.dataset.tab;
-        if (!tabId || btn.classList.contains('tab-bar-item--disabled')) {
-          event.preventDefault();
-          return;
-        }
-        switchTab(tabId);
-      });
-    });
+    bindTabBarNavigation(tabNav, switchTab, isTabEnabled);
 
     window.addEventListener('pageshow', () => {
+      ensureInteractiveShell();
       tabVisibilityState = loadTabVisibility();
       applyTabBarState();
       const active = qs('.tab-bar-item.active');
@@ -5087,7 +5138,10 @@ $('summaryNote').textContent =
     applyTabBarState();
     let initialTab = resolveInitialTabId();
     if (!isTabEnabled(initialTab)) initialTab = 'calculator';
+    window.__toolboxTabColdStart = true;
     switchTab(initialTab);
+    window.__toolboxTabColdStart = false;
+    ensureInteractiveShell();
   }
 
   window.toolboxHaptic = toolboxHaptic;
@@ -5095,6 +5149,7 @@ $('summaryNote').textContent =
   window.syncToggleStateLabel = syncToggleStateLabel;
   window.openSettings = openSettings;
 
+  ensureInteractiveShell();
   initTabBar();
   try { localStorage.removeItem('toolboxPostUpdatePending'); } catch {}
   tabPolicyReady = fetchRemoteTabPolicy();
@@ -5109,6 +5164,7 @@ $('summaryNote').textContent =
 
   window.addEventListener('load', async () => {
     syncViewportHeight();
+    ensureInteractiveShell();
     if (tabPolicyReady) await tabPolicyReady;
     else {
       await syncBuildLabelFromReleaseNotes();
@@ -5116,7 +5172,8 @@ $('summaryNote').textContent =
     }
     refreshAllVersionDisplays();
     if (!tabBarInitialized) initTabBar();
-    if (!postUpdateReloadPass) finishPostUpdateLaunchUi();
+    ensureInteractiveShell();
+    runPostUpdateReloadFlow();
     try {
       sessionStorage.removeItem('toolboxReloadBuild');
     } catch {}
@@ -5125,14 +5182,6 @@ $('summaryNote').textContent =
       if (sessionStorage.getItem('toolboxQuietLoad') === '1') {
         sessionStorage.removeItem('toolboxQuietLoad');
         quietUpdateLoad = true;
-        suppressUpdatePromptOnLoad = true;
-      }
-      if (sessionStorage.getItem('toolboxShowUptodate') === '1') {
-        sessionStorage.removeItem('toolboxShowUptodate');
-        suppressUpdatePromptOnLoad = true;
-        quietUpdateLoad = true;
-        waitingSW = null;
-        showUptodateBanner();
       }
     } catch {}
 
@@ -5146,17 +5195,17 @@ $('summaryNote').textContent =
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 
     runUpdateFlowTask(async () => {
-      const afterPostUpdateReload = postUpdateReloadPass;
-      if (suppressUpdatePromptOnLoad || quietUpdateLoad || afterPostUpdateReload) {
+      if (quietUpdateLoad && !postUpdateReloadPass) {
         await registerForCurrentBuild();
-        const registration = swRegistration || await navigator.serviceWorker.getRegistration(BASE_PATH);
-        suppressUpdatePromptOnLoad = false;
         quietUpdateLoad = false;
+        refreshSettingsVersionLabel();
+        return;
+      }
+
+      if (postUpdateReloadPass) {
+        await registerForCurrentBuild();
         postUpdateReloadPass = false;
         refreshSettingsVersionLabel();
-        if (registration?.waiting) bindWaitingWorker(registration, { showBanner: false });
-        else if (registration) await probeForRemoteUpdate(registration);
-        refreshSettingsUpdateBadge();
         return;
       }
 
@@ -5165,24 +5214,26 @@ $('summaryNote').textContent =
       if (!navigator.serviceWorker.controller) return;
 
       if (registration.waiting) {
-        bindWaitingWorker(registration);
+        bindWaitingWorker(registration, { showBanner: true });
         return;
       }
       if (registration.installing) {
         watchInstallingWorker(registration);
         await waitForServiceWorkerSettle(registration, 10000);
-        bindWaitingWorker(registration);
+        bindWaitingWorker(registration, { showBanner: true });
         return;
       }
       if (!registration.installing && !registration.waiting) {
         await registration.update();
       }
       if (registration.waiting) {
-        bindWaitingWorker(registration);
+        bindWaitingWorker(registration, { showBanner: true });
       } else if (registration.installing) {
         watchInstallingWorker(registration);
         await waitForServiceWorkerSettle(registration, 10000);
-        bindWaitingWorker(registration);
+        bindWaitingWorker(registration, { showBanner: true });
+      } else {
+        await refreshPendingUpdateUi(registration);
       }
     })
       .catch(() => {})
@@ -5195,14 +5246,14 @@ $('summaryNote').textContent =
       refreshSettingsUpdateBadge();
       if (isUpdateBusy()) return;
       checkForAppUpdate({ showCheckingUi: false }).then((status) => {
-        if (status === 'available') bindWaitingWorker(swRegistration);
+        if (status === 'available') bindWaitingWorker(swRegistration, { showBanner: true });
         else refreshSettingsUpdateBadge();
       });
     });
     setInterval(() => {
       if (isUpdateBusy()) return;
       checkForAppUpdate({ showCheckingUi: false }).then((status) => {
-        if (status === 'available') bindWaitingWorker(swRegistration);
+        if (status === 'available') bindWaitingWorker(swRegistration, { showBanner: true });
       });
     }, 30 * 60 * 1000);
   });

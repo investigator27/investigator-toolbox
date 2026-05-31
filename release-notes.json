@@ -1,11 +1,39 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v153",
-  "appVersion": "3.5.22",
+  "latest": "v155",
+  "appVersion": "3.5.24",
   "highlights": [
-    "Restore working tabs, update badges, and Software Update after botched post-update changes."
+    "Restore update badges and post-install Software Update / up-to-date flow."
   ],
   "builds": {
+    "v155": {
+      "intro": "Build v155 — Software Update and badges restored.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Red update badge on menu and Settings again when a build is ready (app icon badge uses Badging API even if notifications are off in Toolbox).",
+            "After Update Now, reload opens Settings → Software Update with the up-to-date screen.",
+            "Removed flags that were permanently blocking update detection after reload.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v155)."
+          ]
+        }
+      ]
+    },
+    "v154": {
+      "intro": "Build v154 — tab bar works again.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Opening the app no longer auto-starts fullscreen camera (which hid the tab bar and blocked taps).",
+            "Tab policy refresh no longer shows every tab panel at once.",
+            "Stuck camera or settings overlay cleared on load.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v154)."
+          ]
+        }
+      ]
+    },
     "v153": {
       "intro": "Build v153 — tabs, badges, and update flow restored.",
       "sections": [

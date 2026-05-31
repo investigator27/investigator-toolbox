@@ -1,10 +1,23 @@
 {
-  "latest": "v126",
+  "latest": "v127",
   "appVersion": "3.5.4",
   "highlights": [
-    "Install page: Open on Desktop with Firefox, Chrome, or Edge picker."
+    "After Android install, Toolbox opens automatically (or tap Open Toolbox)."
   ],
   "builds": {
+    "v127": {
+      "intro": "Investigator Toolbox 3.5.4 — launch after PWA install.",
+      "sections": [
+        {
+          "heading": "Install",
+          "items": [
+            "After you accept Install on Android, the app opens Toolbox automatically when Chrome allows it.",
+            "Install button becomes Open Toolbox if you need to launch again from the install page.",
+            "Deploy index.html, surveillance-travel-calculator.html, service-worker.js, and release-notes.json (v127)."
+          ]
+        }
+      ]
+    },
     "v126": {
       "intro": "Investigator Toolbox 3.5.4 — desktop browser picker on install page.",
       "sections": [

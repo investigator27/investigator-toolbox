@@ -1605,9 +1605,9 @@
           <div class="settings-group">
             <div class="settings-body-text">
               <ol class="steps-list">
-                <li><strong>Android:</strong> Scan the install QR (<a id="howInstallPageLink" href="#">install page</a>) in Chrome → <strong>Install on this phone</strong> (or ⋮ → Install app).</li>
+                <li><strong>Android:</strong> Scan the install QR (<a id="howInstallPageLink" href="#">install page</a>) in Chrome → <strong>Install on this phone</strong>. Toolbox opens automatically after install.</li>
                 <li><strong>Desktop:</strong> On the install page, tap <strong>Open on Desktop</strong> → choose Firefox, Chrome, or Edge.</li>
-                <li>Open <strong>Toolbox</strong> from your home screen (phone) or browser (desktop).</li>
+                <li>If it does not open, use the <strong>Toolbox</strong> icon on your home screen (phone) or open the link again.</li>
               </ol>
             </div>
           </div>
@@ -1915,7 +1915,7 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   const BUNDLED_APP_VERSION = '3.5.4';
-  const BUNDLED_PWA_CACHE_VERSION = 'v126';
+  const BUNDLED_PWA_CACHE_VERSION = 'v127';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4394,6 +4394,22 @@ $('summaryNote').textContent =
   });
 
   const pwaInstallBanner = $('pwaInstallBanner');
+  let pwaLaunchScheduled = false;
+
+  function launchToolboxAfterInstall() {
+    if (pwaLaunchScheduled) return;
+    pwaLaunchScheduled = true;
+    hidePwaInstallBanner();
+    if (installBtn) {
+      installBtn.textContent = 'Open Toolbox';
+      installBtn.disabled = false;
+    }
+    const target = new URL(window.location.href);
+    target.searchParams.delete('install');
+    window.setTimeout(() => {
+      window.location.replace(target.toString());
+    }, 500);
+  }
 
   function shouldShowPwaInstallBanner() {
     if (!/Android/i.test(navigator.userAgent)) return false;
@@ -4427,12 +4443,29 @@ $('summaryNote').textContent =
   });
 
   installBtn?.addEventListener('click', () => {
+    if (installBtn?.textContent === 'Open Toolbox') {
+      launchToolboxAfterInstall();
+      return;
+    }
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.finally(() => {
-      deferredPrompt = null;
-      hidePwaInstallBanner();
-    });
+    deferredPrompt.userChoice
+      .then((choice) => {
+        if (choice?.outcome === 'accepted') {
+          setTimeout(() => {
+            if (!pwaLaunchScheduled) launchToolboxAfterInstall();
+          }, 2500);
+        }
+      })
+      .finally(() => {
+        deferredPrompt = null;
+        if (!pwaLaunchScheduled) hidePwaInstallBanner();
+      });
+  });
+
+  window.addEventListener('appinstalled', () => {
+    if (!/Android/i.test(navigator.userAgent)) return;
+    launchToolboxAfterInstall();
   });
 
   function initTabBar() {

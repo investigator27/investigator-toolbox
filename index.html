@@ -222,6 +222,7 @@
     var actionsEl = document.querySelector('.actions');
     var deferredPrompt = null;
     var installReady = false;
+    var launchScheduled = false;
 
     function setCallout(text) {
       if (installCallout) installCallout.textContent = text;
@@ -293,16 +294,40 @@
       }
     }
 
+    function launchToolboxAfterInstall() {
+      if (launchScheduled) return;
+      launchScheduled = true;
+      setCallout('Installed! Opening Toolbox…');
+      if (installBtn) {
+        installBtn.disabled = false;
+        installBtn.textContent = 'Open Toolbox';
+      }
+      window.setTimeout(function () {
+        window.location.replace(appUrl);
+      }, 500);
+    }
+
     function runInstallPrompt() {
       if (!deferredPrompt) return false;
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.finally(function () {
+      deferredPrompt.userChoice.then(function (choice) {
+        if (choice && choice.outcome === 'accepted') {
+          window.setTimeout(function () {
+            if (!launchScheduled) launchToolboxAfterInstall();
+          }, 2500);
+        }
+      }).finally(function () {
         deferredPrompt = null;
         installReady = false;
-        if (installBtn) installBtn.disabled = true;
+        if (installBtn && !launchScheduled) installBtn.disabled = true;
       });
       return true;
     }
+
+    window.addEventListener('appinstalled', function () {
+      if (!isAndroid) return;
+      launchToolboxAfterInstall();
+    });
 
     if (!isAndroid && (isIOS || !/Mobile/i.test(ua))) {
       blockNonAndroid();
@@ -331,6 +356,10 @@
     if (installBtn) {
       installBtn.addEventListener('click', function () {
         if (!isAndroid || isStandalone) return;
+        if (installBtn.textContent === 'Open Toolbox') {
+          window.location.href = appUrl;
+          return;
+        }
         if (runInstallPrompt()) return;
         try {
           sessionStorage.setItem('toolboxPwaInstall', '1');

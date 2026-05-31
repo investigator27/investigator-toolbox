@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v179",
-  "appVersion": "3.5.48",
+  "latest": "v180",
+  "appVersion": "3.5.49",
   "highlights": [
-    "Camera tab layout matches Calculator padding; Clip Library and Settings rows visible; back from camera returns to hub."
+    "Camera Clip Library and Settings scroll with the tab like Calculator; each day’s clips sit in a visible folder card."
   ],
   "builds": {
+    "v180": {
+      "intro": "Build v180 — Camera subpages scroll with the tab; clip day folders.",
+      "sections": [
+        {
+          "heading": "Fixes",
+          "items": [
+            "Clip Library and Camera Settings are full cards in the tab scroll area (no small inner scroll box).",
+            "Each calendar day’s clips appear in a bordered settings-style folder with date header and clip count.",
+            "Subpage layout matches Calculator/Hotels card title style; back returns to Covert Camera hub.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v180)."
+          ]
+        }
+      ]
+    },
     "v179": {
       "intro": "Build v179 — Camera tab layout and navigation fixes.",
       "sections": [

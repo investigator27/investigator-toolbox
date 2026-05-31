@@ -252,71 +252,40 @@
     }
     #tab-camera.hidden{display:none!important}
     .covert-camera--session-off{display:none!important}
-    .camera-tab-view{
-      position:relative;
+    #cameraTabView{
       display:grid;
       gap:var(--space-4);
       align-content:start;
-      min-height:min(68vh,40rem);
-    }
-    .camera-tab-view.is-subpage #covertClipsHub{
-      transform:translateX(-28%);
-      pointer-events:none;
-      transition:transform .34s cubic-bezier(.32,.72,.24,1);
+      min-width:0;
+      max-width:100%;
     }
     #covertClipsHub{
       display:grid;
       gap:var(--space-4);
       align-content:start;
-      transition:transform .34s cubic-bezier(.32,.72,.24,1);
     }
-    .camera-slide-panel.card{
-      padding:0;
-      gap:0;
-    }
-    .camera-slide-panel{
-      position:absolute;
-      inset:0;
-      z-index:8;
+    .camera-subpage-card{
       display:grid;
-      grid-template-rows:auto minmax(0,1fr);
-      overflow:hidden;
-      transform:translateX(100%);
-      transition:transform .34s cubic-bezier(.32,.72,.24,1);
-      visibility:hidden;
-      pointer-events:none;
+      gap:var(--space-4);
+      align-content:start;
     }
-    .camera-slide-panel.is-open{
-      transform:translateX(0);
-      visibility:visible;
-      pointer-events:auto;
-    }
-    .camera-slide-panel__toolbar{
-      display:flex;
-      align-items:center;
-      min-height:3.25rem;
-      flex-shrink:0;
-      padding:max(env(safe-area-inset-top),var(--space-2)) var(--space-4) var(--space-2);
-    }
-    .camera-slide-panel__body{
-      min-height:0;
-      overflow-y:auto;
-      overflow-x:hidden;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
-    }
-    .camera-slide-panel__body::-webkit-scrollbar{display:none}
-    .camera-slide-panel__body.settings-scroll{
-      padding:0 var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom,0px));
+    .camera-subpage-card__back{
+      justify-self:start;
+      margin:calc(-1 * var(--space-2)) 0 0;
     }
     .camera-clips-day{display:grid;gap:var(--space-2)}
-    .camera-clips-day + .camera-clips-day{margin-top:var(--space-4)}
-    .camera-clips-day__title{
-      margin:0;
-      font-size:var(--text-sm);
+    .camera-clips-day + .camera-clips-day{margin-top:var(--space-2)}
+    .camera-clips-day .settings-section-title{margin:0}
+    .camera-clips-day__folder-body{
+      padding:var(--space-3);
+      border-top:1px solid var(--color-divider);
+    }
+    .camera-clips-day__folder-head .settings-row__label{
       font-weight:700;
-      color:var(--color-text-muted);
-      line-height:1.35;
+      font-size:var(--text-sm);
+      text-transform:none;
+      letter-spacing:normal;
+      color:var(--color-text);
     }
     .camera-clips-day__grid{
       display:grid;
@@ -1607,7 +1576,7 @@
     </div>
 
     <div class="tab-panel hidden" id="tab-camera" data-tab="camera" role="tabpanel" aria-labelledby="tab-btn-camera">
-      <div class="camera-tab-view" id="cameraTabView">
+      <div id="cameraTabView">
         <section class="card hidden" id="covertClipsHub" aria-labelledby="camera-hub-title">
           <div>
             <h2 id="camera-hub-title" class="card-title card-title--section">Covert Camera</h2>
@@ -1633,53 +1602,36 @@
           </div>
         </section>
 
-        <section class="card camera-slide-panel" id="cameraPanelClipLibrary" data-camera-panel="clip-library" aria-labelledby="clip-library-intro-title" hidden>
-          <header class="camera-slide-panel__toolbar">
-            <button type="button" class="settings-back" data-camera-pop aria-label="Back">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
-            </button>
-          </header>
-          <div class="camera-slide-panel__body settings-scroll settings-scroll--subpage">
-            <section class="settings-page-intro" aria-labelledby="clip-library-intro-title">
-              <div class="settings-page-intro__inner">
-                <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16v12H4z"/><path d="M9 12h6"/><path d="M12 8V4"/><path d="M8 4h8"/></svg></span>
-                <div class="settings-page-intro__text">
-                  <h1 class="settings-page-intro__title" id="clip-library-intro-title">Clip Library</h1>
-                  <p class="settings-page-intro__blurb">Clips are grouped by day. Select, view, send to OneDrive, or delete from this device.</p>
-                </div>
-              </div>
-            </section>
-            <p class="card-sub" id="covertClipsSummary">0 clips · 0 B</p>
-            <div class="camera-clips-hub__toolbar">
-              <button type="button" class="btn btn-secondary" id="covertClipsSelectAllBtn">Select all</button>
-            </div>
-            <div class="camera-clips-hub__list" id="covertClipsList"></div>
-            <div class="camera-clips-card__footer">
-              <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Send to OneDrive</button>
-              <button type="button" class="btn btn-secondary" id="covertClipsDeleteBtn" disabled>Delete selected</button>
-            </div>
+        <section class="card camera-subpage-card hidden" id="cameraPanelClipLibrary" data-camera-panel="clip-library" aria-labelledby="clip-library-title" hidden>
+          <button type="button" class="settings-back camera-subpage-card__back" data-camera-pop aria-label="Back to Covert Camera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+          </button>
+          <div>
+            <h2 id="clip-library-title" class="card-title card-title--section">Clip Library</h2>
+            <p class="card-sub">Clips are grouped by day in folders below. Select, view, send to OneDrive, or delete from this device.</p>
+          </div>
+          <p class="card-sub" id="covertClipsSummary">0 clips · 0 B</p>
+          <div class="camera-clips-hub__toolbar">
+            <button type="button" class="btn btn-secondary" id="covertClipsSelectAllBtn">Select all</button>
+          </div>
+          <div class="camera-clips-hub__list" id="covertClipsList"></div>
+          <div class="camera-clips-card__footer">
+            <button type="button" class="btn btn-primary" id="covertClipsSendBtn" disabled>Send to OneDrive</button>
+            <button type="button" class="btn btn-secondary" id="covertClipsDeleteBtn" disabled>Delete selected</button>
           </div>
         </section>
 
-        <section class="card camera-slide-panel" id="cameraPanelSettings" data-camera-panel="camera-settings" aria-labelledby="camera-tab-settings-intro-title" hidden>
-          <header class="camera-slide-panel__toolbar">
-            <button type="button" class="settings-back" data-camera-pop aria-label="Back">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
-            </button>
-          </header>
-          <div class="camera-slide-panel__body settings-scroll settings-scroll--subpage">
-            <section class="settings-page-intro" aria-labelledby="camera-tab-settings-intro-title">
-              <div class="settings-page-intro__inner">
-                <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
-                <div class="settings-page-intro__text">
-                  <h1 class="settings-page-intro__title" id="camera-tab-settings-intro-title">Camera Settings</h1>
-                  <p class="settings-page-intro__blurb">Covert video — rear camera, landscape. Clips stay inside Toolbox until you upload or export.</p>
-                </div>
-              </div>
-            </section>
-            <p class="settings-permission-hint" data-cam-permission-status aria-live="polite">Checking…</p>
-            <p class="settings-permission-hint" data-cam-storage-summary aria-live="polite"></p>
-            <div class="settings-group" role="group" aria-label="Recording">
+        <section class="card camera-subpage-card hidden" id="cameraPanelSettings" data-camera-panel="camera-settings" aria-labelledby="camera-tab-settings-title" hidden>
+          <button type="button" class="settings-back camera-subpage-card__back" data-camera-pop aria-label="Back to Covert Camera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+          </button>
+          <div>
+            <h2 id="camera-tab-settings-title" class="card-title card-title--section">Camera Settings</h2>
+            <p class="card-sub">Covert video — rear camera, landscape. Clips stay inside Toolbox until you upload or export.</p>
+          </div>
+          <p class="settings-permission-hint" data-cam-permission-status aria-live="polite">Checking…</p>
+          <p class="settings-permission-hint" data-cam-storage-summary aria-live="polite"></p>
+          <div class="settings-group" role="group" aria-label="Recording">
               <div class="settings-row settings-row--toggle">
                 <span class="settings-row__label">Keep screen on while recording</span>
                 <label class="settings-switch"><input type="checkbox" data-cam-pref="wakeLock" checked aria-label="Keep screen on while recording" /><span class="settings-switch__track"></span></label>
@@ -1706,22 +1658,21 @@
               <button type="button" class="btn btn-secondary" data-cam-action="clear-all">Delete all clips on this device</button>
               <button type="button" class="btn btn-secondary" data-cam-action="perm-help">Camera permission help</button>
             </div>
-            <div class="settings-group">
-              <div class="settings-body-text">
-                <p><strong>Controls</strong></p>
-                <ol class="steps-list">
-                  <li>3 taps on the black area — start recording (screen stays black).</li>
-                  <li>3 taps again — stop; clip saved as 00000, 00001, …</li>
-                  <li>Swipe up — live preview · Swipe down — hide preview.</li>
-                  <li>Swipe up twice (after stop) — Clip Library on this tab.</li>
-                </ol>
-                <p><strong>Notes</strong></p>
-                <ul class="steps-list">
-                  <li>Android shows a camera indicator while recording — cannot be hidden.</li>
-                  <li>Upload opens Share — choose OneDrive; not automatic.</li>
-                  <li>Enable Haptic feedback under Personalization for tap pulses.</li>
-                </ul>
-              </div>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <p><strong>Controls</strong></p>
+              <ol class="steps-list">
+                <li>3 taps on the black area — start recording (screen stays black).</li>
+                <li>3 taps again — stop; clip saved as 00000, 00001, …</li>
+                <li>Swipe up — live preview · Swipe down — hide preview.</li>
+                <li>Swipe up twice (after stop) — Clip Library on this tab.</li>
+              </ol>
+              <p><strong>Notes</strong></p>
+              <ul class="steps-list">
+                <li>Android shows a camera indicator while recording — cannot be hidden.</li>
+                <li>Upload opens Share — choose OneDrive; not automatic.</li>
+                <li>Enable Haptic feedback under Personalization for tap pulses.</li>
+              </ul>
             </div>
           </div>
         </section>
@@ -2564,7 +2515,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=179" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=180" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2586,8 +2537,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.48';
-  const BUNDLED_PWA_CACHE_VERSION = 'v179';
+  const BUNDLED_APP_VERSION = '3.5.49';
+  const BUNDLED_PWA_CACHE_VERSION = 'v180';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

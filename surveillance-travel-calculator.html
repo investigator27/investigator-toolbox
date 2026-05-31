@@ -241,6 +241,7 @@
       text-align:center;
     }
     .covert-permission-gate.hidden{display:none!important}
+    .covert-camera--gate-open .covert-camera__tap{pointer-events:none}
     .covert-permission-gate p{
       margin:0;
       font-size:var(--text-sm);
@@ -2089,8 +2090,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.7';
-  const BUNDLED_PWA_CACHE_VERSION = 'v138';
+  const BUNDLED_APP_VERSION = '3.5.8';
+  const BUNDLED_PWA_CACHE_VERSION = 'v139';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2258,9 +2259,13 @@
     settingsCheckUpdateBtn?.classList.toggle('hidden', mode === 'checking' || mode === 'card');
   }
 
-  async function getUpdateCardVersionLabel(build) {
+  function getProductVersionLabel() {
+    return String(APP_VERSION || BUNDLED_APP_VERSION || '').trim() || '—';
+  }
+
+  function getBuildLabel(build) {
     const id = String(build || PWA_CACHE_VERSION || BUNDLED_PWA_CACHE_VERSION || '').trim();
-    return id || APP_VERSION;
+    return id || '—';
   }
 
   async function getUpdateCardSummary(build) {
@@ -2274,12 +2279,13 @@
 
   async function refreshSwUpdateCardCopy(state) {
     const build = getDisplayUpdateBuild();
-    const versionNum = await getUpdateCardVersionLabel(build);
-    if (swUpdateTitle) swUpdateTitle.textContent = `Toolbox · ${versionNum}`;
+    const productVer = getProductVersionLabel();
+    const buildId = getBuildLabel(build);
+    if (swUpdateTitle) swUpdateTitle.textContent = `Toolbox ${productVer}`;
     if (swUpdateMeta) {
       swUpdateMeta.textContent = state === 'ready'
-        ? `Build ${build} · Ready to install`
-        : `Build ${build}`;
+        ? `Build ${buildId} · Ready to install`
+        : `Build ${buildId}`;
     }
     if (swUpdateSummary) {
       swUpdateSummary.textContent = await getUpdateCardSummary(build);
@@ -2302,7 +2308,9 @@
     if (state === 'uptodate') {
       showSwUpdatePanels('uptodate');
       if (swUpdateUptodateVersion) {
-        swUpdateUptodateVersion.textContent = formatAppVersionLabel();
+        const productVer = getProductVersionLabel();
+        const buildId = getBuildLabel(getDisplayUpdateBuild());
+        swUpdateUptodateVersion.textContent = `Version ${productVer} · build ${buildId}`;
       }
       return;
     }
@@ -2709,13 +2717,17 @@
   }
 
   function formatAppVersionLabel() {
-    const build = getDisplayUpdateBuild();
-    return build ? `Version ${APP_VERSION} · ${build}` : `Version ${APP_VERSION}`;
+    const productVer = getProductVersionLabel();
+    const buildId = getBuildLabel(getDisplayUpdateBuild());
+    if (buildId && buildId !== '—') return `Version ${productVer} · build ${buildId}`;
+    return `Version ${productVer}`;
   }
 
   function getShortVersionLabel() {
-    const build = getDisplayUpdateBuild();
-    return build ? `${build} (${APP_VERSION})` : `v${APP_VERSION}`;
+    const productVer = getProductVersionLabel();
+    const buildId = getBuildLabel(getDisplayUpdateBuild());
+    if (buildId && buildId !== '—') return `${productVer} · ${buildId}`;
+    return productVer;
   }
 
   function getFooterVersionLine() {

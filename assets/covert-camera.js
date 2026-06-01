@@ -1089,22 +1089,14 @@
   }
 
   async function enterCovertFullscreen() {
-    if (!document.documentElement.requestFullscreen && !$('tab-camera')?.requestFullscreen) return false;
-    if (document.fullscreenElement) return true;
+    const target = $('tab-camera');
+    if (!target?.requestFullscreen) return false;
+    if (document.fullscreenElement === target) return true;
     paintFullscreenBackdropBlack();
     document.documentElement.style.backgroundColor = '#000';
     document.body.style.backgroundColor = '#000';
-    const opts = { navigationUI: 'hide' };
     try {
-      await document.documentElement.requestFullscreen(opts);
-      usedFullscreenForOrientation = true;
-      paintFullscreenBackdropBlack();
-      return true;
-    } catch {}
-    const target = $('tab-camera') || $('covertCamera');
-    if (!target?.requestFullscreen) return false;
-    try {
-      await target.requestFullscreen(opts);
+      await target.requestFullscreen({ navigationUI: 'hide' });
       usedFullscreenForOrientation = true;
       paintFullscreenBackdropBlack();
       return true;
@@ -1119,13 +1111,13 @@
     return !!(s.width && s.height && s.width >= s.height);
   }
 
-  /** Permission gate: landscape lock first; fullscreen only if lock needs it (black backdrop). */
-  async function prepareLandscapeForGate() {
-    setBlackVisible(true);
-    paintFullscreenBackdropBlack();
-    const locked = await lockLandscape();
-    if (!locked) await enterCovertFullscreen();
-    return locked;
+  /** Permission screen only — never fullscreen (breaks gate buttons + white corner on Android). */
+  async function lockLandscapeForPermissionGate() {
+    try {
+      return await lockLandscape();
+    } catch {
+      return false;
+    }
   }
 
   async function prepareLandscapeCapture() {
@@ -1135,6 +1127,13 @@
     const locked = await lockLandscape();
     if (!locked) await enterCovertFullscreen();
     return locked;
+  }
+
+  function isCovertUiActive() {
+    return (
+      cameraSessionActive &&
+      !$('covertCamera')?.classList.contains('covert-camera--session-off')
+    );
   }
 
   function enterCovertMode() {
@@ -1473,7 +1472,13 @@
     enterCovertMode();
     hidePreview();
     clearHud();
-    void prepareLandscapeForGate();
+    const needGate = !streamIsLive();
+    showPermissionGate(needGate);
+    if (needGate) {
+      void lockLandscapeForPermissionGate();
+    } else {
+      void prepareLandscapeCapture();
+    }
   }
 
   async function exitCovertToNewestClipDay() {
@@ -1515,8 +1520,20 @@
   }
 
   function showPermissionGate(show) {
-    $('covertPermissionGate')?.classList.toggle('hidden', !show);
-    $('covertCamera')?.classList.toggle('covert-camera--gate-open', !!show);
+    const gate = $('covertPermissionGate');
+    const root = $('covertCamera');
+    if (!gate) return;
+    if (show) {
+      gate.classList.remove('hidden');
+      gate.removeAttribute('hidden');
+      gate.setAttribute('aria-hidden', 'false');
+      root?.classList.add('covert-camera--gate-open');
+    } else {
+      gate.classList.add('hidden');
+      gate.setAttribute('hidden', '');
+      gate.setAttribute('aria-hidden', 'true');
+      root?.classList.remove('covert-camera--gate-open');
+    }
   }
 
   function setPreviewVisible(visible) {
@@ -2345,16 +2362,8 @@
   }
 
   function resumeCameraSession() {
-    openCameraSession();
-    if (streamIsLive()) {
-      showPermissionGate(false);
-      clearHud();
-      void prepareLandscapeCapture();
-      return;
-    }
-    showPermissionGate(true);
     setPermissionError('');
-    clearHud();
+    openCameraSession();
   }
 
   function onTabLeave() {
@@ -2397,6 +2406,7 @@
     popCameraScreen,
     resetCameraNav,
     forceExitCovertUi,
+    isCovertUiActive,
   };
 
   if (document.readyState === 'loading') {

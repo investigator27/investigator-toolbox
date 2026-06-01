@@ -1096,7 +1096,6 @@
     tab?.classList.remove('tab-panel--camera-active');
     document.documentElement.classList.remove('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
-    window.toolboxSyncViewport?.();
     document.documentElement.style.backgroundColor = '';
     setBlackVisible(false);
     hidePreview();
@@ -1413,7 +1412,6 @@
   async function exitCovertToNewestClipDay() {
     if (isRecording) return;
     userClosedSession = true;
-    cameraSessionActive = false;
     stopCameraStream();
     releaseWakeLock();
     clearHud();

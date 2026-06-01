@@ -721,7 +721,7 @@
   /**
    * Build a canvas-backed stream that burns the timestamp into every frame, then record THAT.
    * Returns the new stream or null on any failure (caller falls back to the raw stream so
-   * recording can never break). Audio tracks are carried over so clips keep sound.
+   * recording can never break). Video-only — no audio tracks are ever added.
    */
   async function buildTimestampedStream(srcStream) {
     try {
@@ -782,7 +782,6 @@
         loopRAF();
       }
       const out = canvas.captureStream(fps);
-      srcStream.getAudioTracks().forEach((t) => out.addTrack(t));
       tsSourceVideo = v;
       tsCanvasStream = out;
       return out;
@@ -819,22 +818,28 @@
   function pickMimeType() {
     if (typeof MediaRecorder === 'undefined') return '';
     const candidates = [
-      'video/webm;codecs=vp9,opus',
-      'video/webm;codecs=vp8,opus',
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
       'video/webm',
       'video/mp4',
     ];
     return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
   }
 
-  /** Scale bitrate to the actual resolution/fps so motion stays sharp (clamped 3.5–12 Mbps). */
+  /** Target bitrate by resolution — VP9/WebM on phone; sharp 720p, smaller files (1.2–3.5 Mbps). */
   function computeVideoBitrate(track) {
     const s = track?.getSettings?.() || {};
-    const w = s.width || 1920;
-    const h = s.height || 1080;
-    const fps = s.frameRate || 30;
-    const bps = Math.round(w * h * fps * 0.12);
-    return Math.min(Math.max(bps, 3500000), 12000000);
+    const w = s.width || 1280;
+    const h = s.height || 720;
+    const fps = Math.min(Math.max(s.frameRate || 30, 24), 30);
+    const megapixels = (w * h) / 1e6;
+    let mbps;
+    if (megapixels >= 2) mbps = 2.8;
+    else if (megapixels >= 0.85) mbps = 2.0;
+    else mbps = 1.4;
+    if (fps >= 29) mbps *= 1.05;
+    const bps = Math.round(mbps * 1_000_000);
+    return Math.min(Math.max(bps, 1200000), 3500000);
   }
 
   function clearHud() {
@@ -862,31 +867,23 @@
   }
 
   async function queryMediaPermissionState() {
-    if (!navigator.permissions?.query) return { camera: 'unknown', microphone: 'unknown' };
+    if (!navigator.permissions?.query) return { camera: 'unknown' };
     try {
-      const [cam, mic] = await Promise.all([
-        navigator.permissions.query({ name: 'camera' }).catch(() => null),
-        navigator.permissions.query({ name: 'microphone' }).catch(() => null),
-      ]);
-      return {
-        camera: cam?.state || 'unknown',
-        microphone: mic?.state || 'unknown',
-      };
+      const cam = await navigator.permissions.query({ name: 'camera' }).catch(() => null);
+      return { camera: cam?.state || 'unknown' };
     } catch {
-      return { camera: 'unknown', microphone: 'unknown' };
+      return { camera: 'unknown' };
     }
   }
 
   function describeMediaError(err, permState) {
     const name = err?.name || '';
     if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-      const camBlocked = permState?.camera === 'denied';
-      const micBlocked = permState?.microphone === 'denied';
-      if (camBlocked || micBlocked) {
+      if (permState?.camera === 'denied') {
         return (
-          'Camera or microphone is blocked for Toolbox — Android will not show a popup until you reset it. ' +
-          'Chrome: ⋮ → Settings → Site settings → Camera (and Microphone) → Allow for this site. ' +
-          'Or Android Settings → Apps → Toolbox or Chrome → Permissions → allow Camera and Microphone.'
+          'Camera is blocked for Toolbox — Android will not show a popup until you reset it. ' +
+          'Chrome: ⋮ → Settings → Site settings → Camera → Allow for this site. ' +
+          'Or Android Settings → Apps → Toolbox or Chrome → Permissions → allow Camera.'
         );
       }
       return (
@@ -1352,11 +1349,10 @@
   function getLandscapeVideoConstraints() {
     return {
       facingMode: { ideal: 'environment' },
-      width: { ideal: 1920, min: 640 },
-      height: { ideal: 1080, min: 360 },
+      width: { ideal: 1280, min: 640 },
+      height: { ideal: 720, min: 360 },
       aspectRatio: { ideal: 16 / 9 },
-      // Ask for a steady 30fps so the camera doesn't drop to a jittery variable rate.
-      frameRate: { ideal: 30 },
+      frameRate: { ideal: 30, max: 30 },
     };
   }
 
@@ -1415,48 +1411,35 @@
     } catch {
       try {
         await track.applyConstraints({
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
           aspectRatio: { ideal: 16 / 9 },
-          frameRate: { ideal: 30 },
+          frameRate: { ideal: 30, max: 30 },
         });
       } catch {
         try {
           await track.applyConstraints({
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 30 },
+            width: { ideal: 960 },
+            height: { ideal: 540 },
+            frameRate: { ideal: 30, max: 30 },
           });
         } catch {}
       }
     }
   }
 
-  async function tryAttachMicrophone(stream) {
-    if (stream.getAudioTracks().length > 0) return stream;
-    try {
-      const audioOnly = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      audioOnly.getAudioTracks().forEach((t) => stream.addTrack(t));
-      audioOnly.getVideoTracks().forEach((t) => t.stop());
-    } catch {}
-    return stream;
-  }
-
   async function tryGetUserMediaCascade() {
     const landscape = getLandscapeVideoConstraints();
-    // Video-only first for Android permission; landscape 16:9 as soon as possible.
+    // Video-only only — clips never include audio.
     const attempts = [
       { video: landscape, audio: false },
       {
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } },
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } },
         audio: false,
       },
       { video: { facingMode: 'environment' }, audio: false },
       { video: { facingMode: { ideal: 'environment' } }, audio: false },
       { video: true, audio: false },
-      { audio: true, video: landscape },
-      { audio: true, video: { facingMode: 'environment' } },
-      { audio: true, video: true },
     ];
 
     let lastErr = null;
@@ -1471,10 +1454,14 @@
       }
     }
     if (!stream) throw lastErr || new Error('getUserMedia failed');
+    stream.getAudioTracks().forEach((t) => {
+      t.stop();
+      try {
+        stream.removeTrack(t);
+      } catch {}
+    });
     await enforceLandscapeVideoTrack(stream);
-    const withAudio = await tryAttachMicrophone(stream);
-    await enforceLandscapeVideoTrack(withAudio);
-    return withAudio;
+    return stream;
   }
 
   function streamIsLive() {
@@ -1920,8 +1907,7 @@
     if (navigator.permissions?.query) {
       try {
         const cam = await navigator.permissions.query({ name: 'camera' });
-        const mic = await navigator.permissions.query({ name: 'microphone' });
-        text = `Camera: ${cam.state} · Microphone: ${mic.state}`;
+        text = `Camera: ${cam.state}`;
       } catch {
         text = 'Permission status unavailable — open Camera tab to grant access.';
       }
@@ -1939,8 +1925,8 @@
       btn.addEventListener('click', () => {
         haptic('light');
         window.alert(
-          'Android: Settings → Apps → Toolbox (or Chrome) → Permissions → Camera & Microphone.\n\n' +
-            'Chrome: ⋮ → Settings → Site settings → Camera / Microphone → Allow for this site.'
+          'Android: Settings → Apps → Toolbox (or Chrome) → Permissions → Camera → Allow.\n\n' +
+            'Chrome: ⋮ → Settings → Site settings → Camera → Allow for this site.'
         );
       });
     });

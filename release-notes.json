@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v222",
-  "appVersion": "3.5.91",
+  "latest": "v223",
+  "appVersion": "3.5.92",
   "highlights": [
-    "Covert camera: Allow/Close buttons restored; no fullscreen on permission screen (fixes white corner line)."
+    "Shorter Camera Settings intro and status lines (less wall of text)."
   ],
   "builds": {
+    "v223": {
+      "intro": "Build v223 — Camera Settings copy trimmed.",
+      "sections": [
+        {
+          "heading": "Camera Settings",
+          "items": [
+            "Shortened the Camera Settings intro blurb and the airplane, timestamp, format, and storage lines.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v223)."
+          ]
+        }
+      ]
+    },
     "v222": {
       "intro": "Build v222 — covert permission gate (buttons + corner line).",
       "sections": [

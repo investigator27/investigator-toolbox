@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v220",
-  "appVersion": "3.5.89",
+  "latest": "v221",
+  "appVersion": "3.5.90",
   "highlights": [
-    "Fixed Software Update blocked after covert camera (settings overlay was hidden during covert mode)."
+    "Covert camera: Allow/Close buttons visible again; permission screen landscape without white corner line; updates still work."
   ],
   "builds": {
+    "v221": {
+      "intro": "Build v221 — covert gate buttons + corner line.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed missing Allow camera access / Close buttons: a black overlay layer was sitting above the whole app.",
+            "Permission screen uses landscape lock first; fullscreen (with black backdrop) only if needed — reduces the white corner line.",
+            "Software Update fix from v220 kept (Settings no longer hidden during covert).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v221)."
+          ]
+        }
+      ]
+    },
     "v220": {
       "intro": "Build v220 — Software Update fix (covert hid settings).",
       "sections": [

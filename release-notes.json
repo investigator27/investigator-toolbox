@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v203",
-  "appVersion": "3.5.72",
+  "latest": "v204",
+  "appVersion": "3.5.73",
   "highlights": [
     "Redesigned the install landing page with a cleaner, more professional look and a quick overview of the tools inside."
   ],
   "builds": {
+    "v204": {
+      "intro": "Build v204 — Install page naming fix.",
+      "sections": [
+        {
+          "heading": "Install page",
+          "items": [
+            "Reverted the install page name back to \"Toolbox\" and removed the Intrepid Investigations text that shouldn't have been added. Same redesigned layout otherwise.",
+            "Deploy index.html, surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v204)."
+          ]
+        }
+      ]
+    },
     "v203": {
       "intro": "Build v203 — Refreshed install landing page.",
       "sections": [

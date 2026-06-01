@@ -1119,7 +1119,18 @@
     return !!(s.width && s.height && s.width >= s.height);
   }
 
+  /** Permission gate: landscape lock first; fullscreen only if lock needs it (black backdrop). */
+  async function prepareLandscapeForGate() {
+    setBlackVisible(true);
+    paintFullscreenBackdropBlack();
+    const locked = await lockLandscape();
+    if (!locked) await enterCovertFullscreen();
+    return locked;
+  }
+
   async function prepareLandscapeCapture() {
+    setBlackVisible(true);
+    paintFullscreenBackdropBlack();
     await enterCovertFullscreen();
     const locked = await lockLandscape();
     if (!locked) await enterCovertFullscreen();
@@ -1462,7 +1473,7 @@
     enterCovertMode();
     hidePreview();
     clearHud();
-    void prepareLandscapeCapture();
+    void prepareLandscapeForGate();
   }
 
   async function exitCovertToNewestClipDay() {

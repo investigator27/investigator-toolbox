@@ -139,9 +139,22 @@
         }
       };
       req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+      req.onerror = () => {
+        dbPromise = null;
+        reject(req.error);
+      };
     });
     return dbPromise;
+  }
+
+  async function getAllClipRecordsRaw() {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
   }
 
   async function putClipRecord(record) {
@@ -324,50 +337,87 @@
     }
   }
 
-  /** On launch, rescue any clip that was mid-recording when the app/phone was interrupted. */
-  async function recoverInterruptedClips() {
+  /**
+   * Rescue clips after a crash, force-close, or update mid-record. The library hides
+   * status=recording and entries without a blob — this rebuilds them from chunks when possible.
+   */
+  async function rescueClipStorage() {
     let records = [];
     try {
-      const db = await openDb();
-      records = await new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE, 'readonly');
-        const req = tx.objectStore(STORE).getAll();
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => reject(req.error);
-      });
+      records = await getAllClipRecordsRaw();
     } catch {
-      return;
+      return { rescued: 0, rawCount: 0, hiddenCount: 0 };
     }
-    const orphans = records.filter((r) => r && r.status === 'recording');
-    for (const r of orphans) {
-      try {
-        const blobs = await getChunkBlobs(r.id);
-        const blob = blobs.length ? new Blob(blobs, { type: r.mimeType || 'video/webm' }) : null;
-        if (blob && blob.size >= 1000) {
-          await finalizeClip(r.id, blob, r.mimeType, {
+    let rescued = 0;
+    for (const r of records) {
+      if (!r?.id) continue;
+      const hasBlob = !!(r.blob && r.blob.size >= 1000);
+      const needsRescue = r.status === 'recording' || !hasBlob;
+      if (!needsRescue) continue;
+
+      if (hasBlob && r.status === 'recording') {
+        try {
+          await finalizeClip(r.id, r.blob, r.mimeType, {
             recordedAt: r.createdAt,
-            durationSeconds: blobs.length, // ~1s per chunk
+            durationSeconds: r.durationSeconds || 0,
             latitude: r.latitude,
             longitude: r.longitude,
             locationLabel: r.locationLabel || '',
           });
           await deleteChunks(r.id).catch(() => {});
-        } else {
+          rescued += 1;
+        } catch {}
+        continue;
+      }
+
+      try {
+        const blobs = await getChunkBlobs(r.id);
+        const blob = blobs.length ? new Blob(blobs, { type: r.mimeType || 'video/webm' }) : null;
+        if (blob && blob.size >= 1000) {
+          await finalizeClip(r.id, blob, r.mimeType, {
+            recordedAt: r.createdAt || Date.now(),
+            durationSeconds: r.durationSeconds || blobs.length,
+            latitude: r.latitude,
+            longitude: r.longitude,
+            locationLabel: r.locationLabel || '',
+          });
+          await deleteChunks(r.id).catch(() => {});
+          rescued += 1;
+        } else if (r.status === 'recording') {
           await deleteClips([r.id]);
           await deleteChunks(r.id).catch(() => {});
         }
       } catch {}
     }
+
+    let rawCount = 0;
+    let hiddenCount = 0;
+    try {
+      const after = await getAllClipRecordsRaw();
+      rawCount = after.length;
+      hiddenCount = after.filter((c) => {
+        if (!c) return false;
+        const ok = c.blob && c.blob.size >= 1000 && c.status !== 'recording';
+        return !ok;
+      }).length;
+    } catch {}
+    return { rescued, rawCount, hiddenCount };
+  }
+
+  /** @deprecated name kept for callers — use rescueClipStorage */
+  async function recoverInterruptedClips() {
+    return rescueClipStorage();
   }
 
   async function getAllClips() {
+    await rescueClipStorage().catch(() => {});
     const db = await openDb();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE, 'readonly');
       const req = tx.objectStore(STORE).getAll();
       req.onsuccess = () => {
         const list = (req.result || [])
-          .filter((c) => c && c.blob && c.status !== 'recording')
+          .filter((c) => c && c.blob && c.blob.size >= 1000 && c.status !== 'recording')
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         resolve(list);
       };
@@ -1206,6 +1256,14 @@
     }
 
     if (!clips.length) {
+      let storageHint = '';
+      try {
+        const raw = await getAllClipRecordsRaw();
+        if (raw.length > 0) {
+          storageHint =
+            '<p class="card-sub">Toolbox still has data in local storage but these clips could not be loaded (often after reinstalling the app, clearing Chrome site data, or very low storage). Use Download to device on important clips after each session.</p>';
+        }
+      } catch {}
       list.innerHTML = `
         <div class="camera-hub-block" role="listitem">
           <h2 class="settings-section-title">Days</h2>
@@ -1213,6 +1271,7 @@
             <div class="camera-clips-card__empty camera-clips-card__empty--hub">
               <p><strong>No clips yet</strong></p>
               <p class="card-sub">Tap Covert Camera to record. Swipe up twice when finished to open that day.</p>
+              ${storageHint}
             </div>
           </div>
         </div>`;
@@ -2244,8 +2303,13 @@
     bindSettings();
     void requestPersistentStorage();
     void initBattery();
-    await recoverInterruptedClips().catch(() => {});
-    refreshClipSummary().catch(() => {});
+    const rescue = await rescueClipStorage().catch(() => ({ rescued: 0 }));
+    if (rescue.rescued > 0) {
+      refreshClipSummary().catch(() => {});
+      void renderClipsLibrary();
+    } else {
+      refreshClipSummary().catch(() => {});
+    }
   }
 
   window.ToolboxCovertCamera = {

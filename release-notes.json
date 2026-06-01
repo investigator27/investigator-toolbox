@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v210",
-  "appVersion": "3.5.79",
+  "latest": "v211",
+  "appVersion": "3.5.80",
   "highlights": [
-    "Clip Library rescue after crashes or updates — recovers interrupted recordings from local storage when possible, and explains when clips were truly cleared."
+    "Removed the thin grey line at the top of the covert black screen (HUD gradient leak and video edge bleed)."
   ],
   "builds": {
+    "v211": {
+      "intro": "Build v211 — covert black screen grey line fix.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed a thin grey line near the top of the black screen and permission gate — caused by the status bar gradient showing even when empty, plus a occasional camera preview edge leak.",
+            "Recording / Stopped text still readable via text shadow only (no top gradient bar).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v211)."
+          ]
+        }
+      ]
+    },
     "v210": {
       "intro": "Build v210 — Clip library rescue after update.",
       "sections": [

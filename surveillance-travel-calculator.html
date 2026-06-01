@@ -562,9 +562,15 @@
       object-fit:cover;
       background:#000;
     }
+    /* No visible video under black overlay / gate — avoids a sub-pixel edge leak at the top. */
+    .covert-camera:not(.covert-camera--preview) > video,
+    .covert-camera--gate-open > video{
+      opacity:0;
+      visibility:hidden;
+    }
     .covert-camera__black{
       position:absolute;
-      inset:0;
+      inset:-2px;
       background:#000;
       z-index:2;
       transition:opacity .2s ease;
@@ -593,8 +599,8 @@
       line-height:1.2;
       color:#fff;
       text-align:center;
-      background:linear-gradient(rgb(0 0 0 / .45),transparent);
       pointer-events:none;
+      text-shadow:0 1px 4px rgb(0 0 0 / .85);
     }
     .covert-camera__hud:empty{display:none}
     .tab-bar{
@@ -1797,7 +1803,7 @@
         <video id="covertVideoPreview" playsinline muted autoplay></video>
         <div class="covert-camera__black" id="covertBlack"></div>
         <div class="covert-camera__tap" id="covertTapZone" aria-hidden="true"></div>
-        <div class="covert-camera__hud"><span id="covertStatus"></span></div>
+        <div class="covert-camera__hud" id="covertStatus" aria-live="polite"></div>
         <div class="covert-permission-gate hidden" id="covertPermissionGate">
           <p class="covert-permission-gate__error" id="covertPermissionError" role="alert" aria-live="polite"></p>
           <button type="button" class="btn covert-gate-btn" id="covertAllowCameraBtn">Allow camera access</button>
@@ -2685,7 +2691,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=210" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=211" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2707,8 +2713,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.79';
-  const BUNDLED_PWA_CACHE_VERSION = 'v210';
+  const BUNDLED_APP_VERSION = '3.5.80';
+  const BUNDLED_PWA_CACHE_VERSION = 'v211';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

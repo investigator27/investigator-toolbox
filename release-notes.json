@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v209",
-  "appVersion": "3.5.78",
+  "latest": "v210",
+  "appVersion": "3.5.79",
   "highlights": [
-    "Fixed Software Update getting stuck on “Updating…” when you open the screen — it now recovers, shows the right state, and only shows download progress while you are on that screen."
+    "Clip Library rescue after crashes or updates — recovers interrupted recordings from local storage when possible, and explains when clips were truly cleared."
   ],
   "builds": {
+    "v210": {
+      "intro": "Build v210 — Clip library rescue after update.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Clip Library now rescues clips left in a “recording” state after a force-close or update — they should reappear if the video data is still on the device.",
+            "Empty library explains when storage was cleared (reinstall / clear site data) vs a normal update.",
+            "Camera Settings notes: Software Update does not delete clips; reinstalling or clearing Chrome storage does.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v210)."
+          ]
+        }
+      ]
+    },
     "v209": {
       "intro": "Build v209 — Software Update stuck UI fix.",
       "sections": [

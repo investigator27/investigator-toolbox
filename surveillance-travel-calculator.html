@@ -2337,7 +2337,7 @@
                 <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
                 <div class="settings-page-intro__text">
                   <h1 class="settings-page-intro__title" id="settings-camera-intro-title">Camera Settings</h1>
-                  <p class="settings-page-intro__blurb">Covert video — rear camera, landscape. Clips stay private inside Toolbox (not in your gallery) until you download them to your device.</p>
+                  <p class="settings-page-intro__blurb">Covert video — rear camera, landscape. Clips stay private inside Toolbox (not in your gallery) until you download them to your device. A normal Software Update does not delete clips; reinstalling the app or clearing Chrome storage for Toolbox does.</p>
                 </div>
               </div>
             </section>
@@ -2685,7 +2685,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=208" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=210" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2707,8 +2707,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.78';
-  const BUNDLED_PWA_CACHE_VERSION = 'v209';
+  const BUNDLED_APP_VERSION = '3.5.79';
+  const BUNDLED_PWA_CACHE_VERSION = 'v210';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

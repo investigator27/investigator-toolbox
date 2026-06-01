@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v221",
-  "appVersion": "3.5.90",
+  "latest": "v222",
+  "appVersion": "3.5.91",
   "highlights": [
-    "Covert camera: Allow/Close buttons visible again; permission screen landscape without white corner line; updates still work."
+    "Covert camera: Allow/Close buttons restored; no fullscreen on permission screen (fixes white corner line)."
   ],
   "builds": {
+    "v222": {
+      "intro": "Build v222 — covert permission gate (buttons + corner line).",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed missing Allow/Close: stopped fullscreen on the whole page during permission (Android hid the gate) and stopped auto-exit on pageshow during an open covert session.",
+            "Permission screen shows buttons first, then landscape lock only — no fullscreen until after camera access (same fix that removed the white corner line in v217).",
+            "Fullscreen for recording uses the camera tab only with a black backdrop. Software Update fix from v220 kept.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v222)."
+          ]
+        }
+      ]
+    },
     "v221": {
       "intro": "Build v221 — covert gate buttons + corner line.",
       "sections": [

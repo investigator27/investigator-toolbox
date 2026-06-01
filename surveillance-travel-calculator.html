@@ -525,8 +525,20 @@
       text-align:center;
     }
     .covert-permission-gate.hidden{display:none!important}
-    .covert-camera--gate-open .covert-camera__tap{display:none}
-    .covert-camera--gate-open .covert-camera__black{z-index:1}
+    #covertPermissionGate:not(.hidden){
+      display:flex!important;
+      visibility:visible!important;
+      opacity:1!important;
+    }
+    .covert-camera--gate-open .covert-permission-gate{
+      display:flex!important;
+      z-index:100;
+    }
+    .covert-camera--gate-open .covert-camera__tap{display:none!important}
+    .covert-camera--gate-open .covert-camera__black{
+      opacity:0;
+      pointer-events:none;
+    }
     .covert-permission-gate p{
       margin:0;
       font-size:var(--text-sm);
@@ -2737,7 +2749,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=221" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=222" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2759,8 +2771,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.90';
-  const BUNDLED_PWA_CACHE_VERSION = 'v221';
+  const BUNDLED_APP_VERSION = '3.5.91';
+  const BUNDLED_PWA_CACHE_VERSION = 'v222';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3689,11 +3701,11 @@
 
   /** Only when covert fullscreen is stuck on top of the tab bar (does not reset normal camera tab). */
   function resetStuckCovertOverlay() {
+    if (window.ToolboxCovertCamera?.isCovertUiActive?.()) return;
     const shell = document.querySelector('.app-shell');
     const cameraTab = $('tab-camera');
     const stuck = cameraTab?.classList.contains('tab-panel--camera-active')
-      || shell?.classList.contains('app-shell--covert-camera')
-      || document.documentElement.classList.contains('toolbox-covert-active');
+      || shell?.classList.contains('app-shell--covert-camera');
     if (!stuck) return;
     if (typeof window.ToolboxCovertCamera?.forceExitCovertUi === 'function') {
       window.ToolboxCovertCamera.forceExitCovertUi();

@@ -72,6 +72,8 @@
   let tsUsingRVFC = false;
   /** Last mime used (or probed) for settings UI — updated when recording starts. */
   let lastRecordingMimeType = '';
+  let covertTopSealEl = null;
+  let covertTopSealListenersBound = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -1073,6 +1075,41 @@
     return locked;
   }
 
+  /** Body-level seal: app-shell uses transform, so fixed children cannot cover the viewport gap above it. */
+  function bindCovertTopSealListeners() {
+    if (covertTopSealListenersBound) return;
+    covertTopSealListenersBound = true;
+    const refresh = () => updateCovertTopSeal();
+    window.addEventListener('resize', refresh, { passive: true });
+    window.visualViewport?.addEventListener('resize', refresh, { passive: true });
+    window.visualViewport?.addEventListener('scroll', refresh, { passive: true });
+  }
+
+  function updateCovertTopSeal() {
+    const active = document.documentElement.classList.contains('toolbox-covert-active');
+    if (!active) {
+      if (covertTopSealEl) covertTopSealEl.style.display = 'none';
+      return;
+    }
+    if (!covertTopSealEl) {
+      covertTopSealEl = document.createElement('div');
+      covertTopSealEl.id = 'covertTopSeal';
+      covertTopSealEl.setAttribute('aria-hidden', 'true');
+      covertTopSealEl.style.cssText =
+        'position:fixed;left:0;top:0;width:100%;max-width:100vw;background:#000;z-index:99990;pointer-events:none;display:none;margin:0;padding:0;border:0;';
+      document.body.appendChild(covertTopSealEl);
+    }
+    const vv = window.visualViewport;
+    const gap = Math.max(0, Math.round(vv?.offsetTop || 0));
+    const h = Math.max(gap + 2, 3);
+    covertTopSealEl.style.height = `${h}px`;
+    covertTopSealEl.style.display = 'block';
+  }
+
+  function removeCovertTopSeal() {
+    if (covertTopSealEl) covertTopSealEl.style.display = 'none';
+  }
+
   function enterCovertMode() {
     const tab = $('tab-camera');
     tab?.classList.add('tab-panel--camera-active');
@@ -1080,7 +1117,8 @@
     closeClipViewer();
     document.documentElement.classList.add('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.add('app-shell--covert-camera');
-    window.toolboxSyncViewport?.();
+    bindCovertTopSealListeners();
+    updateCovertTopSeal();
     setBlackVisible(true);
   }
 
@@ -1096,6 +1134,7 @@
     tab?.classList.remove('tab-panel--camera-active');
     document.documentElement.classList.remove('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
+    removeCovertTopSeal();
     document.documentElement.style.backgroundColor = '';
     setBlackVisible(false);
     hidePreview();
@@ -1854,7 +1893,7 @@
     if (lowStorage) warnings.push('low storage');
     if (criticalBattery) warnings.push('battery critical');
     else if (lowBattery) warnings.push('low battery');
-    const recordingHudText = warnings.length ? `● Recording · ${warnings.join(' & ')}` : '● Recording';
+    const recordingHudText = warnings.length ? `Recording · ${warnings.join(' & ')}` : 'Recording';
     showBriefHud(recordingHudText, HUD_RECORDING_MS);
     if (getPrefs().strongHapticOnRecord) haptic('success');
     else haptic('medium');

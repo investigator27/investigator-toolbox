@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v212",
-  "appVersion": "3.5.81",
+  "latest": "v213",
+  "appVersion": "3.5.82",
   "highlights": [
-    "Fixed the thin line at the top of the covert black screen in light and dark theme — full-bleed layout during camera (viewport offset gap)."
+    "Fixed swipe-up after recording (returns to Clip Library / Camera hub again) and a safer top-edge black fill without breaking navigation."
   ],
   "builds": {
+    "v213": {
+      "intro": "Build v213 — swipe-up restore + careful top-edge fix.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Reverted the v212 layout change that hid the whole Camera hub and broke double swipe-up after recording.",
+            "Top grey line: black overlay now extends upward over the browser viewport gap only — app shell layout unchanged.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v213)."
+          ]
+        }
+      ]
+    },
     "v212": {
       "intro": "Build v212 — covert screen top line fix (both themes).",
       "sections": [

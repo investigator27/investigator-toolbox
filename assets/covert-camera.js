@@ -986,6 +986,12 @@
     }
   }
 
+  /** Tap during recording (black or peek) — confirm the device is still rolling. */
+  function showRecordingReassuranceHud() {
+    if (!isRecording) return;
+    showBriefHud('Recording', HUD_RECORDING_MS);
+  }
+
   function setPermissionError(text) {
     const el = $('covertPermissionError');
     if (el) el.textContent = text || '';
@@ -1413,7 +1419,7 @@
     enterCovertMode();
     hidePreview();
     clearHud();
-    /* Fullscreen waits until camera permission — avoids corner ::backdrop leak on the gate. */
+    void prepareLandscapeCapture();
   }
 
   async function exitCovertToNewestClipDay() {
@@ -1902,6 +1908,7 @@
   function onTapZone() {
     if ($('covertCamera')?.classList.contains('covert-camera--gate-open')) return;
     haptic('tap');
+    if (isRecording) showRecordingReassuranceHud();
     tapCount += 1;
     clearTimeout(tapResetTimer);
     tapResetTimer = setTimeout(() => {

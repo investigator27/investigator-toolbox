@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v217",
-  "appVersion": "3.5.86",
+  "latest": "v218",
+  "appVersion": "3.5.87",
   "highlights": [
-    "Covert camera corner line — fullscreen backdrop black; permission screen no longer enters fullscreen early."
+    "Covert camera: landscape on Open again; tap while recording shows Recording for 5 seconds (black or peek)."
   ],
   "builds": {
+    "v218": {
+      "intro": "Build v218 — covert landscape gate + tap-to-confirm recording.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Open Covert Camera again switches to landscape immediately on the permission screen (v217 black fullscreen backdrop kept — no corner line).",
+            "While recording, any tap on the black screen or after swipe-up peek shows Recording for 5 seconds, then hides (3-tap start/stop unchanged).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v218)."
+          ]
+        }
+      ]
+    },
     "v217": {
       "intro": "Build v217 — covert corner line (fullscreen backdrop).",
       "sections": [

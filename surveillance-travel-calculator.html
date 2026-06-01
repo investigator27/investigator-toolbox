@@ -1802,7 +1802,7 @@
                 <ol class="steps-list">
                   <li>3 taps on the black area — start recording (the screen stays black).</li>
                   <li>3 taps again — stop; the clip is saved automatically.</li>
-                  <li>While recording: swipe up to peek at the live view, swipe down to hide it back to black.</li>
+                  <li>While recording: swipe up to peek at the live view, swipe down to hide it back to black. Tap anytime (black or peek) to show <strong>Recording</strong> for 5 seconds.</li>
                   <li>After a clip stops: swipe up twice to open that day’s clips.</li>
                 </ol>
               </div>
@@ -2734,7 +2734,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=217" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=218" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2756,8 +2756,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.86';
-  const BUNDLED_PWA_CACHE_VERSION = 'v217';
+  const BUNDLED_APP_VERSION = '3.5.87';
+  const BUNDLED_PWA_CACHE_VERSION = 'v218';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

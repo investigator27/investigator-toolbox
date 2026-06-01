@@ -229,22 +229,15 @@
       margin:var(--space-6) auto 0;
     }
     .coming-soon-card .card-sub{margin-top:var(--space-2)}
-    /* Covert: full viewport shell (centered transform left letterbox + theme borders bleeding through). */
-    html.toolbox-covert-active .app-shell,
+    /* Covert: minimal layout — no shell z-index war; body cap + vt lock handle the top-edge line. */
+    html.toolbox-covert-active{--app-vt:0px!important}
     .app-shell--covert-camera{
-      position:fixed!important;
       top:0!important;
       left:0!important;
       right:0!important;
-      bottom:0!important;
       transform:none!important;
       width:100vw!important;
       max-width:none!important;
-      height:100dvh!important;
-      height:100vh!important;
-      max-height:none!important;
-      margin:0!important;
-      z-index:99990!important;
       background:#000!important;
     }
     .app-shell--covert-camera .app-header{display:none!important}
@@ -253,21 +246,19 @@
       visibility:hidden;
       pointer-events:none;
     }
-    /* Hub cards sit under the overlay — hide without visibility:hidden (breaks swipe exit). */
-    #tab-camera.tab-panel--covert-live #cameraTabView{
-      position:absolute!important;
-      left:-10000px!important;
-      top:0!important;
-      width:1px!important;
-      height:1px!important;
-      overflow:hidden!important;
-      clip:rect(0,0,0,0)!important;
-      opacity:0!important;
-      pointer-events:none!important;
+    #covertEdgeCap{
+      display:none;
+      position:fixed;
+      top:0;
+      left:0;
+      width:100vw;
+      height:calc(env(safe-area-inset-top,0px) + 10px);
+      background:#000;
+      z-index:2147483646;
+      pointer-events:none;
     }
-    #tab-camera.tab-panel--covert-live{
-      gap:0;
-    }
+    html.toolbox-covert-active #covertEdgeCap{display:block}
+    #tab-camera.tab-panel--camera-active #cameraTabView{display:none!important}
     #tab-camera.tab-panel--camera-active{
       position:fixed;
       inset:0;
@@ -276,6 +267,7 @@
       width:100%;
       max-width:none;
       background:#000;
+      gap:0;
     }
     #tab-camera:fullscreen,
     #tab-camera:-webkit-full-screen{
@@ -604,7 +596,11 @@
     /* No visible video under black overlay / gate — display:none avoids sub-pixel leaks on some GPUs. */
     .covert-camera:not(.covert-camera--preview) > video,
     .covert-camera--gate-open > video{
-      display:none;
+      display:none!important;
+      width:0!important;
+      height:0!important;
+      opacity:0!important;
+      visibility:hidden!important;
     }
     .covert-camera--preview > video{
       display:block;
@@ -647,7 +643,7 @@
       color:#fff;
       text-align:center;
       pointer-events:none;
-      text-shadow:0 1px 4px rgb(0 0 0 / .85);
+      text-shadow:none;
     }
     .covert-camera__hud:empty{display:none}
     .tab-bar{
@@ -1470,6 +1466,7 @@
   </style>
 </head>
 <body>
+<div id="covertEdgeCap" aria-hidden="true"></div>
 <div class="app-shell">
   <header class="app-header">
     <div class="topbar">
@@ -2738,7 +2735,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=215" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=216" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2760,8 +2757,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.84';
-  const BUNDLED_PWA_CACHE_VERSION = 'v215';
+  const BUNDLED_APP_VERSION = '3.5.85';
+  const BUNDLED_PWA_CACHE_VERSION = 'v216';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3714,8 +3711,9 @@
     const vv = window.visualViewport;
     const h = Math.max(320, Math.round(vv?.height || window.innerHeight || 0));
     const top = Math.max(0, Math.round(vv?.offsetTop || 0));
+    const covert = document.documentElement.classList.contains('toolbox-covert-active');
     root.style.setProperty('--app-vh', `${h}px`);
-    root.style.setProperty('--app-vt', `${top}px`);
+    root.style.setProperty('--app-vt', covert ? '0px' : `${top}px`);
   }
   window.toolboxSyncViewport = syncViewportHeight;
 

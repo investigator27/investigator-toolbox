@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v207",
-  "appVersion": "3.5.76",
+  "latest": "v208",
+  "appVersion": "3.5.77",
   "highlights": [
-    "Covert camera recordings are video-only — no microphone is requested or stored on clips."
+    "Covert camera now records MP4 (H.264) on Android Chrome when supported, with WebM fallback — and shows the active format in Camera Settings."
   ],
   "builds": {
+    "v208": {
+      "intro": "Build v208 — MP4-first camera recording on Android.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Recording tries MP4 (H.264) first on up-to-date Chrome (126+), then falls back to WebM if the device cannot record MP4.",
+            "Camera Settings shows which format this phone will use (MP4 vs WebM) before and after you record.",
+            "Still video-only, 720p, and tuned bitrate for smaller files.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v208)."
+          ]
+        }
+      ]
+    },
     "v207": {
       "intro": "Build v207 — video-only camera recordings.",
       "sections": [

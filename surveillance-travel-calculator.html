@@ -2343,6 +2343,7 @@
             </section>
             <p class="settings-permission-hint" id="cameraPermissionStatus" data-cam-permission-status aria-live="polite">Checking…</p>
             <p class="settings-permission-hint" id="cameraStorageSummary" data-cam-storage-summary aria-live="polite"></p>
+            <p class="settings-permission-hint" id="cameraRecordingFormat" data-cam-recording-format aria-live="polite"></p>
             <h2 class="settings-section-title">Recording</h2>
             <div class="settings-group" role="group" aria-label="Recording">
               <div class="settings-row settings-row--toggle">
@@ -2684,7 +2685,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=207" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=208" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2706,8 +2707,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.76';
-  const BUNDLED_PWA_CACHE_VERSION = 'v207';
+  const BUNDLED_APP_VERSION = '3.5.77';
+  const BUNDLED_PWA_CACHE_VERSION = 'v208';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

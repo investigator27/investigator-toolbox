@@ -250,7 +250,6 @@
       color-scheme:only dark;
       background:#000!important;
     }
-    html.toolbox-covert-active .settings-overlay{display:none!important}
     #covertViewportShroud{
       display:none;
       position:fixed;
@@ -259,7 +258,7 @@
       height:calc(100vh + 40px);
       height:calc(100dvh + 40px);
       background:#000;
-      z-index:2147483646;
+      z-index:5;
       pointer-events:none;
     }
     html.toolbox-covert-active #covertViewportShroud{display:block}
@@ -2756,7 +2755,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=219" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=220" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2778,8 +2777,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.88';
-  const BUNDLED_PWA_CACHE_VERSION = 'v219';
+  const BUNDLED_APP_VERSION = '3.5.89';
+  const BUNDLED_PWA_CACHE_VERSION = 'v220';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3711,8 +3710,13 @@
     const shell = document.querySelector('.app-shell');
     const cameraTab = $('tab-camera');
     const stuck = cameraTab?.classList.contains('tab-panel--camera-active')
-      || shell?.classList.contains('app-shell--covert-camera');
+      || shell?.classList.contains('app-shell--covert-camera')
+      || document.documentElement.classList.contains('toolbox-covert-active');
     if (!stuck) return;
+    if (typeof window.ToolboxCovertCamera?.forceExitCovertUi === 'function') {
+      window.ToolboxCovertCamera.forceExitCovertUi();
+      return;
+    }
     window.ToolboxCovertCamera?.onTabLeave?.();
   }
 
@@ -4449,6 +4453,7 @@
 
   async function applyAppUpdate() {
     if (applyingAppUpdate) return;
+    resetStuckCovertOverlay();
     markPendingPostUpdateLaunch();
     applyingAppUpdate = true;
     try {
@@ -5061,6 +5066,7 @@
 
   function openSettings(screenId, opts = {}) {
     if (!settingsOverlay) return;
+    resetStuckCovertOverlay();
     const postUpdate = opts.postUpdate === true;
     const fromCameraTab = opts.fromCameraTab === true && screenId === 'camera-settings';
     settingsOpenedFromCameraTab = fromCameraTab;

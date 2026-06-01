@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v219",
-  "appVersion": "3.5.88",
+  "latest": "v220",
+  "appVersion": "3.5.89",
   "highlights": [
-    "Covert camera: fixed bright white corner line again (black shroud + fullscreen backdrop) — landscape on Open kept."
+    "Fixed Software Update blocked after covert camera (settings overlay was hidden during covert mode)."
   ],
   "builds": {
+    "v220": {
+      "intro": "Build v220 — Software Update fix (covert hid settings).",
+      "sections": [
+        {
+          "heading": "Software Update",
+          "items": [
+            "Fixed updates not working: v219 hid the entire Settings overlay while covert mode was active, so Software Update could not show or finish.",
+            "Opening Settings or tapping Update Now now exits covert/fullscreen first. Corner-line black backdrop kept.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v220)."
+          ]
+        }
+      ]
+    },
     "v219": {
       "intro": "Build v219 — covert white corner line (fullscreen backdrop).",
       "sections": [

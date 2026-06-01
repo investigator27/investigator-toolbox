@@ -1413,7 +1413,7 @@
     enterCovertMode();
     hidePreview();
     clearHud();
-    void prepareLandscapeCapture();
+    /* Fullscreen waits until camera permission — avoids corner ::backdrop leak on the gate. */
   }
 
   async function exitCovertToNewestClipDay() {
@@ -2288,6 +2288,7 @@
     if (streamIsLive()) {
       showPermissionGate(false);
       clearHud();
+      void prepareLandscapeCapture();
       return;
     }
     showPermissionGate(true);

@@ -1185,6 +1185,10 @@
       overflow:hidden;
       box-shadow:var(--shadow-sm);
     }
+    /* Groups that contain a dropdown must not clip the open panel — otherwise a
+       dropdown alone in a short group (e.g. Max clip length) has its options cut
+       off. Rows are transparent, so the group's rounded card look is unaffected. */
+    .settings-group--menu{overflow:visible}
     [data-theme="light"] .settings-group{
       box-shadow:0 1px 3px rgb(25 23 18/.08),0 0 0 1px rgb(25 23 18/.04);
     }
@@ -2352,7 +2356,7 @@
             </div>
             <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">For full discreetness, turn on Airplane mode (or Do Not Disturb) before recording so no calls, texts or notifications come through. A reminder appears each time you open the camera. Turn Airplane mode off afterwards when you're done.</p>
             <h2 class="settings-section-title">Time &amp; date stamp</h2>
-            <div class="settings-group" role="group" aria-label="Time and date stamp">
+            <div class="settings-group settings-group--menu" role="group" aria-label="Time and date stamp">
               <div class="settings-row settings-row--toggle">
                 <span class="settings-row__label">Enable Date &amp; Timestamp</span>
                 <label class="settings-switch"><input type="checkbox" id="cameraTimestampSwitch" data-cam-pref="timestampEnabled" aria-label="Enable date and timestamp on the recorded video" /><span class="settings-switch__track"></span></label>
@@ -2412,7 +2416,7 @@
             </div>
             <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">The stamp is burned into the video so any player or software shows it. When you download to your device, a matching .txt with the exact time and GPS is included for evidence.</p>
             <h2 class="settings-section-title">Max clip length</h2>
-            <div class="settings-group">
+            <div class="settings-group settings-group--menu">
               <div class="field" style="padding:var(--space-3) var(--space-4)">
                 <label for="cameraMaxClipBtn">Max clip length</label>
                 <div class="menu-wrap city-wrap">
@@ -2680,7 +2684,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=204" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=205" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2702,8 +2706,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.73';
-  const BUNDLED_PWA_CACHE_VERSION = 'v204';
+  const BUNDLED_APP_VERSION = '3.5.74';
+  const BUNDLED_PWA_CACHE_VERSION = 'v205';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

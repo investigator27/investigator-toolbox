@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v204",
-  "appVersion": "3.5.73",
+  "latest": "v205",
+  "appVersion": "3.5.74",
   "highlights": [
-    "Redesigned the install landing page with a cleaner, more professional look and a quick overview of the tools inside."
+    "Fixed the Max clip length dropdown in Camera Settings — its options were being clipped and couldn't be selected."
   ],
   "builds": {
+    "v205": {
+      "intro": "Build v205 — Max clip length dropdown fix.",
+      "sections": [
+        {
+          "heading": "Camera Settings",
+          "items": [
+            "Fixed the Max clip length dropdown for real this time. It sits alone in a short settings card, and that card was clipping the open dropdown so the options were cut off and unselectable. Dropdown-containing cards no longer clip their panel, so all the options show and can be picked.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v205)."
+          ]
+        }
+      ]
+    },
     "v204": {
       "intro": "Build v204 — Install page naming fix.",
       "sections": [

@@ -246,18 +246,10 @@
       visibility:hidden;
       pointer-events:none;
     }
-    #covertEdgeCap{
-      display:none;
-      position:fixed;
-      top:0;
-      left:0;
-      width:100vw;
-      height:calc(env(safe-area-inset-top,0px) + 10px);
-      background:#000;
-      z-index:2147483646;
-      pointer-events:none;
+    html.toolbox-covert-active body{
+      box-shadow:inset 0 0 0 24px #000;
     }
-    html.toolbox-covert-active #covertEdgeCap{display:block}
+    html.toolbox-covert-active .settings-overlay{display:none!important}
     #tab-camera.tab-panel--camera-active #cameraTabView{display:none!important}
     #tab-camera.tab-panel--camera-active{
       position:fixed;
@@ -279,6 +271,14 @@
       margin:0!important;
       background:#000!important;
       z-index:9999!important;
+      outline:none!important;
+      border:none!important;
+    }
+    #tab-camera:fullscreen::backdrop,
+    #tab-camera:-webkit-full-screen::-webkit-backdrop,
+    html:fullscreen::backdrop,
+    :fullscreen::backdrop{
+      background:#000!important;
     }
     html.toolbox-covert-active,
     html.toolbox-covert-active body{
@@ -496,22 +496,22 @@
     .camera-clip-viewer__close{align-self:center;min-width:12rem}
     .covert-camera{
       position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      bottom:0;
-      width:100%;
-      height:100%;
+      top:-10px;
+      left:-10px;
+      right:-10px;
+      bottom:-10px;
+      width:calc(100% + 20px);
+      height:calc(100% + 20px);
       background:#000;
       overflow:hidden;
       touch-action:manipulation;
     }
     .covert-permission-gate{
       position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      bottom:0;
+      top:-10px;
+      left:-10px;
+      right:-10px;
+      bottom:-10px;
       z-index:10;
       display:flex;
       flex-direction:column;
@@ -609,7 +609,7 @@
     }
     .covert-camera__black{
       position:absolute;
-      inset:0;
+      inset:-10px;
       background:#000;
       z-index:2;
       transition:opacity .2s ease;
@@ -1466,7 +1466,6 @@
   </style>
 </head>
 <body>
-<div id="covertEdgeCap" aria-hidden="true"></div>
 <div class="app-shell">
   <header class="app-header">
     <div class="topbar">
@@ -2735,7 +2734,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=216" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=217" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2757,8 +2756,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.85';
-  const BUNDLED_PWA_CACHE_VERSION = 'v216';
+  const BUNDLED_APP_VERSION = '3.5.86';
+  const BUNDLED_PWA_CACHE_VERSION = 'v217';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

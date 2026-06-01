@@ -1041,7 +1041,9 @@
   function setBlackVisible(visible) {
     const black = $('covertBlack');
     if (black) black.classList.toggle('covert-camera__black--hidden', !visible);
-    document.documentElement.style.backgroundColor = visible ? '#000' : '';
+    const bg = visible ? '#000' : '';
+    document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
     const themeMeta = document.querySelector('meta[name="theme-color"]:not([media])');
     if (themeMeta) {
       if (visible) {
@@ -1051,23 +1053,62 @@
         themeMeta.content = theme === 'dark' ? '#171614' : '#ffffff';
       }
     }
+    if (visible) paintFullscreenBackdropBlack();
+    else clearFullscreenBackdropBlack();
+  }
+
+  function paintFullscreenBackdropBlack() {
+    let el = document.getElementById('covertFsBackdropStyle');
+    if (!el) {
+      el = document.createElement('style');
+      el.id = 'covertFsBackdropStyle';
+      document.head.appendChild(el);
+    }
+    el.textContent = [
+      'html:fullscreen,html:-webkit-full-screen,',
+      '#tab-camera:fullscreen,#tab-camera:-webkit-full-screen,',
+      ':fullscreen,:-webkit-full-screen{background:#000!important}',
+      '::backdrop,:-webkit-full-screen::-webkit-backdrop,',
+      'html:fullscreen::backdrop,html:-webkit-full-screen::-webkit-backdrop,',
+      '#tab-camera:fullscreen::backdrop,#tab-camera:-webkit-full-screen::-webkit-backdrop{',
+      'background:#000!important;background-color:#000!important}',
+    ].join('');
+  }
+
+  function clearFullscreenBackdropBlack() {
+    document.getElementById('covertFsBackdropStyle')?.remove();
+  }
+
+  function bindCovertFullscreenBackdrop() {
+    if (window.__covertFsBackdropBound) return;
+    window.__covertFsBackdropBound = true;
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.documentElement.classList.contains('toolbox-covert-active')) return;
+      setBlackVisible(true);
+    });
   }
 
   async function enterCovertFullscreen() {
-    const target = $('tab-camera') || $('covertCamera');
-    if (!target?.requestFullscreen && !document.documentElement.requestFullscreen) return false;
+    if (!document.documentElement.requestFullscreen && !$('tab-camera')?.requestFullscreen) return false;
     if (document.fullscreenElement) return true;
+    paintFullscreenBackdropBlack();
+    document.documentElement.style.backgroundColor = '#000';
+    document.body.style.backgroundColor = '#000';
+    const opts = { navigationUI: 'hide' };
     try {
-      await target.requestFullscreen({ navigationUI: 'hide' });
+      await document.documentElement.requestFullscreen(opts);
       usedFullscreenForOrientation = true;
+      paintFullscreenBackdropBlack();
       return true;
-    } catch {
-      try {
-        await document.documentElement.requestFullscreen();
-        usedFullscreenForOrientation = true;
-        return true;
-      } catch {}
-    }
+    } catch {}
+    const target = $('tab-camera') || $('covertCamera');
+    if (!target?.requestFullscreen) return false;
+    try {
+      await target.requestFullscreen(opts);
+      usedFullscreenForOrientation = true;
+      paintFullscreenBackdropBlack();
+      return true;
+    } catch {}
     return false;
   }
 
@@ -1086,6 +1127,7 @@
   }
 
   function enterCovertMode() {
+    bindCovertFullscreenBackdrop();
     const tab = $('tab-camera');
     tab?.classList.add('tab-panel--camera-active');
     $('covertCamera')?.classList.remove('covert-camera--session-off');
@@ -1110,6 +1152,7 @@
     document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
     if (typeof window.toolboxSyncViewport === 'function') window.toolboxSyncViewport();
     document.documentElement.style.backgroundColor = '';
+    document.body.style.backgroundColor = '';
     setBlackVisible(false);
     hidePreview();
     showPermissionGate(false);

@@ -70,6 +70,8 @@
   let tsSourceVideo = null;
   let tsCanvasStream = null;
   let tsUsingRVFC = false;
+  /** Last mime used (or probed) for settings UI — updated when recording starts. */
+  let lastRecordingMimeType = '';
 
   function $(id) {
     return document.getElementById(id);
@@ -815,15 +817,89 @@
     }
   }
 
-  function pickMimeType() {
-    if (typeof MediaRecorder === 'undefined') return '';
-    const candidates = [
+  /** MP4 (H.264) first for upload/evidence tools; WebM fallback. Video-only — no audio codecs. */
+  function getRecordingMimeCandidates() {
+    return [
+      'video/mp4;codecs=avc1.42E01E',
+      'video/mp4;codecs=avc1.424028',
+      'video/mp4;codecs=avc1',
+      'video/mp4',
       'video/webm;codecs=vp9',
       'video/webm;codecs=vp8',
       'video/webm',
-      'video/mp4',
     ];
-    return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  function probePreferredMimeType() {
+    if (typeof MediaRecorder === 'undefined') return '';
+    return getRecordingMimeCandidates().find((t) => MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  function pickMimeType() {
+    const mime = probePreferredMimeType();
+    if (mime) lastRecordingMimeType = mime;
+    return mime;
+  }
+
+  function describeRecordingFormat(mime) {
+    if (!mime) {
+      return 'Recording format: not supported in this browser — update Chrome or reinstall Toolbox.';
+    }
+    const lower = String(mime).toLowerCase();
+    if (lower.includes('mp4') || lower.includes('avc1')) {
+      return 'Recording format: MP4 (H.264), video only — best match for upload and evidence tools.';
+    }
+    if (lower.includes('vp9')) {
+      return 'Recording format: WebM (VP9), video only — this device does not offer MP4 recording in Chrome.';
+    }
+    if (lower.includes('vp8')) {
+      return 'Recording format: WebM (VP8), video only — this device does not offer MP4 recording in Chrome.';
+    }
+    const base = mime.split(';')[0] || mime;
+    return `Recording format: ${base}, video only.`;
+  }
+
+  function refreshRecordingFormatUi() {
+    const mime = lastRecordingMimeType || probePreferredMimeType();
+    const text = describeRecordingFormat(mime);
+    document.querySelectorAll('[data-cam-recording-format]').forEach((el) => {
+      el.textContent = text;
+    });
+  }
+
+  function createMediaRecorder(stream, videoBitsPerSecond) {
+    if (typeof MediaRecorder === 'undefined') return null;
+    for (const mimeType of getRecordingMimeCandidates()) {
+      if (!MediaRecorder.isTypeSupported(mimeType)) continue;
+      try {
+        const rec = new MediaRecorder(stream, { mimeType, videoBitsPerSecond });
+        lastRecordingMimeType = rec.mimeType || mimeType;
+        refreshRecordingFormatUi();
+        return rec;
+      } catch {
+        try {
+          const rec = new MediaRecorder(stream, { mimeType });
+          lastRecordingMimeType = rec.mimeType || mimeType;
+          refreshRecordingFormatUi();
+          return rec;
+        } catch {}
+      }
+    }
+    try {
+      const rec = new MediaRecorder(stream, { videoBitsPerSecond });
+      lastRecordingMimeType = rec.mimeType || '';
+      refreshRecordingFormatUi();
+      return rec;
+    } catch {
+      try {
+        const rec = new MediaRecorder(stream);
+        lastRecordingMimeType = rec.mimeType || '';
+        refreshRecordingFormatUi();
+        return rec;
+      } catch {
+        return null;
+      }
+    }
   }
 
   /** Target bitrate by resolution — VP9/WebM on phone; sharp 720p, smaller files (1.2–3.5 Mbps). */
@@ -1576,8 +1652,7 @@
 
   async function startRecording() {
     if (isRecording || !mediaStream) return;
-    const mimeType = pickMimeType();
-    if (!mimeType) {
+    if (!probePreferredMimeType()) {
       haptic('medium');
       return;
     }
@@ -1599,14 +1674,12 @@
     const criticalBattery = batteryIsCritical();
 
     const videoBitsPerSecond = computeVideoBitrate(mediaStream.getVideoTracks?.()[0]);
-    try {
-      mediaRecorder = new MediaRecorder(recordStream, {
-        mimeType,
-        videoBitsPerSecond,
-      });
-    } catch {
-      mediaRecorder = new MediaRecorder(recordStream);
+    mediaRecorder = createMediaRecorder(recordStream, videoBitsPerSecond);
+    if (!mediaRecorder) {
+      haptic('medium');
+      return;
     }
+    const mimeType = mediaRecorder.mimeType || lastRecordingMimeType || probePreferredMimeType();
 
     recordingStartedAt = Date.now();
     recordingGeo = null;
@@ -2045,6 +2118,7 @@
   async function refreshCameraSettingsUi() {
     syncCameraSettingsUi();
     await refreshCameraPermissionUi();
+    refreshRecordingFormatUi();
     const summary = await getStorageSummary();
     const free = await getFreeStorageBytes();
     const freeText = free != null ? ` · ${formatBytes(free)} free on device` : '';

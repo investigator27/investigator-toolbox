@@ -72,9 +72,6 @@
   let tsUsingRVFC = false;
   /** Last mime used (or probed) for settings UI — updated when recording starts. */
   let lastRecordingMimeType = '';
-  let covertViewportBackdropEl = null;
-  let covertViewportListenersBound = false;
-
   function $(id) {
     return document.getElementById(id);
   }
@@ -1040,7 +1037,14 @@
     if (black) black.classList.toggle('covert-camera__black--hidden', !visible);
     document.documentElement.style.backgroundColor = visible ? '#000' : '';
     const themeMeta = document.querySelector('meta[name="theme-color"]:not([media])');
-    if (themeMeta) themeMeta.content = visible ? '#000000' : '';
+    if (themeMeta) {
+      if (visible) {
+        themeMeta.content = '#000000';
+      } else {
+        const theme = document.documentElement.getAttribute('data-theme');
+        themeMeta.content = theme === 'dark' ? '#171614' : '#ffffff';
+      }
+    }
   }
 
   async function enterCovertFullscreen() {
@@ -1075,36 +1079,6 @@
     return locked;
   }
 
-  /** Full-screen backdrop on body (shell transform cannot cover viewport letterbox). */
-  function bindCovertViewportBackdropListeners() {
-    if (covertViewportListenersBound) return;
-    covertViewportListenersBound = true;
-    const refresh = () => updateCovertViewportBackdrop();
-    window.addEventListener('resize', refresh, { passive: true });
-    window.visualViewport?.addEventListener('resize', refresh, { passive: true });
-    window.visualViewport?.addEventListener('scroll', refresh, { passive: true });
-  }
-
-  function updateCovertViewportBackdrop() {
-    const active = document.documentElement.classList.contains('toolbox-covert-active');
-    if (!active) {
-      if (covertViewportBackdropEl) covertViewportBackdropEl.style.display = 'none';
-      return;
-    }
-    if (!covertViewportBackdropEl) {
-      covertViewportBackdropEl = document.createElement('div');
-      covertViewportBackdropEl.id = 'covertViewportBackdrop';
-      covertViewportBackdropEl.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(covertViewportBackdropEl);
-    }
-    covertViewportBackdropEl.style.cssText =
-      'position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:99980;pointer-events:none;display:block;margin:0;padding:0;border:0;';
-  }
-
-  function removeCovertViewportBackdrop() {
-    if (covertViewportBackdropEl) covertViewportBackdropEl.style.display = 'none';
-  }
-
   function enterCovertMode() {
     const tab = $('tab-camera');
     tab?.classList.add('tab-panel--camera-active');
@@ -1112,9 +1086,7 @@
     closeClipViewer();
     document.documentElement.classList.add('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.add('app-shell--covert-camera');
-    $('tab-camera')?.classList.add('tab-panel--covert-live');
-    bindCovertViewportBackdropListeners();
-    updateCovertViewportBackdrop();
+    if (typeof window.toolboxSyncViewport === 'function') window.toolboxSyncViewport();
     setBlackVisible(true);
   }
 
@@ -1128,10 +1100,9 @@
   function leaveCovertMode() {
     const tab = $('tab-camera');
     tab?.classList.remove('tab-panel--camera-active');
-    tab?.classList.remove('tab-panel--covert-live');
     document.documentElement.classList.remove('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
-    removeCovertViewportBackdrop();
+    if (typeof window.toolboxSyncViewport === 'function') window.toolboxSyncViewport();
     document.documentElement.style.backgroundColor = '';
     setBlackVisible(false);
     hidePreview();

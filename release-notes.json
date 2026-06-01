@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v218",
-  "appVersion": "3.5.87",
+  "latest": "v219",
+  "appVersion": "3.5.88",
   "highlights": [
-    "Covert camera: landscape on Open again; tap while recording shows Recording for 5 seconds (black or peek)."
+    "Covert camera: fixed bright white corner line again (black shroud + fullscreen backdrop) — landscape on Open kept."
   ],
   "builds": {
+    "v219": {
+      "intro": "Build v219 — covert white corner line (fullscreen backdrop).",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed the bright white line at the viewport corner when opening covert in landscape (Chrome’s default fullscreen backdrop in light theme).",
+            "Black viewport shroud, document fullscreen first, and injected ::backdrop rules — landscape permission screen and tap-to-show Recording unchanged.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v219)."
+          ]
+        }
+      ]
+    },
     "v218": {
       "intro": "Build v218 — covert landscape gate + tap-to-confirm recording.",
       "sections": [

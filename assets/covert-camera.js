@@ -892,20 +892,20 @@
 
   function describeRecordingFormat(mime) {
     if (!mime) {
-      return 'Recording format: not supported in this browser — update Chrome or reinstall Toolbox.';
+      return 'Format: not supported — update Chrome or reinstall Toolbox.';
     }
     const lower = String(mime).toLowerCase();
     if (lower.includes('mp4') || lower.includes('avc1')) {
-      return 'Recording format: MP4 (H.264), video only — best match for upload and evidence tools.';
+      return 'Format: MP4 (H.264), video only.';
     }
     if (lower.includes('vp9')) {
-      return 'Recording format: WebM (VP9), video only — this device does not offer MP4 recording in Chrome.';
+      return 'Format: WebM (VP9), video only — no MP4 on this device.';
     }
     if (lower.includes('vp8')) {
-      return 'Recording format: WebM (VP8), video only — this device does not offer MP4 recording in Chrome.';
+      return 'Format: WebM (VP8), video only — no MP4 on this device.';
     }
     const base = mime.split(';')[0] || mime;
-    return `Recording format: ${base}, video only.`;
+    return `Format: ${base}, video only.`;
   }
 
   function refreshRecordingFormatUi() {
@@ -2267,7 +2267,7 @@
     const free = await getFreeStorageBytes();
     const freeText = free != null ? ` · ${formatBytes(free)} free on device` : '';
     const storageText =
-      `${summary.count} clip(s) · ${formatBytes(summary.bytes)} used${freeText} — view & download in Clip Library.`;
+      `${summary.count} clip(s) · ${formatBytes(summary.bytes)} used${freeText}`;
     document.querySelectorAll('[data-cam-storage-summary]').forEach((el) => {
       el.textContent = storageText;
     });

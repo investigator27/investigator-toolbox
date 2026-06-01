@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v214",
-  "appVersion": "3.5.83",
+  "latest": "v215",
+  "appVersion": "3.5.84",
   "highlights": [
-    "Fixed the thin line at the top of the covert black screen for real — body-level viewport seal (app shell transform was blocking earlier CSS fixes)."
+    "Fixed the faint top-edge line on covert camera (full-screen black + hide hub card borders under the overlay; swipe-up preserved)."
   ],
   "builds": {
+    "v215": {
+      "intro": "Build v215 — covert top line (card bleed + full viewport).",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed the faint grey line at the top (seen on Allow camera access and Recording): the centered app shell left letterbox gaps and the hub card border could show through under the overlay.",
+            "Covert mode now uses a full-screen black backdrop and hides the hub layer under the overlay without breaking double swipe-up to Clip Library.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v215)."
+          ]
+        }
+      ]
+    },
     "v214": {
       "intro": "Build v214 — covert top-edge line (viewport seal).",
       "sections": [

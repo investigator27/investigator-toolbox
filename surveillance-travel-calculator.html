@@ -229,17 +229,49 @@
       margin:var(--space-6) auto 0;
     }
     .coming-soon-card .card-sub{margin-top:var(--space-2)}
-    .app-shell--covert-camera{background:#000}
-    .app-shell--covert-camera .app-header{display:none}
-    .app-shell--covert-camera .app-content{padding:0;overflow:hidden}
+    /* Covert: full viewport shell (centered transform left letterbox + theme borders bleeding through). */
+    html.toolbox-covert-active .app-shell,
+    .app-shell--covert-camera{
+      position:fixed!important;
+      top:0!important;
+      left:0!important;
+      right:0!important;
+      bottom:0!important;
+      transform:none!important;
+      width:100vw!important;
+      max-width:none!important;
+      height:100dvh!important;
+      height:100vh!important;
+      max-height:none!important;
+      margin:0!important;
+      z-index:99990!important;
+      background:#000!important;
+    }
+    .app-shell--covert-camera .app-header{display:none!important}
+    .app-shell--covert-camera .app-content{padding:0!important;overflow:hidden!important}
     .app-shell--covert-camera .tab-bar{
       visibility:hidden;
       pointer-events:none;
     }
+    /* Hub cards sit under the overlay — hide without visibility:hidden (breaks swipe exit). */
+    #tab-camera.tab-panel--covert-live #cameraTabView{
+      position:absolute!important;
+      left:-10000px!important;
+      top:0!important;
+      width:1px!important;
+      height:1px!important;
+      overflow:hidden!important;
+      clip:rect(0,0,0,0)!important;
+      opacity:0!important;
+      pointer-events:none!important;
+    }
+    #tab-camera.tab-panel--covert-live{
+      gap:0;
+    }
     #tab-camera.tab-panel--camera-active{
       position:fixed;
       inset:0;
-      z-index:650;
+      z-index:1;
       margin:0;
       width:100%;
       max-width:none;
@@ -514,7 +546,7 @@
        and renders dark, unreadable text on the black gate). */
     .covert-permission-gate .covert-gate-btn{
       background:rgba(255,255,255,0.10);
-      border:1px solid rgba(255,255,255,0.22);
+      border:none;
       color:#ffffff;
       font-weight:600;
       box-shadow:none;
@@ -2706,7 +2738,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=214" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=215" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2728,8 +2760,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.83';
-  const BUNDLED_PWA_CACHE_VERSION = 'v214';
+  const BUNDLED_APP_VERSION = '3.5.84';
+  const BUNDLED_PWA_CACHE_VERSION = 'v215';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

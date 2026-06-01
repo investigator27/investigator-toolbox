@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v202",
-  "appVersion": "3.5.71",
+  "latest": "v203",
+  "appVersion": "3.5.72",
   "highlights": [
-    "Fixed launch landing on the Allow Camera Access screen — the app now opens to the covert camera hub, and the permission screen only appears when you tap Open Covert Camera."
+    "Redesigned the install landing page with a cleaner, more professional look and a quick overview of the tools inside."
   ],
   "builds": {
+    "v203": {
+      "intro": "Build v203 — Refreshed install landing page.",
+      "sections": [
+        {
+          "heading": "Install page",
+          "items": [
+            "Redesigned the install / landing page (index.html) with a more polished, professional layout: a refined hero, a 'what's inside' overview (Travel Calculator, Hotel Finder, Covert Camera), and a cleaner install card with QR code and trust badges. Same brand colours; device detection and the install / open buttons work exactly as before.",
+            "Deploy index.html alongside the usual files this build.",
+            "Deploy index.html, surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v203)."
+          ]
+        }
+      ]
+    },
     "v202": {
       "intro": "Build v202 — Camera tab launches on the hub, not the permission screen.",
       "sections": [

@@ -1778,8 +1778,8 @@
               <div class="settings-body-text">
                 <p>If the camera won't start, re-enable its permission:</p>
                 <ul class="steps-list">
-                  <li><strong>Android:</strong> Settings → Apps → Toolbox (or Chrome) → Permissions → Camera &amp; Microphone → Allow.</li>
-                  <li><strong>Chrome:</strong> ⋮ menu → Settings → Site settings → Camera / Microphone → Allow for this site.</li>
+                  <li><strong>Android:</strong> Settings → Apps → Toolbox (or Chrome) → Permissions → Camera → Allow.</li>
+                  <li><strong>Chrome:</strong> ⋮ menu → Settings → Site settings → Camera → Allow for this site.</li>
                 </ul>
               </div>
             </div>
@@ -2462,7 +2462,7 @@
             <div class="settings-body-text">
               <ol class="steps-list">
                 <li>Install Toolbox as an app (Chrome → Install).</li>
-                <li>Open <strong>Camera</strong> tab — allow camera and microphone.</li>
+                <li>Open <strong>Camera</strong> tab — allow camera when prompted.</li>
                 <li>3 taps to record · 3 taps to stop · Download to device when done for the day.</li>
               </ol>
             </div>
@@ -2684,7 +2684,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=205" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=207" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2706,8 +2706,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.74';
-  const BUNDLED_PWA_CACHE_VERSION = 'v205';
+  const BUNDLED_APP_VERSION = '3.5.76';
+  const BUNDLED_PWA_CACHE_VERSION = 'v207';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

@@ -1,11 +1,38 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v205",
-  "appVersion": "3.5.74",
+  "latest": "v207",
+  "appVersion": "3.5.76",
   "highlights": [
-    "Fixed the Max clip length dropdown in Camera Settings — its options were being clipped and couldn't be selected."
+    "Covert camera recordings are video-only — no microphone is requested or stored on clips."
   ],
   "builds": {
+    "v207": {
+      "intro": "Build v207 — video-only camera recordings.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "All recordings are video-only: no microphone permission prompts for recording, no audio tracks on clips, and no Opus audio in the file format.",
+            "Permission help and How To Use text now refer to Camera only (not microphone).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v207)."
+          ]
+        }
+      ]
+    },
+    "v206": {
+      "intro": "Build v206 — smaller camera clip file sizes.",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Reduced clip file size: records at 720p (1280×720) instead of pushing 1080p, with bitrate capped around 2 Mbps for 720p (was often ~4–7+ Mbps). A ~9 second clip should land near ~2 MB instead of ~5 MB.",
+            "Video-only recording (no automatic microphone track) so clips stay smaller and more discreet.",
+            "VP9 video-only WebM when the browser supports it — efficient codec without bundled audio.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v206)."
+          ]
+        }
+      ]
+    },
     "v205": {
       "intro": "Build v205 — Max clip length dropdown fix.",
       "sections": [

@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v213",
-  "appVersion": "3.5.82",
+  "latest": "v214",
+  "appVersion": "3.5.83",
   "highlights": [
-    "Fixed swipe-up after recording (returns to Clip Library / Camera hub again) and a safer top-edge black fill without breaking navigation."
+    "Fixed the thin line at the top of the covert black screen for real — body-level viewport seal (app shell transform was blocking earlier CSS fixes)."
   ],
   "builds": {
+    "v214": {
+      "intro": "Build v214 — covert top-edge line (viewport seal).",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed the persistent thin grey/white line at the top: the app shell is centered with CSS transform, so in-page overlays could not cover the browser gap above the shell. A small black seal is now attached to the document body during covert mode.",
+            "Removed the ● prefix on Recording text (could look like a stray mark). Video hidden with display:none under the black layer to avoid GPU edge bleed.",
+            "Swipe-up and Camera hub navigation unchanged from v213.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v214)."
+          ]
+        }
+      ]
+    },
     "v213": {
       "intro": "Build v213 — swipe-up restore + careful top-edge fix.",
       "sections": [

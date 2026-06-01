@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v211",
-  "appVersion": "3.5.80",
+  "latest": "v212",
+  "appVersion": "3.5.81",
   "highlights": [
-    "Removed the thin grey line at the top of the covert black screen (HUD gradient leak and video edge bleed)."
+    "Fixed the thin line at the top of the covert black screen in light and dark theme — full-bleed layout during camera (viewport offset gap)."
   ],
   "builds": {
+    "v212": {
+      "intro": "Build v212 — covert screen top line fix (both themes).",
+      "sections": [
+        {
+          "heading": "Covert Camera",
+          "items": [
+            "Fixed the thin grey/white line at the top of the black screen and permission gate in both themes — the app shell was sitting below the browser viewport (visualViewport offset), exposing the theme background above the overlay.",
+            "Covert mode now uses full-screen black with no shell offset; hub UI hidden behind the overlay.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v212)."
+          ]
+        }
+      ]
+    },
     "v211": {
       "intro": "Build v211 — covert black screen grey line fix.",
       "sections": [

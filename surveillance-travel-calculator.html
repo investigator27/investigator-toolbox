@@ -229,7 +229,22 @@
       margin:var(--space-6) auto 0;
     }
     .coming-soon-card .card-sub{margin-top:var(--space-2)}
-    .app-shell--covert-camera{background:#000}
+    /* Full-bleed covert: shell is normally offset (--app-vt) and centered — that leaves a
+       theme-colored strip above the black overlay (thin grey/white line in both themes). */
+    html.toolbox-covert-active .app-shell,
+    .app-shell--covert-camera{
+      top:0!important;
+      left:0!important;
+      right:0!important;
+      transform:none!important;
+      width:100%!important;
+      max-width:none!important;
+      height:100vh!important;
+      height:100dvh!important;
+      max-height:none!important;
+      margin:0!important;
+      background:#000!important;
+    }
     .app-shell--covert-camera .app-header{display:none}
     .app-shell--covert-camera .app-content{padding:0;overflow:hidden}
     .app-shell--covert-camera .tab-bar{
@@ -238,12 +253,19 @@
     }
     #tab-camera.tab-panel--camera-active{
       position:fixed;
-      inset:0;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
       z-index:650;
       margin:0;
       width:100%;
       max-width:none;
       background:#000;
+    }
+    #tab-camera.tab-panel--camera-active #cameraTabView{
+      visibility:hidden;
+      pointer-events:none;
     }
     #tab-camera:fullscreen,
     #tab-camera:-webkit-full-screen{
@@ -478,6 +500,7 @@
       background:#000;
       overflow:hidden;
       touch-action:manipulation;
+      isolation:isolate;
     }
     .covert-permission-gate{
       position:absolute;
@@ -526,12 +549,13 @@
     .covert-permission-gate .covert-gate-btn--close:hover{background:rgba(255,255,255,0.06);color:#ffffff}
     .covert-permission-gate__error{
       margin:0;
-      min-height:1.25em;
+      min-height:0;
       font-size:var(--text-xs);
       color:#f87171;
       max-width:18rem;
       line-height:1.4;
     }
+    .covert-permission-gate__error:empty{display:none}
     .camera-airplane-note{
       display:flex;
       align-items:flex-start;
@@ -2691,7 +2715,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=211" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=212" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2713,8 +2737,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.80';
-  const BUNDLED_PWA_CACHE_VERSION = 'v211';
+  const BUNDLED_APP_VERSION = '3.5.81';
+  const BUNDLED_PWA_CACHE_VERSION = 'v212';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3665,11 +3689,16 @@
 
   function syncViewportHeight() {
     const vv = window.visualViewport;
-    const h = Math.max(320, Math.round(vv?.height || window.innerHeight || 0));
-    const top = Math.max(0, Math.round(vv?.offsetTop || 0));
+    const covert = document.documentElement.classList.contains('toolbox-covert-active');
+    const h = Math.max(
+      320,
+      Math.round(covert ? window.innerHeight : (vv?.height || window.innerHeight || 0))
+    );
+    const top = covert ? 0 : Math.max(0, Math.round(vv?.offsetTop || 0));
     root.style.setProperty('--app-vh', `${h}px`);
     root.style.setProperty('--app-vt', `${top}px`);
   }
+  window.toolboxSyncViewport = syncViewportHeight;
 
   function bindViewportHeightSync() {
     syncViewportHeight();

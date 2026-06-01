@@ -72,8 +72,8 @@
   let tsUsingRVFC = false;
   /** Last mime used (or probed) for settings UI — updated when recording starts. */
   let lastRecordingMimeType = '';
-  let covertTopSealEl = null;
-  let covertTopSealListenersBound = false;
+  let covertViewportBackdropEl = null;
+  let covertViewportListenersBound = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -1075,39 +1075,34 @@
     return locked;
   }
 
-  /** Body-level seal: app-shell uses transform, so fixed children cannot cover the viewport gap above it. */
-  function bindCovertTopSealListeners() {
-    if (covertTopSealListenersBound) return;
-    covertTopSealListenersBound = true;
-    const refresh = () => updateCovertTopSeal();
+  /** Full-screen backdrop on body (shell transform cannot cover viewport letterbox). */
+  function bindCovertViewportBackdropListeners() {
+    if (covertViewportListenersBound) return;
+    covertViewportListenersBound = true;
+    const refresh = () => updateCovertViewportBackdrop();
     window.addEventListener('resize', refresh, { passive: true });
     window.visualViewport?.addEventListener('resize', refresh, { passive: true });
     window.visualViewport?.addEventListener('scroll', refresh, { passive: true });
   }
 
-  function updateCovertTopSeal() {
+  function updateCovertViewportBackdrop() {
     const active = document.documentElement.classList.contains('toolbox-covert-active');
     if (!active) {
-      if (covertTopSealEl) covertTopSealEl.style.display = 'none';
+      if (covertViewportBackdropEl) covertViewportBackdropEl.style.display = 'none';
       return;
     }
-    if (!covertTopSealEl) {
-      covertTopSealEl = document.createElement('div');
-      covertTopSealEl.id = 'covertTopSeal';
-      covertTopSealEl.setAttribute('aria-hidden', 'true');
-      covertTopSealEl.style.cssText =
-        'position:fixed;left:0;top:0;width:100%;max-width:100vw;background:#000;z-index:99990;pointer-events:none;display:none;margin:0;padding:0;border:0;';
-      document.body.appendChild(covertTopSealEl);
+    if (!covertViewportBackdropEl) {
+      covertViewportBackdropEl = document.createElement('div');
+      covertViewportBackdropEl.id = 'covertViewportBackdrop';
+      covertViewportBackdropEl.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(covertViewportBackdropEl);
     }
-    const vv = window.visualViewport;
-    const gap = Math.max(0, Math.round(vv?.offsetTop || 0));
-    const h = Math.max(gap + 2, 3);
-    covertTopSealEl.style.height = `${h}px`;
-    covertTopSealEl.style.display = 'block';
+    covertViewportBackdropEl.style.cssText =
+      'position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#000;z-index:99980;pointer-events:none;display:block;margin:0;padding:0;border:0;';
   }
 
-  function removeCovertTopSeal() {
-    if (covertTopSealEl) covertTopSealEl.style.display = 'none';
+  function removeCovertViewportBackdrop() {
+    if (covertViewportBackdropEl) covertViewportBackdropEl.style.display = 'none';
   }
 
   function enterCovertMode() {
@@ -1117,8 +1112,9 @@
     closeClipViewer();
     document.documentElement.classList.add('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.add('app-shell--covert-camera');
-    bindCovertTopSealListeners();
-    updateCovertTopSeal();
+    $('tab-camera')?.classList.add('tab-panel--covert-live');
+    bindCovertViewportBackdropListeners();
+    updateCovertViewportBackdrop();
     setBlackVisible(true);
   }
 
@@ -1132,9 +1128,10 @@
   function leaveCovertMode() {
     const tab = $('tab-camera');
     tab?.classList.remove('tab-panel--camera-active');
+    tab?.classList.remove('tab-panel--covert-live');
     document.documentElement.classList.remove('toolbox-covert-active');
     document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
-    removeCovertTopSeal();
+    removeCovertViewportBackdrop();
     document.documentElement.style.backgroundColor = '';
     setBlackVisible(false);
     hidePreview();

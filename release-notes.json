@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v208",
-  "appVersion": "3.5.77",
+  "latest": "v209",
+  "appVersion": "3.5.78",
   "highlights": [
-    "Covert camera now records MP4 (H.264) on Android Chrome when supported, with WebM fallback — and shows the active format in Camera Settings."
+    "Fixed Software Update getting stuck on “Updating…” when you open the screen — it now recovers, shows the right state, and only shows download progress while you are on that screen."
   ],
   "builds": {
+    "v209": {
+      "intro": "Build v209 — Software Update stuck UI fix.",
+      "sections": [
+        {
+          "heading": "Software Update",
+          "items": [
+            "Opening Software Update no longer leaves the button stuck on “Updating…” from a background download you never started.",
+            "Stalled downloads recover to Up to date, Update ready, or Retry instead of hanging forever.",
+            "Update Now failures reset the button so you can try again.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v209)."
+          ]
+        }
+      ]
+    },
     "v208": {
       "intro": "Build v208 — MP4-first camera recording on Android.",
       "sections": [

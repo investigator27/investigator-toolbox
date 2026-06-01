@@ -2707,8 +2707,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.77';
-  const BUNDLED_PWA_CACHE_VERSION = 'v208';
+  const BUNDLED_APP_VERSION = '3.5.78';
+  const BUNDLED_PWA_CACHE_VERSION = 'v209';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2857,8 +2857,25 @@
     });
   }
 
+  function isSoftwareUpdateScreenOpen() {
+    return !!(
+      settingsOverlay?.classList.contains('is-open')
+      && settingsNavStack[settingsNavStack.length - 1] === 'updates'
+    );
+  }
+
+  /** Only paint download/install progress on the Software Update screen (or during Update Now). */
+  function shouldPaintUpdateProgressUi() {
+    return applyingAppUpdate || isSoftwareUpdateScreenOpen();
+  }
+
   function setSwUpdateButtonMode(mode) {
     if (!swUpdateNowBtn) return;
+    if (mode === 'downloading') {
+      swUpdateNowBtn.disabled = true;
+      swUpdateNowBtn.innerHTML = '<span class="sw-update-btn__spinner" aria-hidden="true"></span><span>Downloading…</span>';
+      return;
+    }
     if (mode === 'busy') {
       swUpdateNowBtn.disabled = true;
       swUpdateNowBtn.innerHTML = '<span class="sw-update-btn__spinner" aria-hidden="true"></span><span>Updating…</span>';
@@ -2960,7 +2977,7 @@
 
     if (state === 'downloading') {
       swUpdateProgressWrap?.classList.remove('hidden');
-      setSwUpdateButtonMode('busy');
+      setSwUpdateButtonMode('downloading');
       await refreshSwUpdateCardCopy('downloading');
       const pct = Math.max(displayProgress, updateProgressValue || 8);
       setUpdateTargetProgress(Math.max(pct, 12));
@@ -3119,6 +3136,10 @@
     pendingUpdateBuild = '';
     clearUpdateReadyMark();
     refreshSettingsUpdateBadge();
+    if (updateUIState === 'downloading' || updateUIState === 'installing') {
+      if (isSoftwareUpdateScreenOpen()) showUptodateBanner();
+      else updateUIState = 'idle';
+    }
   }
 
   function resolveTargetBuild() {
@@ -4082,12 +4103,89 @@
       waitingSW = null;
       clearUpdateReadyMark();
       refreshSettingsVersionLabel();
+      if (isSoftwareUpdateScreenOpen()) {
+        showUptodateBanner();
+      } else {
+        updateUIState = 'idle';
+        stopWaitingReadyPoll();
+      }
       return;
     }
 
+    if (isSoftwareUpdateScreenOpen()) {
+      renderUpdateBanner('error', {
+        statusLine: 'Could not finish the update. Tap Retry, or close the app and open it again.'
+      });
+    } else {
+      updateUIState = 'idle';
+      stopWaitingReadyPoll();
+    }
+  }
+
+  async function recoverSoftwareUpdateScreen() {
+    if (applyingAppUpdate) {
+      try {
+        const started = parseInt(sessionStorage.getItem('toolboxApplyingUpdateAt'), 10);
+        if (Number.isFinite(started) && Date.now() - started > 45000) {
+          applyingAppUpdate = false;
+          sessionStorage.removeItem('toolboxApplyingUpdateAt');
+        } else {
+          await renderSoftwareUpdateUi('installing', {
+            statusLine: 'Still installing… If this lasts, close Toolbox completely and reopen.'
+          });
+          return;
+        }
+      } catch {
+        applyingAppUpdate = false;
+      }
+    }
+    stopWaitingReadyPoll();
+    if (updateUIState === 'downloading' || updateUIState === 'installing') {
+      await promoteDownloadToReady();
+    }
+    if (updateUIState !== 'downloading' && updateUIState !== 'installing') return;
+
+    const reg = await navigator.serviceWorker.getRegistration(BASE_PATH);
+    swRegistration = reg;
+    if (reg?.waiting) {
+      showUpdateReadyBanner();
+      return;
+    }
+    if (!reg?.installing) {
+      await clearStaleUpdateUiIfCurrent(reg);
+      const activeBuild = await resolveInstalledBuild(reg);
+      const targetBuild = resolveTargetBuild();
+      if (activeBuild && !isBuildNewer(targetBuild, activeBuild)) {
+        showUptodateBanner();
+        return;
+      }
+    }
     renderUpdateBanner('error', {
-      statusLine: 'Could not finish the update. Tap Retry, or close the app and open it again.'
+      statusLine: 'Update stalled. Tap Retry, or close Toolbox and open it again.'
     });
+  }
+
+  async function recoverAndPaintSoftwareUpdateScreen() {
+    await recoverSoftwareUpdateScreen();
+    if (updateUIState === 'uptodate' || document.documentElement.getAttribute('data-post-update') === '1') {
+      renderSoftwareUpdateUi('uptodate');
+    } else if (updateUIState === 'ready' && (waitingSW || isUpdateReadyInSession())) {
+      renderSoftwareUpdateUi('ready');
+    } else if (updateUIState === 'error') {
+      renderSoftwareUpdateUi('error');
+    } else if (updateUIState === 'downloading' || updateUIState === 'installing') {
+      renderSoftwareUpdateUi('error', {
+        statusLine: 'Update stalled. Tap Retry, or close Toolbox and open it again.'
+      });
+    } else if (
+      !DEV_MODE
+      && !isUpdateBusy()
+      && document.documentElement.getAttribute('data-post-update') !== '1'
+      && !postUpdateFlowCompleted
+    ) {
+      runUpdateCheckFlow();
+    }
+    refreshSettingsUpdateBadge();
   }
 
   function scheduleDownloadStallRecovery() {
@@ -4130,11 +4228,13 @@
     updateProgressValue = pct;
     lastDownloadProgressAt = Date.now();
     const eased = Math.min(96, Math.max(displayProgress + 2, pct * 0.92));
-    renderSoftwareUpdateUi('downloading', {
-      progress: eased,
-      statusLine: label || 'Downloading update…'
-    });
-    setUpdateTargetProgress(eased);
+    if (shouldPaintUpdateProgressUi()) {
+      renderSoftwareUpdateUi('downloading', {
+        progress: eased,
+        statusLine: label || 'Downloading update…'
+      });
+      setUpdateTargetProgress(eased);
+    }
 
     if ((total > 0 && done >= total - 1) || pct >= 85) {
       startWaitingReadyPoll();
@@ -4191,7 +4291,9 @@
         }
       });
       if (applyingAppUpdate || quietUpdateLoad) return;
-      renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
+      if (shouldPaintUpdateProgressUi()) {
+        renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
+      }
       startWaitingReadyPoll();
       sw.addEventListener('statechange', () => {
         if (sw.state === 'installed') {
@@ -4276,6 +4378,10 @@
     if (applyingAppUpdate) return;
     markPendingPostUpdateLaunch();
     applyingAppUpdate = true;
+    try {
+      sessionStorage.setItem('toolboxApplyingUpdateAt', String(Date.now()));
+    } catch {}
+    try {
     stopWaitingReadyPoll();
     clearUpdateReadyMark();
     refreshSettingsUpdateBadge();
@@ -4351,6 +4457,14 @@
       swUpdateStatusLine.textContent = 'Restarting Toolbox…';
     }
     await reloadOnce();
+    } catch (err) {
+      console.warn('applyAppUpdate failed', err);
+      applyingAppUpdate = false;
+      try { sessionStorage.removeItem('toolboxApplyingUpdateAt'); } catch {}
+      renderUpdateBanner('error', {
+        statusLine: 'Update could not finish. Tap Retry, or close Toolbox and open it again.'
+      });
+    }
   }
 
   async function bindWaitingWorker(registration, opts = {}) {
@@ -4380,7 +4494,7 @@
     const sw = registration.installing;
     if (!sw || !navigator.serviceWorker.controller) return;
     if (updateUIState === 'ready') return;
-    if (!quietUpdateLoad) {
+    if (!quietUpdateLoad && shouldPaintUpdateProgressUi()) {
       renderUpdateBanner('downloading', { progress: 8, statusLine: 'Starting download…' });
     }
     startWaitingReadyPoll();
@@ -4830,22 +4944,7 @@
     paintSettingsScreens();
     if (screenId === 'updates') {
       bindSoftwareUpdateActions();
-      if (updateUIState === 'uptodate' || document.documentElement.getAttribute('data-post-update') === '1') {
-        renderSoftwareUpdateUi('uptodate');
-      } else if (updateUIState === 'ready' && (waitingSW || isUpdateReadyInSession())) {
-        renderSoftwareUpdateUi('ready');
-      } else if (updateUIState === 'error') renderSoftwareUpdateUi('error');
-      else if (updateUIState === 'downloading' || updateUIState === 'installing') {
-        renderSoftwareUpdateUi(updateUIState);
-      } else if (
-        !DEV_MODE
-        && !isUpdateBusy()
-        && document.documentElement.getAttribute('data-post-update') !== '1'
-        && !postUpdateFlowCompleted
-      ) {
-        runUpdateCheckFlow();
-      }
-      refreshSettingsUpdateBadge();
+      void recoverAndPaintSoftwareUpdateScreen();
     }
     if (screenId === 'personalization') {
       bindPersonalizationSettings();
@@ -5527,6 +5626,18 @@ $('summaryNote').textContent =
     initTabBar();
   })();
   window.addEventListener('pageshow', (event) => {
+    if (applyingAppUpdate) {
+      try {
+        const started = parseInt(sessionStorage.getItem('toolboxApplyingUpdateAt'), 10);
+        if (Number.isFinite(started) && Date.now() - started > 45000) {
+          applyingAppUpdate = false;
+          sessionStorage.removeItem('toolboxApplyingUpdateAt');
+          if (isSoftwareUpdateScreenOpen()) {
+            void recoverAndPaintSoftwareUpdateScreen();
+          }
+        }
+      } catch {}
+    }
     if (event.persisted) {
       void (async () => {
         if (await ensurePostUpdateLaunchFlow()) return;

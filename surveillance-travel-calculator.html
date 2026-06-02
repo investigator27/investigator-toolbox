@@ -23,6 +23,30 @@
     meta.content = theme === 'dark' ? '#171614' : '#ffffff';
   })();
   </script>
+  <script>
+  // App Lock anti-flash: if a lock is armed, paint a solid cover before any app content can
+  // render. The App Lock module removes this class the instant its real lock screen is shown.
+  (function () {
+    try {
+      var raw = localStorage.getItem('toolboxAppLock');
+      if (!raw) return;
+      var cfg = JSON.parse(raw);
+      if (cfg && cfg.enabled && cfg.hashB64) {
+        document.documentElement.classList.add('applock-armed');
+      }
+    } catch (e) {}
+  })();
+  </script>
+  <style id="applock-early-style">
+    html.applock-armed::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      z-index:2147483646;
+      background:#ffffff;
+    }
+    html[data-theme="dark"].applock-armed::before{ background:#171614; }
+  </style>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
@@ -2034,6 +2058,11 @@
               <span class="settings-row__label">Camera</span>
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="app-lock">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <span class="settings-row__label">App Lock</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
             <button type="button" class="settings-row settings-row--nav" data-settings-push="updates">
               <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
               <span class="settings-row__label">Software Update</span>
@@ -2057,6 +2086,21 @@
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="app-lock" aria-hidden="true">
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="app-lock-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="app-lock-intro-title">App Lock</h1>
+                <p class="settings-page-intro__blurb">Optional PIN (and biometric) lock for the whole app. Works fully offline. Recordings stay on this device.</p>
+              </div>
+            </div>
+          </section>
+          <div id="appLockBody"></div>
         </div>
       </div>
 
@@ -2750,7 +2794,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=224" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=225" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2772,8 +2816,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.93';
-  const BUNDLED_PWA_CACHE_VERSION = 'v224';
+  const BUNDLED_APP_VERSION = '3.5.94';
+  const BUNDLED_PWA_CACHE_VERSION = 'v225';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5032,6 +5076,9 @@
     }
     if (screenId === 'camera-settings') {
       window.ToolboxCovertCamera?.refreshCameraSettingsUi?.();
+    }
+    if (screenId === 'app-lock') {
+      window.ToolboxAppLock?.renderSettings?.();
     }
     if (screenId === 'developer-tools') {
       bindDeveloperToolActions();
@@ -9319,6 +9366,754 @@ out body;`;
   syncClientBilledField();
   setEmailActionsEnabled(false);
 
+})();
+</script>
+
+<style>
+  /* ===== App Lock ===== */
+  .applock{
+    position:fixed;
+    inset:0;
+    z-index:2147483647;
+    background:var(--color-bg);
+    color:var(--color-text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:max(env(safe-area-inset-top,0px),var(--space-6)) var(--space-5) max(env(safe-area-inset-bottom,0px),var(--space-6));
+    overflow-y:auto;
+  }
+  .applock[hidden]{display:none!important}
+  .applock__inner{
+    width:100%;
+    max-width:360px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:var(--space-3);
+  }
+  .applock__logo{width:54px;height:54px;margin-bottom:var(--space-1)}
+  .applock__title{font-size:var(--text-lg);font-weight:700;line-height:1.2;margin:0}
+  .applock__msg{font-size:var(--text-sm);color:var(--color-text-muted);margin:0;min-height:1.2em}
+  .applock__msg.is-error{color:var(--color-primary)}
+  .applock__dots{display:flex;gap:var(--space-3);justify-content:center;margin:var(--space-3) 0 var(--space-2);min-height:16px}
+  .applock__dot{width:14px;height:14px;border-radius:var(--radius-full);border:2px solid var(--color-text-faint);box-sizing:border-box}
+  .applock__dot.is-filled{background:var(--color-text);border-color:var(--color-text)}
+  .applock__keypad{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:var(--space-3);
+    width:100%;
+    max-width:300px;
+  }
+  .applock__key{
+    aspect-ratio:1;
+    border-radius:var(--radius-full);
+    border:1px solid var(--color-border);
+    background:var(--color-surface-2);
+    color:var(--color-text);
+    font-size:1.5rem;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    transition:transform .06s ease,background .12s ease;
+  }
+  .applock__key:active{transform:scale(.94);background:var(--color-surface-offset)}
+  .applock__key--action{font-size:1.25rem;background:transparent;border-color:transparent}
+  .applock__key--confirm{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
+  .applock__key[disabled]{opacity:.4;pointer-events:none}
+  .applock__key[data-empty]{visibility:hidden}
+  .applock__recovery{width:100%;max-width:300px}
+  .applock__recovery[hidden]{display:none}
+  .applock__recovery-input{
+    width:100%;
+    padding:0.85rem 1rem;
+    border-radius:var(--radius-lg);
+    border:1px solid var(--color-border);
+    background:var(--color-surface-2);
+    color:var(--color-text);
+    font-size:var(--text-base);
+    text-align:center;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  .applock__bio{
+    margin-top:var(--space-3);
+    display:inline-flex;
+    align-items:center;
+    gap:var(--space-2);
+    padding:0.7rem 1.2rem;
+    border-radius:var(--radius-full);
+    border:1px solid var(--color-border);
+    background:var(--color-surface);
+    color:var(--color-text);
+    font-size:var(--text-sm);
+    font-weight:600;
+  }
+  .applock__bio[hidden]{display:none}
+  .applock__link{
+    margin-top:var(--space-2);
+    background:none;
+    border:none;
+    color:var(--color-text-muted);
+    font-size:var(--text-sm);
+    text-decoration:underline;
+    padding:var(--space-2);
+  }
+  .applock__link[hidden]{display:none}
+  .applock__code{
+    font-family:var(--font-mono,ui-monospace,monospace);
+    font-size:1.4rem;
+    font-weight:700;
+    letter-spacing:0.1em;
+    background:var(--color-surface-2);
+    border:1px dashed var(--color-border);
+    border-radius:var(--radius-lg);
+    padding:var(--space-4);
+    width:100%;
+    max-width:300px;
+    word-break:break-word;
+  }
+  /* App Lock settings body */
+  .applock-settings__hint{font-size:var(--text-sm);color:var(--color-text-muted);margin:0 0 var(--space-4);line-height:1.5}
+  .applock-settings__note{font-size:var(--text-sm);color:var(--color-text-faint);margin:var(--space-4) 0 0;line-height:1.5}
+  .applock-btn{
+    width:100%;
+    padding:0.9rem 1rem;
+    border-radius:var(--radius-lg);
+    border:1px solid var(--color-border);
+    background:var(--color-surface-2);
+    color:var(--color-text);
+    font-size:var(--text-base);
+    font-weight:600;
+    margin-bottom:var(--space-3);
+  }
+  .applock-btn--primary{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
+  .applock-btn--danger{color:var(--color-primary)}
+  .applock-seg{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-2)}
+  .applock-seg__btn{
+    flex:1 1 0;
+    min-width:64px;
+    padding:0.6rem 0.4rem;
+    border-radius:var(--radius-md);
+    border:1px solid var(--color-border);
+    background:var(--color-surface-2);
+    color:var(--color-text);
+    font-size:var(--text-sm);
+    font-weight:600;
+  }
+  .applock-seg__btn.is-active{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
+</style>
+
+<div class="applock" id="appLockOverlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="App locked">
+  <div class="applock__inner">
+    <div class="applock__logo logo logo-icon" aria-hidden="true"></div>
+    <h1 class="applock__title" id="appLockTitle">Enter PIN</h1>
+    <p class="applock__msg" id="appLockMsg"></p>
+    <div class="applock__dots" id="appLockDots" aria-hidden="true"></div>
+    <div class="applock__code" id="appLockCode" hidden></div>
+    <div class="applock__recovery" id="appLockRecoveryWrap" hidden>
+      <input type="text" id="appLockRecoveryInput" class="applock__recovery-input" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX-XXXX-XXXX-XXXX" aria-label="Recovery code" />
+    </div>
+    <div class="applock__keypad" id="appLockKeypad"></div>
+    <button type="button" class="applock__bio" id="appLockBioBtn" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 11v3M7 11a5 5 0 0 1 10 0M4.5 13a8 8 0 0 1 15 0M9 18a3 3 0 0 1 6 0"/></svg>
+      <span id="appLockBioLabel">Use biometrics</span>
+    </button>
+    <button type="button" class="applock__link" id="appLockPrimaryBtn" hidden></button>
+    <button type="button" class="applock__link" id="appLockForgotBtn" hidden>Forgot PIN?</button>
+    <button type="button" class="applock__link" id="appLockCancelBtn" hidden>Cancel</button>
+  </div>
+</div>
+
+<script>
+/* Investigator Toolbox — App Lock (self-contained, offline). Isolated from the main app closure;
+   communicates only via window.ToolboxAppLock and the DOM. Never touches tabs, the update flow,
+   or covert recording state. */
+(function () {
+  'use strict';
+  var STORE_KEY = 'toolboxAppLock';
+  var ITERATIONS = 210000;
+  var MIN_PIN = 4, MAX_PIN = 8;
+  var RECOVERY_ALPHABET = 'ABCDEFGHJKMNPQRSTVWXYZ23456789'; // no ambiguous chars
+  var subtle = (window.crypto && window.crypto.subtle) ? window.crypto.subtle : null;
+
+  var el = {};
+  var cfg = loadCfg();
+  var mode = null;            // unlock | set | confirm | verify | recovery | recovery-show
+  var buffer = '';
+  var firstPin = '';          // set -> confirm
+  var sessionLocked = false;  // true when the overlay is gating a locked app (vs. settings task)
+  var pendingAction = null;   // run after a successful verify
+  var attempts = 0;
+  var lockoutUntil = 0;
+  var lockoutTimer = null;
+  var hiddenAt = 0;
+  var bioAvailable = false;
+  var booted = false;
+
+  /* ---------- storage ---------- */
+  function loadCfg() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return { enabled: false };
+      var c = JSON.parse(raw);
+      return c && typeof c === 'object' ? c : { enabled: false };
+    } catch (e) { return { enabled: false }; }
+  }
+  function saveCfg() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(cfg)); } catch (e) {}
+  }
+  function isEnabled() { return !!(cfg && cfg.enabled && cfg.hashB64); }
+  function autoLockMs() { return (cfg && typeof cfg.autoLockMs === 'number') ? cfg.autoLockMs : 120000; }
+
+  /* ---------- crypto helpers ---------- */
+  function randomBytes(n) { var a = new Uint8Array(n); window.crypto.getRandomValues(a); return a; }
+  function toB64(bytes) {
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function fromB64(b64) {
+    var bin = atob(b64); var a = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+    return a;
+  }
+  function deriveHash(text, saltBytes, iterations) {
+    var enc = new TextEncoder();
+    return subtle.importKey('raw', enc.encode(text), 'PBKDF2', false, ['deriveBits'])
+      .then(function (km) {
+        return subtle.deriveBits(
+          { name: 'PBKDF2', salt: saltBytes, iterations: iterations, hash: 'SHA-256' }, km, 256
+        );
+      })
+      .then(function (bits) { return new Uint8Array(bits); });
+  }
+  function constEq(a, b) {
+    if (!a || !b || a.length !== b.length) return false;
+    var diff = 0;
+    for (var i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+    return diff === 0;
+  }
+  function verifySecret(text, saltB64, hashB64) {
+    if (!subtle || !saltB64 || !hashB64) return Promise.resolve(false);
+    return deriveHash(text, fromB64(saltB64), cfg.iterations || ITERATIONS)
+      .then(function (h) { return constEq(h, fromB64(hashB64)); })
+      .catch(function () { return false; });
+  }
+
+  /* ---------- recovery code ---------- */
+  function makeRecoveryCode() {
+    var bytes = randomBytes(16), out = '';
+    for (var i = 0; i < 16; i++) {
+      out += RECOVERY_ALPHABET[bytes[i] % RECOVERY_ALPHABET.length];
+      if (i % 4 === 3 && i < 15) out += '-';
+    }
+    return out;
+  }
+  function normalizeRecovery(s) {
+    return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  }
+
+  /* ---------- overlay show/hide ---------- */
+  function armEarlyCover(on) {
+    var h = document.documentElement;
+    if (on) h.classList.add('applock-armed'); else h.classList.remove('applock-armed');
+  }
+  function showOverlay() {
+    if (!el.overlay) return;
+    el.overlay.hidden = false;
+    el.overlay.setAttribute('aria-hidden', 'false');
+    try { document.body.style.overflow = 'hidden'; } catch (e) {}
+    armEarlyCover(false); // real lock is now painted; drop the raw cover
+  }
+  function hideOverlay() {
+    if (!el.overlay) return;
+    el.overlay.hidden = true;
+    el.overlay.setAttribute('aria-hidden', 'true');
+    try { document.body.style.overflow = ''; } catch (e) {}
+  }
+  function isLocked() { return el.overlay && !el.overlay.hidden && (mode === 'unlock'); }
+
+  /* ---------- rendering ---------- */
+  function setMsg(text, isError) {
+    if (!el.msg) return;
+    el.msg.textContent = text || '';
+    el.msg.classList.toggle('is-error', !!isError);
+  }
+  function renderDots() {
+    if (!el.dots) return;
+    var target;
+    if (mode === 'unlock' || mode === 'verify') target = Math.max(cfg.pinLength || MIN_PIN, buffer.length);
+    else target = Math.max(buffer.length, MIN_PIN);
+    var html = '';
+    for (var i = 0; i < target; i++) {
+      html += '<span class="applock__dot' + (i < buffer.length ? ' is-filled' : '') + '"></span>';
+    }
+    el.dots.innerHTML = html;
+  }
+  function keypadKeys() {
+    // 9 digits, then action row: delete / 0 / confirm
+    return ['1','2','3','4','5','6','7','8','9','del','0','ok'];
+  }
+  function renderKeypad() {
+    if (!el.keypad) return;
+    var usingRecovery = (mode === 'recovery');
+    el.keypad.hidden = usingRecovery;
+    el.recoveryWrap.hidden = !usingRecovery;
+    if (usingRecovery) { el.keypad.innerHTML = ''; return; }
+    var keys = keypadKeys(), html = '';
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (k === 'del') html += '<button type="button" class="applock__key applock__key--action" data-key="del" aria-label="Delete">⌫</button>';
+      else if (k === 'ok') html += '<button type="button" class="applock__key applock__key--action applock__key--confirm" data-key="ok" aria-label="Confirm">✓</button>';
+      else html += '<button type="button" class="applock__key" data-key="' + k + '">' + k + '</button>';
+    }
+    el.keypad.innerHTML = html;
+  }
+
+  function refreshTitle() {
+    if (mode === 'set') { el.title.textContent = firstPin ? 'Re-enter PIN' : 'Create a PIN'; }
+    else if (mode === 'confirm') { el.title.textContent = 'Confirm PIN'; }
+    else if (mode === 'verify') { el.title.textContent = 'Enter current PIN'; }
+    else if (mode === 'recovery') { el.title.textContent = 'Enter recovery code'; }
+    else { el.title.textContent = 'Enter PIN'; }
+  }
+
+  function showBio(show) { if (el.bioBtn) el.bioBtn.hidden = !show; }
+  function showForgot(show) { if (el.forgotBtn) el.forgotBtn.hidden = !show; }
+  function showCancel(show) { if (el.cancelBtn) el.cancelBtn.hidden = !show; }
+
+  function enterMode(newMode) {
+    mode = newMode;
+    buffer = '';
+    if (el.code) el.code.hidden = true;
+    if (el.recoveryInput) el.recoveryInput.value = '';
+    refreshTitle();
+    renderKeypad();
+    renderDots();
+    var bioOn = !!(cfg.biometric && cfg.biometric.enabled) && bioAvailable;
+    showBio((mode === 'unlock' || mode === 'verify') && bioOn);
+    showForgot(mode === 'unlock' || mode === 'recovery');
+    if (el.forgotBtn) el.forgotBtn.textContent = (mode === 'recovery') ? 'Unlock with recovery code' : 'Forgot PIN?';
+    // No cancel in plain unlock (cannot bypass a locked app). Recovery can step back to unlock.
+    showCancel(mode === 'set' || mode === 'confirm' || mode === 'verify' || mode === 'recovery');
+    if (el.cancelBtn) el.cancelBtn.textContent = 'Cancel';
+    setMsg('');
+  }
+
+  /* ---------- input handling ---------- */
+  function lockedOut() {
+    if (Date.now() < lockoutUntil) return true;
+    return false;
+  }
+  function startLockoutCountdown() {
+    if (lockoutTimer) clearInterval(lockoutTimer);
+    var tick = function () {
+      var left = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      if (left <= 0) {
+        clearInterval(lockoutTimer); lockoutTimer = null;
+        setMsg(''); setKeypadDisabled(false);
+      } else {
+        setMsg('Too many attempts — try again in ' + left + 's', true);
+      }
+    };
+    setKeypadDisabled(true); tick();
+    lockoutTimer = setInterval(tick, 500);
+  }
+  function setKeypadDisabled(disabled) {
+    if (!el.keypad) return;
+    var btns = el.keypad.querySelectorAll('.applock__key');
+    for (var i = 0; i < btns.length; i++) btns[i].disabled = !!disabled;
+  }
+
+  function onKey(k) {
+    if (lockedOut()) return;
+    if (k === 'del') { buffer = buffer.slice(0, -1); renderDots(); return; }
+    if (k === 'ok') { onConfirmKey(); return; }
+    if (buffer.length >= MAX_PIN) return;
+    buffer += k;
+    renderDots();
+    // auto-submit where length is known
+    if ((mode === 'unlock' || mode === 'verify') && buffer.length === (cfg.pinLength || 0)) submitEntry();
+    else if (mode === 'confirm' && buffer.length === firstPin.length) submitEntry();
+  }
+  function onConfirmKey() {
+    if (mode === 'set') {
+      if (buffer.length < MIN_PIN) { setMsg('PIN must be at least ' + MIN_PIN + ' digits', true); return; }
+      firstPin = buffer; enterMode('confirm'); return;
+    }
+    submitEntry();
+  }
+
+  function submitEntry() {
+    if (mode === 'set') { onConfirmKey(); return; }
+    if (mode === 'confirm') {
+      if (buffer === firstPin) { finalizeSetPin(firstPin); }
+      else { firstPin = ''; enterMode('set'); setMsg('PINs did not match — start again', true); }
+      return;
+    }
+    if (mode === 'unlock' || mode === 'verify') {
+      if (buffer.length < MIN_PIN) return;
+      var entered = buffer;
+      verifySecret(entered, cfg.saltB64, cfg.hashB64).then(function (ok) {
+        if (ok) { onCorrectPin(); }
+        else { onWrongPin(); }
+      });
+    }
+  }
+
+  function onWrongPin() {
+    buffer = ''; renderDots();
+    attempts += 1;
+    if (attempts >= 5) {
+      var factor = Math.min(5, attempts - 4);
+      lockoutUntil = Date.now() + factor * 30000;
+      startLockoutCountdown();
+    } else {
+      setMsg('Incorrect PIN', true);
+    }
+    if (navigator.vibrate) try { navigator.vibrate(60); } catch (e) {}
+  }
+  function onCorrectPin() {
+    attempts = 0; lockoutUntil = 0;
+    if (mode === 'verify') {
+      var act = pendingAction; pendingAction = null;
+      if (typeof act === 'function') act();
+      return;
+    }
+    unlockApp();
+  }
+
+  function unlockApp() {
+    hideOverlay();
+    mode = null; buffer = '';
+  }
+
+  /* ---------- setup / change / disable ---------- */
+  function finalizeSetPin(pin) {
+    if (!subtle) { setMsg('Secure storage unavailable on this browser', true); return; }
+    var salt = randomBytes(16);
+    var recovery = makeRecoveryCode();
+    var recSalt = randomBytes(16);
+    Promise.all([
+      deriveHash(pin, salt, ITERATIONS),
+      deriveHash(normalizeRecovery(recovery), recSalt, ITERATIONS)
+    ]).then(function (res) {
+      cfg = {
+        enabled: true,
+        iterations: ITERATIONS,
+        saltB64: toB64(salt),
+        hashB64: toB64(res[0]),
+        pinLength: pin.length,
+        recoverySaltB64: toB64(recSalt),
+        recoveryHashB64: toB64(res[1]),
+        autoLockMs: autoLockMs(),
+        biometric: (cfg.biometric && cfg.biometric.enabled) ? cfg.biometric : { enabled: false, credentialIdB64: '' }
+      };
+      saveCfg();
+      showRecoveryCode(recovery);
+    }).catch(function () { setMsg('Could not save PIN', true); });
+  }
+
+  function showRecoveryCode(code) {
+    mode = 'recovery-show';
+    buffer = '';
+    refreshTitleStatic('Save your recovery code');
+    el.keypad.hidden = true;
+    el.recoveryWrap.hidden = true;
+    el.dots.innerHTML = '';
+    showBio(false); showForgot(false);
+    setMsg('This is the ONLY way to unlock if you forget your PIN. Write it down — it will not be shown again.');
+    el.code.hidden = false;
+    el.code.textContent = code;
+    showCancel(true);
+    el.cancelBtn.textContent = 'I saved it — done';
+  }
+  function refreshTitleStatic(t) { if (el.title) el.title.textContent = t; }
+
+  function requireVerifyThen(action) {
+    sessionLocked = false;
+    pendingAction = action;
+    showOverlay();
+    enterMode('verify');
+    var bioOn = !!(cfg.biometric && cfg.biometric.enabled) && bioAvailable;
+    if (bioOn) tryBiometric();
+  }
+
+  function doDisable() {
+    cfg = { enabled: false };
+    saveCfg();
+    armEarlyCover(false);
+    hideOverlay();
+    mode = null;
+    renderSettings();
+  }
+
+  /* ---------- biometric (WebAuthn platform authenticator) ---------- */
+  function checkBioAvailable() {
+    if (!window.PublicKeyCredential || !navigator.credentials ||
+        typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== 'function') {
+      bioAvailable = false; return Promise.resolve(false);
+    }
+    return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+      .then(function (ok) { bioAvailable = !!ok; return bioAvailable; })
+      .catch(function () { bioAvailable = false; return false; });
+  }
+  function registerBiometric() {
+    if (!bioAvailable) return Promise.reject(new Error('unavailable'));
+    var opts = {
+      publicKey: {
+        challenge: randomBytes(32),
+        rp: { name: 'Investigator Toolbox', id: location.hostname },
+        user: { id: randomBytes(16), name: 'toolbox', displayName: 'Toolbox User' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    };
+    return navigator.credentials.create(opts).then(function (cred) {
+      if (!cred) throw new Error('no-cred');
+      return toB64(new Uint8Array(cred.rawId));
+    });
+  }
+  function biometricUnlock() {
+    if (!bioAvailable || !cfg.biometric || !cfg.biometric.enabled || !cfg.biometric.credentialIdB64) {
+      return Promise.reject(new Error('unavailable'));
+    }
+    var opts = {
+      publicKey: {
+        challenge: randomBytes(32),
+        rpId: location.hostname,
+        allowCredentials: [{ type: 'public-key', id: fromB64(cfg.biometric.credentialIdB64) }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    };
+    return navigator.credentials.get(opts);
+  }
+  function tryBiometric() {
+    setMsg('');
+    biometricUnlock().then(function (assertion) {
+      if (assertion) onCorrectPin();
+    }).catch(function () { /* user cancelled or failed — fall back to PIN silently */ });
+  }
+
+  /* ---------- settings UI ---------- */
+  function renderSettings() {
+    var body = document.getElementById('appLockBody');
+    if (!body) return;
+    if (!isEnabled()) {
+      body.innerHTML =
+        '<p class="applock-settings__hint">App Lock is off. Add a PIN to require it every time the app opens. It works completely offline — no account, no texts, no email.</p>' +
+        '<button type="button" class="applock-btn applock-btn--primary" data-applock="setup">Set up App Lock</button>' +
+        '<p class="applock-settings__note">If you forget your PIN you will need the recovery code shown at setup. Save it somewhere safe.</p>';
+      return;
+    }
+    var ms = autoLockMs();
+    var segs = [['0','Immediately'],['60000','1 min'],['120000','2 min'],['300000','5 min']];
+    var segHtml = '';
+    for (var i = 0; i < segs.length; i++) {
+      segHtml += '<button type="button" class="applock-seg__btn' + (String(ms) === segs[i][0] ? ' is-active' : '') +
+        '" data-applock="autolock" data-ms="' + segs[i][0] + '">' + segs[i][1] + '</button>';
+    }
+    var bioRow = '';
+    if (bioAvailable) {
+      var bioOn = !!(cfg.biometric && cfg.biometric.enabled);
+      bioRow =
+        '<div class="settings-row settings-row--toggle">' +
+          '<span class="settings-row__label">Biometric unlock</span>' +
+          '<label class="settings-switch"><input type="checkbox" data-applock="biometric"' + (bioOn ? ' checked' : '') +
+          ' aria-label="Biometric unlock" /><span class="settings-switch__track"></span></label>' +
+        '</div>';
+    }
+    body.innerHTML =
+      '<div class="settings-group">' +
+        '<div class="settings-row settings-row--toggle">' +
+          '<span class="settings-row__label">App Lock</span>' +
+          '<label class="settings-switch"><input type="checkbox" data-applock="toggle" checked aria-label="App Lock" /><span class="settings-switch__track"></span></label>' +
+        '</div>' +
+        bioRow +
+      '</div>' +
+      '<h2 class="settings-section-title">Auto-lock after</h2>' +
+      '<div class="applock-seg">' + segHtml + '</div>' +
+      '<p class="applock-settings__note">Locks when reopened after this much time in the background. It will never interrupt an active recording.</p>' +
+      '<h2 class="settings-section-title">Manage</h2>' +
+      '<div class="settings-group">' +
+        '<button type="button" class="settings-row settings-row--nav" data-applock="change"><span class="settings-row__label">Change PIN</span><span class="settings-row__chevron" aria-hidden="true">›</span></button>' +
+        '<button type="button" class="settings-row settings-row--nav" data-applock="newcode"><span class="settings-row__label">Show new recovery code</span><span class="settings-row__chevron" aria-hidden="true">›</span></button>' +
+      '</div>';
+  }
+
+  // Buttons (setup / change / newcode / autolock segments).
+  function onSettingsClick(e) {
+    var t = e.target.closest('button[data-applock]');
+    if (!t) return;
+    var action = t.getAttribute('data-applock');
+    if (action === 'setup') {
+      sessionLocked = false; showOverlay(); firstPin = ''; enterMode('set');
+    } else if (action === 'change') {
+      requireVerifyThen(function () { firstPin = ''; enterMode('set'); });
+    } else if (action === 'newcode') {
+      requireVerifyThen(function () { regenerateRecovery(); });
+    } else if (action === 'autolock') {
+      cfg.autoLockMs = parseInt(t.getAttribute('data-ms'), 10) || 0;
+      saveCfg(); renderSettings();
+    }
+  }
+
+  // Checkbox switches (master toggle / biometric) fire 'change', matching the rest of Settings.
+  function onSettingsChange(e) {
+    var t = e.target.closest('input[data-applock]');
+    if (!t) return;
+    var action = t.getAttribute('data-applock');
+    if (action === 'toggle') {
+      // Only "off" is actionable here; require verification before disabling.
+      if (!t.checked) {
+        t.checked = true; // keep visually on until identity is confirmed
+        requireVerifyThen(function () { doDisable(); });
+      }
+    } else if (action === 'biometric') {
+      if (t.checked) {
+        registerBiometric().then(function (idB64) {
+          cfg.biometric = { enabled: true, credentialIdB64: idB64 };
+          saveCfg(); renderSettings();
+        }).catch(function () { t.checked = false; renderSettings(); });
+      } else {
+        cfg.biometric = { enabled: false, credentialIdB64: '' };
+        saveCfg(); renderSettings();
+      }
+    }
+  }
+
+  function regenerateRecovery() {
+    var recovery = makeRecoveryCode();
+    var recSalt = randomBytes(16);
+    deriveHash(normalizeRecovery(recovery), recSalt, ITERATIONS).then(function (h) {
+      cfg.recoverySaltB64 = toB64(recSalt);
+      cfg.recoveryHashB64 = toB64(h);
+      saveCfg();
+      showOverlay();
+      showRecoveryCode(recovery);
+    }).catch(function () {});
+  }
+
+  /* ---------- recovery (forgot PIN) ---------- */
+  function submitRecovery() {
+    var entered = normalizeRecovery(el.recoveryInput.value);
+    if (entered.length < 8) { setMsg('Enter your full recovery code', true); return; }
+    verifySecret(entered, cfg.recoverySaltB64, cfg.recoveryHashB64).then(function (ok) {
+      if (ok) {
+        attempts = 0; lockoutUntil = 0;
+        setMsg('Recovery accepted — set a new PIN');
+        firstPin = ''; enterMode('set');
+      } else {
+        setMsg('Recovery code not recognized', true);
+        if (navigator.vibrate) try { navigator.vibrate(60); } catch (e) {}
+      }
+    });
+  }
+
+  /* ---------- public lock entry ---------- */
+  function lockNow() {
+    if (!isEnabled()) return;
+    sessionLocked = true;
+    showOverlay();
+    enterMode('unlock');
+    var bioOn = !!(cfg.biometric && cfg.biometric.enabled) && bioAvailable;
+    if (bioOn) tryBiometric();
+  }
+
+  function covertRecording() {
+    try { return !!(window.ToolboxCovertCamera && window.ToolboxCovertCamera.isRecording && window.ToolboxCovertCamera.isRecording()); }
+    catch (e) { return false; }
+  }
+
+  /* ---------- bind + boot ---------- */
+  function cacheEls() {
+    el.overlay = document.getElementById('appLockOverlay');
+    el.title = document.getElementById('appLockTitle');
+    el.msg = document.getElementById('appLockMsg');
+    el.dots = document.getElementById('appLockDots');
+    el.code = document.getElementById('appLockCode');
+    el.keypad = document.getElementById('appLockKeypad');
+    el.recoveryWrap = document.getElementById('appLockRecoveryWrap');
+    el.recoveryInput = document.getElementById('appLockRecoveryInput');
+    el.bioBtn = document.getElementById('appLockBioBtn');
+    el.forgotBtn = document.getElementById('appLockForgotBtn');
+    el.cancelBtn = document.getElementById('appLockCancelBtn');
+  }
+  function bind() {
+    if (el.keypad) el.keypad.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-key]'); if (!b) return;
+      onKey(b.getAttribute('data-key'));
+    });
+    if (el.bioBtn) el.bioBtn.addEventListener('click', tryBiometric);
+    if (el.forgotBtn) el.forgotBtn.addEventListener('click', function () {
+      if (mode === 'recovery') submitRecovery(); else enterMode('recovery');
+    });
+    if (el.cancelBtn) el.cancelBtn.addEventListener('click', function () {
+      pendingAction = null;
+      if (mode === 'recovery-show') {
+        // Finished viewing/saving the recovery code.
+        if (sessionLocked) { unlockApp(); } else { hideOverlay(); mode = null; renderSettings(); }
+        return;
+      }
+      if (mode === 'recovery' && sessionLocked) {
+        // Step back to the unlock keypad — must NOT leave a locked app open.
+        enterMode('unlock');
+        var bioOn = !!(cfg.biometric && cfg.biometric.enabled) && bioAvailable;
+        if (bioOn) tryBiometric();
+        return;
+      }
+      // Settings-initiated task (setup / change / verify): just return to settings.
+      hideOverlay(); mode = null; renderSettings();
+    });
+    if (el.recoveryInput) el.recoveryInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submitRecovery();
+    });
+    // Forgot button doubles as the recovery submit when in recovery mode.
+    var body = document.getElementById('appLockBody');
+    if (body) {
+      body.addEventListener('click', onSettingsClick);
+      body.addEventListener('change', onSettingsChange);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+      // becoming visible
+      if (!isEnabled() || isLocked()) return;
+      if (covertRecording()) return;
+      var elapsed = Date.now() - (hiddenAt || 0);
+      if (autoLockMs() === 0 || elapsed >= autoLockMs()) lockNow();
+    });
+  }
+
+  function boot() {
+    if (booted) return; booted = true;
+    cacheEls();
+    if (!el.overlay) { armEarlyCover(false); return; }
+    bind();
+    checkBioAvailable().then(function () {
+      if (isEnabled()) { lockNow(); } else { armEarlyCover(false); }
+      renderSettings();
+    });
+  }
+
+  window.ToolboxAppLock = {
+    renderSettings: renderSettings,
+    isEnabled: isEnabled,
+    isLocked: isLocked,
+    lockNow: lockNow
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 

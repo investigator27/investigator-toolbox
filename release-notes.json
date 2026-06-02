@@ -1,11 +1,26 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v224",
-  "appVersion": "3.5.93",
+  "latest": "v225",
+  "appVersion": "3.5.94",
   "highlights": [
-    "Long/continuous recordings now stay memory-safe — clips assemble from disk so the app won't crash on multi-hour sessions."
+    "New optional App Lock: protect the app with a PIN (and fingerprint/face) that works fully offline."
   ],
   "builds": {
+    "v225": {
+      "intro": "Build v225 — optional App Lock (PIN + biometric).",
+      "sections": [
+        {
+          "heading": "Security",
+          "items": [
+            "Added an optional App Lock in Settings → App Lock: set a PIN to require it every time the app opens. It is off by default and works completely offline — no account, no texts, no email.",
+            "Optional biometric (fingerprint/face) unlock with the PIN as fallback, plus an adjustable auto-lock timer (immediately, 1, 2, or 5 minutes).",
+            "The PIN is stored hashed (PBKDF2), never in plain text. A recovery code is shown at setup so a forgotten PIN can be reset without losing your recordings.",
+            "The lock never interrupts an active recording, and it does not touch tabs, the update flow, or your saved clips.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v225)."
+          ]
+        }
+      ]
+    },
     "v224": {
       "intro": "Build v224 — memory-safe long recordings.",
       "sections": [

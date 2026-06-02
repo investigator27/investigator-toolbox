@@ -2794,7 +2794,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=225" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=227" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2816,8 +2816,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.94';
-  const BUNDLED_PWA_CACHE_VERSION = 'v225';
+  const BUNDLED_APP_VERSION = '3.5.96';
+  const BUNDLED_PWA_CACHE_VERSION = 'v227';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -9378,9 +9378,9 @@ out body;`;
     background:var(--color-bg);
     color:var(--color-text);
     display:flex;
-    align-items:center;
+    align-items:safe center;
     justify-content:center;
-    padding:max(env(safe-area-inset-top,0px),var(--space-6)) var(--space-5) max(env(safe-area-inset-bottom,0px),var(--space-6));
+    padding:max(env(safe-area-inset-top,0px),var(--space-8)) var(--space-5) max(env(safe-area-inset-bottom,0px),var(--space-6));
     overflow-y:auto;
   }
   .applock[hidden]{display:none!important}
@@ -9403,28 +9403,31 @@ out body;`;
   .applock__keypad{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:var(--space-3);
+    gap:var(--space-2);
     width:100%;
-    max-width:300px;
+    max-width:236px;
   }
+  .applock__keypad[hidden]{display:none}
   .applock__key{
     aspect-ratio:1;
     border-radius:var(--radius-full);
     border:1px solid var(--color-border);
-    background:var(--color-surface-2);
+    background:var(--color-surface);
     color:var(--color-text);
-    font-size:1.5rem;
+    font-size:1.25rem;
     font-weight:600;
     display:flex;
     align-items:center;
     justify-content:center;
+    box-shadow:var(--shadow-sm);
     -webkit-tap-highlight-color:transparent;
     user-select:none;
-    transition:transform .06s ease,background .12s ease;
+    transition:transform .08s ease,background .12s ease,box-shadow .12s ease;
   }
-  .applock__key:active{transform:scale(.94);background:var(--color-surface-offset)}
-  .applock__key--action{font-size:1.25rem;background:transparent;border-color:transparent}
-  .applock__key--confirm{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
+  .applock__key:active{transform:scale(.92);background:var(--color-surface-2);box-shadow:none}
+  .applock__key--action{font-size:1.1rem;background:transparent;border-color:transparent;box-shadow:none}
+  .applock__key--action:active{background:var(--color-surface-2)}
+  .applock__key--confirm{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent;box-shadow:var(--shadow-sm)}
   .applock__key[disabled]{opacity:.4;pointer-events:none}
   .applock__key[data-empty]{visibility:hidden}
   .applock__recovery{width:100%;max-width:300px}
@@ -9465,6 +9468,17 @@ out body;`;
     padding:var(--space-2);
   }
   .applock__link[hidden]{display:none}
+  .applock__link.applock__done{
+    margin-top:var(--space-5);
+    text-decoration:none;
+    background:var(--color-primary);
+    color:var(--color-text-inverse);
+    font-size:var(--text-base);
+    font-weight:700;
+    padding:0.9rem 1.6rem;
+    border-radius:var(--radius-full);
+    box-shadow:var(--shadow-md);
+  }
   .applock__code{
     font-family:var(--font-mono,ui-monospace,monospace);
     font-size:1.4rem;
@@ -9494,19 +9508,6 @@ out body;`;
   }
   .applock-btn--primary{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
   .applock-btn--danger{color:var(--color-primary)}
-  .applock-seg{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-2)}
-  .applock-seg__btn{
-    flex:1 1 0;
-    min-width:64px;
-    padding:0.6rem 0.4rem;
-    border-radius:var(--radius-md);
-    border:1px solid var(--color-border);
-    background:var(--color-surface-2);
-    color:var(--color-text);
-    font-size:var(--text-sm);
-    font-weight:600;
-  }
-  .applock-seg__btn.is-active{background:var(--color-primary);color:var(--color-text-inverse);border-color:transparent}
 </style>
 
 <div class="applock" id="appLockOverlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="App locked">
@@ -9702,7 +9703,7 @@ out body;`;
     if (el.forgotBtn) el.forgotBtn.textContent = (mode === 'recovery') ? 'Unlock with recovery code' : 'Forgot PIN?';
     // No cancel in plain unlock (cannot bypass a locked app). Recovery can step back to unlock.
     showCancel(mode === 'set' || mode === 'confirm' || mode === 'verify' || mode === 'recovery');
-    if (el.cancelBtn) el.cancelBtn.textContent = 'Cancel';
+    if (el.cancelBtn) { el.cancelBtn.textContent = 'Cancel'; el.cancelBtn.classList.remove('applock__done'); }
     setMsg('');
   }
 
@@ -9828,11 +9829,12 @@ out body;`;
     el.recoveryWrap.hidden = true;
     el.dots.innerHTML = '';
     showBio(false); showForgot(false);
-    setMsg('This is the ONLY way to unlock if you forget your PIN. Write it down — it will not be shown again.');
+    setMsg('Write this down and keep it safe. It is the ONLY way to get back in if you forget your PIN, and it will not be shown again.');
     el.code.hidden = false;
     el.code.textContent = code;
     showCancel(true);
     el.cancelBtn.textContent = 'I saved it — done';
+    el.cancelBtn.classList.add('applock__done');
   }
   function refreshTitleStatic(t) { if (el.title) el.title.textContent = t; }
 
@@ -9916,11 +9918,11 @@ out body;`;
       return;
     }
     var ms = autoLockMs();
-    var segs = [['0','Immediately'],['60000','1 min'],['120000','2 min'],['300000','5 min']];
-    var segHtml = '';
-    for (var i = 0; i < segs.length; i++) {
-      segHtml += '<button type="button" class="applock-seg__btn' + (String(ms) === segs[i][0] ? ' is-active' : '') +
-        '" data-applock="autolock" data-ms="' + segs[i][0] + '">' + segs[i][1] + '</button>';
+    var autoOpts = [['0','Immediately'],['60000','1 minute'],['120000','2 minutes'],['300000','5 minutes']];
+    var autoLabel = '2 minutes', dropItems = '';
+    for (var i = 0; i < autoOpts.length; i++) {
+      if (String(ms) === autoOpts[i][0]) autoLabel = autoOpts[i][1];
+      dropItems += '<button type="button" class="menu-item city-item" data-applock-autolock="' + autoOpts[i][0] + '">' + autoOpts[i][1] + '</button>';
     }
     var bioRow = '';
     if (bioAvailable) {
@@ -9941,7 +9943,14 @@ out body;`;
         bioRow +
       '</div>' +
       '<h2 class="settings-section-title">Auto-lock after</h2>' +
-      '<div class="applock-seg">' + segHtml + '</div>' +
+      '<div class="settings-group settings-group--menu">' +
+        '<div class="field" style="padding:var(--space-3) var(--space-4)">' +
+          '<div class="menu-wrap city-wrap">' +
+            '<button type="button" class="menu-btn city-btn" id="appLockAutoLockBtn" aria-haspopup="listbox" aria-expanded="false"><span id="appLockAutoLockLabel">' + autoLabel + '</span></button>' +
+            '<div class="menu-panel city-panel" id="appLockAutoLockDrop" hidden role="listbox">' + dropItems + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
       '<p class="applock-settings__note">Locks when reopened after this much time in the background. It will never interrupt an active recording.</p>' +
       '<h2 class="settings-section-title">Manage</h2>' +
       '<div class="settings-group">' +
@@ -9950,8 +9959,45 @@ out body;`;
       '</div>';
   }
 
-  // Buttons (setup / change / newcode / autolock segments).
+  /* Auto-lock dropdown — mirrors the app's standard picker (.city-btn / .city-panel). */
+  function autoLockPanelEls() {
+    return { btn: document.getElementById('appLockAutoLockBtn'), panel: document.getElementById('appLockAutoLockDrop') };
+  }
+  function closeAutoLockPanel() {
+    var p = autoLockPanelEls();
+    if (p.panel) p.panel.hidden = true;
+    if (p.btn) p.btn.setAttribute('aria-expanded', 'false');
+  }
+  function toggleAutoLockPanel() {
+    var p = autoLockPanelEls();
+    if (!p.btn || !p.panel) return;
+    var willOpen = p.panel.hidden;
+    if (willOpen) {
+      p.panel.classList.remove('city-panel--up');
+      var rect = p.btn.getBoundingClientRect();
+      var spaceBelow = window.innerHeight - rect.bottom;
+      var spaceAbove = rect.top;
+      if (spaceBelow < 280 && spaceAbove > spaceBelow) p.panel.classList.add('city-panel--up');
+    }
+    p.panel.hidden = !willOpen;
+    p.btn.setAttribute('aria-expanded', String(willOpen));
+  }
+
+  // Buttons (setup / change / newcode / auto-lock dropdown).
   function onSettingsClick(e) {
+    if (e.target.closest('#appLockAutoLockBtn')) {
+      e.stopPropagation();
+      toggleAutoLockPanel();
+      return;
+    }
+    var autoItem = e.target.closest('[data-applock-autolock]');
+    if (autoItem) {
+      cfg.autoLockMs = parseInt(autoItem.getAttribute('data-applock-autolock'), 10) || 0;
+      saveCfg();
+      closeAutoLockPanel();
+      renderSettings();
+      return;
+    }
     var t = e.target.closest('button[data-applock]');
     if (!t) return;
     var action = t.getAttribute('data-applock');
@@ -9961,9 +10007,6 @@ out body;`;
       requireVerifyThen(function () { firstPin = ''; enterMode('set'); });
     } else if (action === 'newcode') {
       requireVerifyThen(function () { regenerateRecovery(); });
-    } else if (action === 'autolock') {
-      cfg.autoLockMs = parseInt(t.getAttribute('data-ms'), 10) || 0;
-      saveCfg(); renderSettings();
     }
   }
 
@@ -10083,6 +10126,13 @@ out body;`;
       body.addEventListener('click', onSettingsClick);
       body.addEventListener('change', onSettingsChange);
     }
+    // Close the auto-lock dropdown when tapping anywhere outside it.
+    document.addEventListener('click', function (e) {
+      var p = autoLockPanelEls();
+      if (!p.panel || p.panel.hidden) return;
+      var wrap = e.target.closest ? e.target.closest('.menu-wrap') : null;
+      if (!wrap || !p.btn || !wrap.contains(p.btn)) closeAutoLockPanel();
+    });
 
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }

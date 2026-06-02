@@ -1,11 +1,36 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v225",
-  "appVersion": "3.5.94",
+  "latest": "v227",
+  "appVersion": "3.5.96",
   "highlights": [
-    "New optional App Lock: protect the app with a PIN (and fingerprint/face) that works fully offline."
+    "Clearer App Lock recovery-code screen and a smaller, more refined PIN keypad."
   ],
   "builds": {
+    "v227": {
+      "intro": "Build v227 — App Lock recovery screen + keypad polish.",
+      "sections": [
+        {
+          "heading": "Security",
+          "items": [
+            "Fixed the recovery-code screen: the keypad no longer appears there, so it is clear you just save the code and tap the new \"I saved it — done\" button (now a proper large button, not a tiny link).",
+            "Made the PIN keypad smaller and more refined, and stopped the title from being clipped by the status bar on tall screens.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v227)."
+          ]
+        }
+      ]
+    },
+    "v226": {
+      "intro": "Build v226 — App Lock auto-lock dropdown.",
+      "sections": [
+        {
+          "heading": "Security",
+          "items": [
+            "Changed the App Lock \"Auto-lock after\" picker from cramped buttons to the app's standard dropdown so the options no longer get clipped.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v226)."
+          ]
+        }
+      ]
+    },
     "v225": {
       "intro": "Build v225 — optional App Lock (PIN + biometric).",
       "sections": [

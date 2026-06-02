@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v228",
-  "appVersion": "3.5.97",
+  "latest": "v229",
+  "appVersion": "3.5.98",
   "highlights": [
-    "App Lock keypad now has a little more breathing room and a haptic tap on each key."
+    "Revamped Developer Tools with a live version-sync check and one-tap deploy block."
   ],
   "builds": {
+    "v229": {
+      "intro": "Build v229 — Developer Tools revamp.",
+      "sections": [
+        {
+          "heading": "Developer",
+          "items": [
+            "Reorganized Developer Tools into clear cards with a deploy-readiness pill at the top (green = safe, red = mismatch).",
+            "Added a live Version sync card that fetches release-notes.json and service-worker.js and flags when their build numbers do not match — the usual \"forgot to re-upload a file\" deploy slip.",
+            "Added a one-tap \"Copy deploy block\" button and a \"Refresh all\" button, and expanded the This device card (platform, screen, connection, storage usage, persistent storage, app-lock state).",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v229)."
+          ]
+        }
+      ]
+    },
     "v228": {
       "intro": "Build v228 — App Lock keypad spacing + haptics.",
       "sections": [

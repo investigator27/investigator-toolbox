@@ -1401,6 +1401,40 @@
       color:var(--color-text-muted);
     }
     .dev-section-title:first-child{margin-top:var(--space-2)}
+    .dev-readiness{
+      margin:var(--space-2) var(--space-4) var(--space-3);
+      padding:var(--space-3) var(--space-4);
+      border-radius:var(--radius-lg);
+      font-size:var(--text-sm);
+      font-weight:700;
+      line-height:1.4;
+      border:1px solid var(--color-border);
+      background:var(--color-surface-2);
+      color:var(--color-text);
+      display:flex;
+      align-items:flex-start;
+      gap:var(--space-3);
+    }
+    .dev-readiness::before{
+      content:'';
+      width:10px;height:10px;
+      margin-top:0.35em;
+      border-radius:var(--radius-full);
+      background:var(--color-text-faint);
+      flex-shrink:0;
+    }
+    .dev-readiness--ok{
+      background:color-mix(in srgb,var(--color-success) 12%,var(--color-surface));
+      border-color:color-mix(in srgb,var(--color-success) 35%,transparent);
+      color:var(--color-success);
+    }
+    .dev-readiness--ok::before{background:var(--color-success)}
+    .dev-readiness--warn{
+      background:color-mix(in srgb,var(--color-error) 12%,var(--color-surface));
+      border-color:color-mix(in srgb,var(--color-error) 35%,transparent);
+      color:var(--color-error);
+    }
+    .dev-readiness--warn::before{background:var(--color-error)}
     .dev-status-panel{
       margin:0 var(--space-4) var(--space-3);
       padding:var(--space-3) var(--space-4);
@@ -2637,12 +2671,22 @@
               </div>
             </div>
           </section>
-          <p class="dev-hint" id="developerToolsHint">Refresh when you open this screen.</p>
+          <div class="dev-readiness" id="developerReadiness" aria-live="polite">Checking deploy status…</div>
+          <p class="dev-hint" id="developerToolsHint">Tap Refresh all to re-check the live build, service worker, and worker health.</p>
+          <div class="dev-actions">
+            <button type="button" class="btn btn-primary" id="developerRefreshAllBtn">Refresh all</button>
+          </div>
 
-          <h2 class="dev-section-title">Deploy &amp; versions</h2>
+          <h2 class="dev-section-title">Version sync (live files)</h2>
+          <div class="dev-status-panel" id="developerVersionSync" aria-live="polite">Loading…</div>
+          <div class="dev-actions">
+            <button type="button" class="btn btn-secondary" id="developerCopyDeployBlockBtn">Copy deploy block</button>
+            <button type="button" class="btn btn-secondary" id="developerCopyDeployBtn">Copy file list</button>
+          </div>
+
+          <h2 class="dev-section-title">Build &amp; deploy</h2>
           <div class="dev-status-panel" id="developerDeployStatus" aria-live="polite">Loading…</div>
           <div class="dev-actions">
-            <button type="button" class="btn btn-secondary" id="developerCopyDeployBtn">Copy deploy file list</button>
             <button type="button" class="btn btn-secondary" id="developerRefreshRemoteBtn">Refresh live GitHub build</button>
           </div>
 
@@ -2668,7 +2712,7 @@
           <h2 class="dev-section-title">This device</h2>
           <div class="dev-status-panel" id="developerDeviceStatus" aria-live="polite">Loading…</div>
 
-          <h2 class="dev-section-title">Actions</h2>
+          <h2 class="dev-section-title">Diagnostics</h2>
           <div class="dev-actions">
             <button type="button" class="btn btn-primary" id="developerCopyDebugBtn">Copy debug bundle</button>
             <button type="button" class="btn btn-secondary" id="developerClearSessionBtn">Clear dev session data</button>
@@ -2794,7 +2838,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=228" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=229" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2816,8 +2860,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.97';
-  const BUNDLED_PWA_CACHE_VERSION = 'v228';
+  const BUNDLED_APP_VERSION = '3.5.98';
+  const BUNDLED_PWA_CACHE_VERSION = 'v229';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5319,6 +5363,90 @@
     }
   }
 
+  async function fetchLiveReleaseNotesInfo() {
+    try {
+      const response = await fetch(`${BASE_PATH}release-notes.json?ts=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) return { latest: '', appVersion: '' };
+      const data = await response.json();
+      return {
+        latest: String(data.latest || '').trim(),
+        appVersion: String(data.appVersion || '').trim(),
+      };
+    } catch {
+      return { latest: '', appVersion: '' };
+    }
+  }
+
+  // Reads the live service-worker.js straight from the origin and pulls its cache version, so we
+  // can confirm it was actually re-uploaded alongside release-notes.json (the usual deploy slip).
+  async function fetchLiveServiceWorkerCacheVersion() {
+    try {
+      const response = await fetch(`${BASE_PATH}service-worker.js?ts=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) return '';
+      const text = await response.text();
+      const match = text.match(/surveillance-travel-pwa-(v\d+)/);
+      return match ? match[1] : '';
+    } catch {
+      return '';
+    }
+  }
+
+  // Ready-to-paste deploy block matching the standard upload checklist.
+  function buildDeployBlock() {
+    return [
+      '## Upload to GitHub (investigator-toolbox)',
+      '1. surveillance-travel-calculator.html',
+      '2. assets/covert-camera.js',
+      '3. service-worker.js',
+      '4. release-notes.json',
+      '',
+      `Version ${BUNDLED_APP_VERSION} · build ${BUNDLED_PWA_CACHE_VERSION}`,
+      '',
+      'Phone: Settings → Software Update → Update',
+    ].join('\n');
+  }
+
+  // Cross-checks the live release-notes.json and service-worker.js against the constants bundled
+  // into this HTML, surfacing the exact "forgot to re-upload" mismatches as a pass/fail pill.
+  async function refreshDeveloperVersionSync() {
+    const panel = $('developerVersionSync');
+    const pill = $('developerReadiness');
+    if (panel) panel.textContent = 'Loading…';
+    const [notes, swCache] = await Promise.all([
+      fetchLiveReleaseNotesInfo(),
+      fetchLiveServiceWorkerCacheVersion(),
+    ]);
+    if (notes.latest) remoteLatestBuild = notes.latest;
+    const bundledBuild = BUNDLED_PWA_CACHE_VERSION;
+    const bundledApp = BUNDLED_APP_VERSION;
+    const fetchedBoth = !!notes.latest && !!swCache;
+    const liveBuildsAgree = fetchedBoth && notes.latest === swCache;
+    const upToDate = !!notes.latest && notes.latest === bundledBuild;
+
+    renderDevStatusPanel(panel, [
+      { label: 'release-notes latest', value: notes.latest || 'Could not fetch', ok: liveBuildsAgree, warn: !notes.latest || (fetchedBoth && !liveBuildsAgree) },
+      { label: 'service-worker cache', value: swCache || 'Could not parse', ok: liveBuildsAgree, warn: !swCache || (fetchedBoth && !liveBuildsAgree) },
+      { label: 'release-notes appVersion', value: notes.appVersion || '—' },
+      { label: 'This HTML build', value: bundledBuild, ok: upToDate, warn: fetchedBoth && !upToDate },
+      { label: 'This HTML appVersion', value: bundledApp },
+    ]);
+
+    if (pill) {
+      pill.classList.remove('dev-readiness--ok', 'dev-readiness--warn');
+      if (!fetchedBoth) {
+        pill.classList.add('dev-readiness--warn');
+        pill.textContent = 'Could not verify live files — offline, or this build is not deployed to GitHub yet.';
+      } else if (!liveBuildsAgree) {
+        pill.classList.add('dev-readiness--warn');
+        pill.textContent = `Live mismatch: release-notes is ${notes.latest} but service-worker is ${swCache}. Re-upload whichever is behind.`;
+      } else {
+        pill.classList.add('dev-readiness--ok');
+        const device = upToDate ? 'this device is on the live build' : `this device is on ${bundledBuild}`;
+        pill.textContent = `Live files in sync — ${notes.latest} · ${notes.appVersion || '—'} (${device}).`;
+      }
+    }
+  }
+
   async function refreshDeveloperDeployStatus() {
     const el = $('developerDeployStatus');
     const live = await fetchLiveReleaseNotesLatest();
@@ -5458,24 +5586,47 @@
     }
   }
 
-  function refreshDeveloperDeviceStatus() {
+  async function refreshDeveloperDeviceStatus() {
     const el = $('developerDeviceStatus');
+    if (!el) return;
     const standalone = window.matchMedia('(display-mode: standalone)').matches;
+    const conn = navigator.connection || {};
+    const fmtMb = (n) => `${Math.round((n || 0) / 1048576)} MB`;
+    let storageLine = '—';
+    let persisted = '—';
+    try {
+      if (navigator.storage?.estimate) {
+        const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+        storageLine = `${fmtMb(usage)} used / ${fmtMb(quota)}`;
+      }
+    } catch {}
+    try {
+      if (navigator.storage?.persisted) persisted = (await navigator.storage.persisted()) ? 'Yes' : 'No';
+    } catch {}
     renderDevStatusPanel(el, [
-      { label: 'URL', value: location.href },
       { label: 'Online', value: navigator.onLine ? 'Yes' : 'No', ok: navigator.onLine, warn: !navigator.onLine },
+      { label: 'Display mode', value: standalone ? 'standalone (installed)' : 'browser tab' },
+      { label: 'Platform', value: navigator.platform || '—' },
+      { label: 'Language', value: navigator.language || '—' },
+      { label: 'Screen', value: `${screen.width}×${screen.height} @${window.devicePixelRatio || 1}x` },
+      { label: 'Viewport', value: `${window.innerWidth}×${window.innerHeight}` },
+      { label: 'Connection', value: conn.effectiveType ? `${conn.effectiveType}${conn.downlink ? ` · ${conn.downlink} Mb/s` : ''}` : '—' },
+      { label: 'Storage', value: storageLine },
+      { label: 'Persistent storage', value: persisted },
       { label: 'Theme', value: getThemePreference() },
-      { label: 'Display mode', value: standalone ? 'standalone' : 'browser' },
-      { label: 'User agent', value: navigator.userAgent.slice(0, 120) + (navigator.userAgent.length > 120 ? '…' : '') },
+      { label: 'App Lock', value: window.ToolboxAppLock?.isEnabled?.() ? 'On' : 'Off' },
+      { label: 'URL', value: location.href },
+      { label: 'User agent', value: navigator.userAgent },
     ]);
   }
 
   async function refreshDeveloperTools() {
+    await refreshDeveloperVersionSync();
     await refreshDeveloperDeployStatus();
     await refreshDeveloperPwaStatus();
     await refreshDeveloperHotelStatus();
     await refreshDeveloperTabPolicyPre();
-    refreshDeveloperDeviceStatus();
+    await refreshDeveloperDeviceStatus();
     refreshDeveloperGuideLabels();
   }
 
@@ -5552,6 +5703,10 @@
     if (window.__developerToolsBound) return;
     window.__developerToolsBound = true;
 
+    $('developerRefreshAllBtn')?.addEventListener('click', () => refreshDeveloperTools());
+    $('developerCopyDeployBlockBtn')?.addEventListener('click', () => {
+      copyDeveloperText(buildDeployBlock(), $('developerCopyDeployBlockBtn'));
+    });
     $('developerCopyDeployBtn')?.addEventListener('click', () => {
       const text = getStandardDeployFiles(false).join('\n');
       copyDeveloperText(text, $('developerCopyDeployBtn'));

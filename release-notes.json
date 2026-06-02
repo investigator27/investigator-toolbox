@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v223",
-  "appVersion": "3.5.92",
+  "latest": "v224",
+  "appVersion": "3.5.93",
   "highlights": [
-    "Shorter Camera Settings intro and status lines (less wall of text)."
+    "Long/continuous recordings now stay memory-safe — clips assemble from disk so the app won't crash on multi-hour sessions."
   ],
   "builds": {
+    "v224": {
+      "intro": "Build v224 — memory-safe long recordings.",
+      "sections": [
+        {
+          "heading": "Recording Engine",
+          "items": [
+            "Continuous (\"Never\") and 1 hr+ recordings no longer hold the whole clip in RAM — each ~1s chunk is released from memory once it's safely written to disk, and the final clip is rebuilt from the on-disk chunk store on stop.",
+            "Memory now stays flat regardless of recording length, removing the crash risk on multi-hour sessions. Short clips, stop behaviour, file output, and crash recovery are unchanged.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v224)."
+          ]
+        }
+      ]
+    },
     "v223": {
       "intro": "Build v223 — Camera Settings copy trimmed.",
       "sections": [

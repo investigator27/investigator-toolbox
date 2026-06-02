@@ -2455,6 +2455,7 @@
     resetCameraNav,
     forceExitCovertUi,
     isCovertUiActive,
+    isRecording: () => isRecording,
   };
 
   if (document.readyState === 'loading') {

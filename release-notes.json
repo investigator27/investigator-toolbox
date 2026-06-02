@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v227",
-  "appVersion": "3.5.96",
+  "latest": "v228",
+  "appVersion": "3.5.97",
   "highlights": [
-    "Clearer App Lock recovery-code screen and a smaller, more refined PIN keypad."
+    "App Lock keypad now has a little more breathing room and a haptic tap on each key."
   ],
   "builds": {
+    "v228": {
+      "intro": "Build v228 — App Lock keypad spacing + haptics.",
+      "sections": [
+        {
+          "heading": "Security",
+          "items": [
+            "Loosened the App Lock keypad spacing so the keys are less tight, and added a light haptic tap when you press a key.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, service-worker.js, release-notes.json (v228)."
+          ]
+        }
+      ]
+    },
     "v227": {
       "intro": "Build v227 — App Lock recovery screen + keypad polish.",
       "sections": [

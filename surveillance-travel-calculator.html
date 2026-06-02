@@ -2794,7 +2794,7 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=227" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=228" onerror="window.__covertCameraLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2816,8 +2816,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.96';
-  const BUNDLED_PWA_CACHE_VERSION = 'v227';
+  const BUNDLED_APP_VERSION = '3.5.97';
+  const BUNDLED_PWA_CACHE_VERSION = 'v228';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -9403,9 +9403,9 @@ out body;`;
   .applock__keypad{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:var(--space-2);
+    gap:var(--space-3);
     width:100%;
-    max-width:236px;
+    max-width:270px;
   }
   .applock__keypad[hidden]{display:none}
   .applock__key{
@@ -9414,7 +9414,7 @@ out body;`;
     border:1px solid var(--color-border);
     background:var(--color-surface);
     color:var(--color-text);
-    font-size:1.25rem;
+    font-size:1.35rem;
     font-weight:600;
     display:flex;
     align-items:center;
@@ -9732,8 +9732,16 @@ out body;`;
     for (var i = 0; i < btns.length; i++) btns[i].disabled = !!disabled;
   }
 
+  function tapHaptic() {
+    try {
+      if (typeof window.toolboxHaptic === 'function') window.toolboxHaptic('light');
+      else if (navigator.vibrate) navigator.vibrate(12);
+    } catch (e) {}
+  }
+
   function onKey(k) {
     if (lockedOut()) return;
+    tapHaptic();
     if (k === 'del') { buffer = buffer.slice(0, -1); renderDots(); return; }
     if (k === 'ok') { onConfirmKey(); return; }
     if (buffer.length >= MAX_PIN) return;

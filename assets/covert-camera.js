@@ -37,7 +37,10 @@
 
   let mediaStream = null;
   let mediaRecorder = null;
-  let recordedChunks = [];
+  // Chunks are held in memory ONLY until their disk write confirms, then released. The on-disk
+  // chunk store is the source of truth when assembling the final clip — this keeps RAM flat over
+  // long ("Never" mode) recordings instead of growing with the whole clip.
+  let pendingChunks = new Map();
   let isRecording = false;
   let previewVisible = false;
   let tapCount = 0;
@@ -224,6 +227,42 @@
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
+  }
+
+  /** Disk chunks for a clip as {seq, blob} so the live-stop path can merge them with pendingChunks. */
+  async function getChunkEntries(clipId) {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CHUNK_STORE, 'readonly');
+      const req = tx.objectStore(CHUNK_STORE).index('clipId').getAll(IDBKeyRange.only(clipId));
+      req.onsuccess = () => {
+        const list = (req.result || []).map((r) => ({ seq: r.seq || 0, blob: r.blob }));
+        resolve(list);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Build the final clip Blob from the on-disk chunk store, filling any chunk whose disk write had
+   * not yet confirmed from pendingChunks (kept in memory as a fallback). Disk-backed blobs are
+   * reference-assembled, so memory stays flat no matter how long the recording ran.
+   */
+  async function assembleClipBlob(clipId, type) {
+    const bySeq = new Map();
+    if (clipId != null) {
+      try {
+        const diskEntries = await getChunkEntries(clipId);
+        for (const { seq, blob } of diskEntries) {
+          if (blob) bySeq.set(seq, blob);
+        }
+      } catch {}
+    }
+    for (const [seq, blob] of pendingChunks) {
+      if (blob && !bySeq.has(seq)) bySeq.set(seq, blob);
+    }
+    const ordered = [...bySeq.keys()].sort((a, b) => a - b).map((k) => bySeq.get(k));
+    return new Blob(ordered, { type: type || 'video/webm' });
   }
 
   async function deleteChunks(clipId) {
@@ -1799,7 +1838,7 @@
       haptic('medium');
       return;
     }
-    recordedChunks = [];
+    pendingChunks.clear();
     cleanupTimestampPipeline();
     // Default path is the raw stream (unchanged). Only when the stamp is enabled do we route
     // through a canvas; if that fails for any reason we fall back so recording never breaks.
@@ -1844,14 +1883,20 @@
 
     mediaRecorder.ondataavailable = (e) => {
       if (!e.data || e.data.size <= 0) return;
-      recordedChunks.push(e.data);
       const id = currentRecordingId;
       const seq = currentChunkSeq++;
+      // Hold the chunk in memory only until its disk write confirms, then release it so RAM stays
+      // flat over long sessions. The on-disk chunk store is assembled into the final clip on stop.
+      pendingChunks.set(seq, e.data);
       if (id != null) {
-        // Best-effort crash backup of each ~1s chunk. A failed backup write must NEVER stop
-        // the live recording — the full clip is still in memory and saved on stop. Genuine
-        // out-of-space is handled by the periodic storage watch instead.
-        appendChunk(id, seq, e.data).catch(() => {});
+        appendChunk(id, seq, e.data)
+          .then(() => {
+            pendingChunks.delete(seq);
+          })
+          .catch(() => {
+            // A failed backup write must NEVER stop the live recording or lose data: keep the
+            // chunk in memory as a fallback. Genuine out-of-space is handled by the storage watch.
+          });
       }
     };
 
@@ -1861,8 +1906,11 @@
       stopResourceWatch();
       await releaseWakeLock();
       const finishedId = currentRecordingId;
-      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || mimeType });
-      recordedChunks = [];
+      const blobType = mediaRecorder.mimeType || mimeType;
+      // Assemble the clip from the on-disk chunk store (plus any not-yet-flushed chunks still in
+      // memory) so RAM never has to hold the whole recording.
+      const blob = await assembleClipBlob(finishedId, blobType);
+      pendingChunks.clear();
       isRecording = false;
       $('covertCamera')?.classList.remove('covert-camera--recording');
       setBlackVisible(true);
@@ -1885,16 +1933,16 @@
         if (recordingGeo && !locationLabel) {
           locationLabel = await resolveClipAddress(recordingGeo.lat, recordingGeo.lng);
         }
-        // Free the on-disk chunk backup BEFORE writing the final clip so we never need 2x space
-        // (the full clip is already assembled in memory at this point).
-        await clearChunkStore().catch(() => {});
-        await finalizeClip(finishedId != null ? finishedId : nextClipId(), blob, mediaRecorder.mimeType || mimeType, {
+        // Write the assembled clip FIRST, then free the on-disk chunk backup. The blob references
+        // the chunk records, so they must survive until finalizeClip has committed the clip.
+        await finalizeClip(finishedId != null ? finishedId : nextClipId(), blob, blobType, {
           durationSeconds,
           recordedAt: recordingStartedAt || Date.now(),
           latitude: recordingGeo?.lat,
           longitude: recordingGeo?.lng,
           locationLabel,
         });
+        await clearChunkStore().catch(() => {});
         currentRecordingId = null;
         recordingStartedAt = 0;
         recordingGeo = null;

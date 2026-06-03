@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v231",
-  "appVersion": "3.5.100",
+  "latest": "v232",
+  "appVersion": "3.5.101",
   "highlights": [
-    "Voice Recorder polish — higher audio quality, a live waveform, true-fullscreen Covert Mode, and clip-library layout fixes."
+    "Every tab now shows the version footer (Beta · Toolbox · build), and the install page lists the Voice Recorder."
   ],
   "builds": {
+    "v232": {
+      "intro": "Build v232 — version footer on every tab.",
+      "sections": [
+        {
+          "heading": "App",
+          "items": [
+            "Added the version footer (Beta · Toolbox · version · build) to the bottom of every tab — Calculator, Hotels, Camera, and Recorder — so the build is visible everywhere. It updates automatically with each release.",
+            "Updated the footer wording to the Beta channel and short Toolbox name.",
+            "Install page (index.html) now lists the Voice Recorder feature and shows the current version and build in its footer.",
+            "Deploy index.html, surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json (v232)."
+          ]
+        }
+      ]
+    },
     "v231": {
       "intro": "Build v231 — Voice Recorder fixes + Covert Mode.",
       "sections": [

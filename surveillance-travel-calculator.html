@@ -1772,6 +1772,7 @@
           <button class="btn btn-primary" id="hotelSendEmailBtn" type="button" disabled>Send Email</button>
         </div>
       </section>
+      <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
     </div>
 
     <div class="tab-panel hidden" id="tab-recorder" data-tab="recorder" role="tabpanel" aria-labelledby="tab-btn-recorder">
@@ -1892,6 +1893,7 @@
             </div>
           </div>
         </section>
+        <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
       </div>
 
       <div class="voice-clip-viewer hidden" id="voiceClipViewer" aria-hidden="true">
@@ -2069,6 +2071,7 @@
           </div>
         </section>
 
+        <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
       </div>
       <div class="camera-clip-viewer hidden" id="covertClipViewer" aria-hidden="true">
         <div class="camera-clip-viewer__stage">
@@ -3232,8 +3235,8 @@
     max-width:none!important;margin:0!important;background:#000!important;z-index:9999!important;
   }
 </style>
-<script src="assets/covert-camera.js?v=231" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=231" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=232" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=232" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3255,8 +3258,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.100';
-  const BUNDLED_PWA_CACHE_VERSION = 'v231';
+  const BUNDLED_APP_VERSION = '3.5.101';
+  const BUNDLED_PWA_CACHE_VERSION = 'v232';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4255,7 +4258,7 @@
   }
 
   function getFooterVersionLine() {
-    return `Alpha (Internal / Closed) · Investigator Toolbox ${getShortVersionLabel()} · © 2026 Mitchell (CIM)`;
+    return `Beta · Toolbox ${getShortVersionLabel()} · © 2026 Mitchell (CIM)`;
   }
 
   function refreshAllVersionDisplays() {

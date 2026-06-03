@@ -1,11 +1,25 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v233",
-  "appVersion": "3.5.102",
+  "latest": "v234",
+  "appVersion": "4.0.0",
   "highlights": [
-    "Recorder: per-tab haptics (off by default), the waveform only moves while recording, and louder pickup of distant/quiet voices."
+    "Toolbox 4.0 — version footer now appears in the Settings menu, with cleaner spacing in the Recorder tab."
   ],
   "builds": {
+    "v234": {
+      "intro": "Build v234 — Toolbox 4.0.",
+      "sections": [
+        {
+          "heading": "App",
+          "items": [
+            "Moved to version 4.0.0 to mark the Voice Recorder release and recent polish.",
+            "Added the version footer (Beta · Toolbox · version · build) to the bottom of the Settings menu.",
+            "Added spacing above the version footer in the Recorder tab so it no longer sits against the card border.",
+            "Deploy index.html, surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json (v234)."
+          ]
+        }
+      ]
+    },
     "v233": {
       "intro": "Build v233 — Recorder haptics, waveform, and pickup fixes.",
       "sections": [

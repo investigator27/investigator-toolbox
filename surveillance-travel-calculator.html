@@ -820,7 +820,7 @@
     .install-hint{font-size:var(--text-sm);color:var(--color-text-muted);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-xl)}.menu-panel{position:fixed;top:72px;right:16px;z-index:200;width:min(320px,calc(100vw - 32px));background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);padding:var(--space-2);display:grid;gap:var(--space-2)}.menu-item{min-height:48px;width:100%;text-align:left;padding:0 var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);font-weight:700}.menu-item:hover{background:var(--color-surface-offset)} .menu-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)} .menu-half{text-align:center}.modal{position:fixed;inset:0;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:var(--space-4);z-index:300}.modal-card{width:min(720px,100%);max-height:min(90vh,900px);overflow:auto;background:var(--color-bg);border-radius:var(--radius-xl);border:1px solid var(--color-border);padding:var(--space-5);box-shadow:var(--shadow-md)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)}
     .modal-title{margin:0;font-size:var(--text-lg);font-weight:700;line-height:1.2}
     .modal-intro{margin:0 0 var(--space-4);font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.5}
-    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;padding-bottom:var(--space-2)}.hidden{display:none!important}
+    .install-hint strong{display:block;margin-bottom:0.3rem;color:var(--color-text)}.footer{font-size:var(--text-xs);color:var(--color-text-faint);text-align:center;margin-top:var(--space-5);padding-bottom:var(--space-2)}.hidden{display:none!important}
     .hotel-form-grid{display:grid;gap:var(--space-4)}
     @media(min-width:480px){.hotel-form-grid--dates{grid-template-columns:1fr 1fr}}
     @media(min-width:480px){
@@ -2294,6 +2294,7 @@
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
           </div>
+          <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
         </div>
       </div>
 
@@ -3236,8 +3237,8 @@
     max-width:none!important;margin:0!important;background:#000!important;z-index:9999!important;
   }
 </style>
-<script src="assets/covert-camera.js?v=233" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=233" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=234" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=234" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3259,8 +3260,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.102';
-  const BUNDLED_PWA_CACHE_VERSION = 'v233';
+  const BUNDLED_APP_VERSION = '4.0.0';
+  const BUNDLED_PWA_CACHE_VERSION = 'v234';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

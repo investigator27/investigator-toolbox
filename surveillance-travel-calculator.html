@@ -2841,14 +2841,15 @@
                 <label class="settings-switch"><input type="checkbox" id="recorderWakeLockSwitch" data-rec-pref="wakeLock" checked aria-label="Keep screen on while recording" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Strong haptic on start/stop</span>
-                <label class="settings-switch"><input type="checkbox" id="recorderStrongHapticSwitch" data-rec-pref="strongHapticOnRecord" checked aria-label="Stronger haptic on record start and stop" /><span class="settings-switch__track"></span></label>
+                <span class="settings-row__label">Haptic feedback</span>
+                <label class="settings-switch"><input type="checkbox" id="recorderStrongHapticSwitch" data-rec-pref="strongHapticOnRecord" aria-label="Vibrate on record, pause, and taps in the Recorder tab" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="settings-row settings-row--toggle">
                 <span class="settings-row__label">Start in Covert Mode (black screen)</span>
                 <label class="settings-switch"><input type="checkbox" id="recorderStealthSwitch" data-rec-pref="stealthByDefault" aria-label="Open the recorder straight into the black Covert Mode screen" /><span class="settings-switch__track"></span></label>
               </div>
             </div>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">Haptic feedback is per-tab and off by default for the Recorder — turning it off here keeps the Recorder silent even when the global haptic setting is on.</p>
             <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">In Covert Mode: triple-tap to start/stop, single-tap to confirm, swipe up to show controls.</p>
             <h2 class="settings-section-title">Max clip length</h2>
             <div class="settings-group settings-group--menu">
@@ -3235,8 +3236,8 @@
     max-width:none!important;margin:0!important;background:#000!important;z-index:9999!important;
   }
 </style>
-<script src="assets/covert-camera.js?v=232" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=232" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=233" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=233" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3258,8 +3259,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.101';
-  const BUNDLED_PWA_CACHE_VERSION = 'v232';
+  const BUNDLED_APP_VERSION = '3.5.102';
+  const BUNDLED_PWA_CACHE_VERSION = 'v233';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -5385,8 +5386,9 @@
     syncToggleStateLabel(input);
   }
 
-  function toolboxHaptic(style) {
-    if (!isHapticEnabled() || typeof navigator.vibrate !== 'function') return;
+  function toolboxHaptic(style, force) {
+    // `force` lets a per-tab haptic toggle (e.g. the Recorder) override the global setting.
+    if ((!force && !isHapticEnabled()) || typeof navigator.vibrate !== 'function') return;
     // Longer pulses than before — sub-20ms vibrations are rounded down to nothing on many
     // Android devices, so they were imperceptible. (iOS has no web vibration API at all.)
     const patterns = {

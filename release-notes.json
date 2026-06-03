@@ -1,11 +1,26 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v232",
-  "appVersion": "3.5.101",
+  "latest": "v233",
+  "appVersion": "3.5.102",
   "highlights": [
-    "Every tab now shows the version footer (Beta · Toolbox · build), and the install page lists the Voice Recorder."
+    "Recorder: per-tab haptics (off by default), the waveform only moves while recording, and louder pickup of distant/quiet voices."
   ],
   "builds": {
+    "v233": {
+      "intro": "Build v233 — Recorder haptics, waveform, and pickup fixes.",
+      "sections": [
+        {
+          "heading": "Voice Recorder",
+          "items": [
+            "Haptic feedback is now per-tab. The Recorder's toggle overrides the global haptic setting, so turning it off keeps the Recorder fully silent even when global haptics are on.",
+            "Recorder haptics are now OFF by default (the covert camera stays ON by default).",
+            "The waveform now only animates while actually recording — on the Ready screen and while paused it sits as a flat idle line, so it no longer looks like it's capturing when it isn't.",
+            "Improved pickup of distant/quiet voices: auto gain now stays on in both modes to lift across-the-room sound. For someone 5-7 ft away, also turn Voice clarity OFF so noise suppression doesn't gate out the faint audio.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json (v233)."
+          ]
+        }
+      ]
+    },
     "v232": {
       "intro": "Build v232 — version footer on every tab.",
       "sections": [

@@ -42,8 +42,10 @@
     stealthByDefault: false,
   };
 
-  // 'high' is closer to broadcast voice; 'standard' is a good clear default; 'small' saves space.
-  const QUALITY_BITRATE = { high: 128000, standard: 96000, small: 64000 };
+  // Bitrates tuned for fidelity. 'high' is near-lossless voice/ambient, 'standard' is clearly
+  // intelligible, 'small' saves space. Higher than before to fix muffled/thin captures.
+  const QUALITY_BITRATE = { high: 256000, standard: 160000, small: 96000 };
+  const TARGET_SAMPLE_RATE = 48000;
 
   let mediaStream = null;
   let mediaRecorder = null;
@@ -67,6 +69,7 @@
   let recordingStartedAt = 0;
   let pausedTotalMs = 0;
   let pauseStartedAt = 0;
+  let pendingClipDurationSeconds = 0;
   let elapsedTimer = null;
   let recordingGeo = null;
   let stealthWarned = false;
@@ -661,34 +664,84 @@
 
   /* ---------------- level meter ---------------- */
 
+  // Animated frequency-bar visualizer ("CEO-mode" style) drawn on a canvas. Bars rise from a
+  // centre line and mirror, with a smooth decay so it looks fluid rather than jumpy.
+  let waveSmooth = null;
+
   function startLevelMeter(stream) {
     stopLevelMeter();
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
+    const canvas = $('voiceWave');
     try {
       audioCtx = new Ctx();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       const source = audioCtx.createMediaStreamSource(stream);
       analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.75;
       analyserData = new Uint8Array(analyser.frequencyBinCount);
       source.connect(analyser);
-      const bar = $('voiceLevelBar');
+      const BARS = 40;
+      waveSmooth = new Array(BARS).fill(0);
+      const ctx = canvas ? canvas.getContext('2d') : null;
       const loop = () => {
         if (!analyser) return;
-        analyser.getByteTimeDomainData(analyserData);
-        let peak = 0;
-        for (let i = 0; i < analyserData.length; i++) {
-          const v = Math.abs(analyserData[i] - 128) / 128;
-          if (v > peak) peak = v;
-        }
-        const pct = isPaused ? 0 : Math.min(100, Math.round(peak * 160));
-        if (bar) bar.style.width = `${pct}%`;
+        analyser.getByteFrequencyData(analyserData);
+        if (ctx && canvas) drawWave(ctx, canvas, BARS);
         levelRaf = requestAnimationFrame(loop);
       };
       loop();
     } catch {
       stopLevelMeter();
     }
+  }
+
+  function drawWave(ctx, canvas, bars) {
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || 300;
+    const cssH = canvas.clientHeight || 88;
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+    }
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const mid = H / 2;
+    const gap = Math.max(2 * dpr, W * 0.004);
+    const barW = (W - gap * (bars - 1)) / bars;
+    const binStep = Math.max(1, Math.floor(analyserData.length / bars));
+    for (let i = 0; i < bars; i++) {
+      let sum = 0;
+      for (let j = 0; j < binStep; j++) sum += analyserData[i * binStep + j] || 0;
+      const avg = sum / binStep / 255;
+      const target = isPaused ? 0.02 : avg;
+      // Smooth toward the target so bars glide.
+      waveSmooth[i] += (target - waveSmooth[i]) * 0.35;
+      const amp = Math.max(0.03, waveSmooth[i]);
+      const h = amp * (H * 0.92);
+      const x = i * (barW + gap);
+      const r = Math.min(barW / 2, 4 * dpr);
+      const grad = ctx.createLinearGradient(0, mid - h / 2, 0, mid + h / 2);
+      grad.addColorStop(0, '#f87171');
+      grad.addColorStop(0.5, '#dc2626');
+      grad.addColorStop(1, '#f87171');
+      ctx.fillStyle = grad;
+      roundRect(ctx, x, mid - h / 2, barW, h, r);
+      ctx.fill();
+    }
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
   }
 
   function stopLevelMeter() {
@@ -698,12 +751,16 @@
     }
     analyser = null;
     analyserData = null;
+    waveSmooth = null;
     if (audioCtx) {
       try { audioCtx.close(); } catch {}
       audioCtx = null;
     }
-    const bar = $('voiceLevelBar');
-    if (bar) bar.style.width = '0%';
+    const canvas = $('voiceWave');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }
 
   /* ---------------- HUD + state ---------------- */
@@ -753,7 +810,7 @@
     if (el) el.textContent = formatClock(elapsedSeconds());
     if (!stealthWarned && !isPaused && elapsedSeconds() >= STEALTH_WARN_MINUTES * 60 && stealthOn) {
       stealthWarned = true;
-      showBriefHud('Long stealth recording — watch battery/heat', 6000);
+      showBriefHud('Long covert recording — watch battery/heat', 6000);
     }
   }
 
@@ -774,12 +831,16 @@
 
   function getAudioConstraints() {
     const clarity = getPrefs().voiceClarity !== false;
+    // With clarity OFF we capture raw, full-band audio (best for distant/ambient sound and
+    // music). With it ON we enable the speech DSP (noise suppression etc.) for close voice.
     return {
       audio: {
         echoCancellation: clarity,
         noiseSuppression: clarity,
         autoGainControl: clarity,
         channelCount: 1,
+        sampleRate: TARGET_SAMPLE_RATE,
+        sampleSize: 16,
       },
       video: false,
     };
@@ -833,6 +894,8 @@
       await ensureMicStream();
       showPermissionGate(false);
       void initBattery();
+      // Live visualizer reacts as soon as the mic is open, even before pressing Record.
+      if (mediaStream) startLevelMeter(mediaStream);
     } catch (err) {
       setPermissionError(describeMicError(err));
       showPermissionGate(true);
@@ -914,7 +977,7 @@
 
     recorder.onstop = async () => {
       const finishedId = clipId;
-      const durationSeconds = Math.round(elapsedSeconds());
+      const durationSeconds = pendingClipDurationSeconds || Math.round(elapsedSeconds());
       const blobType = lastRecordingMimeType || mimeType;
       try {
         const blob = await assembleClipBlob(finishedId, blobType);
@@ -980,19 +1043,29 @@
       pausedTotalMs += Date.now() - pauseStartedAt;
       pauseStartedAt = 0;
     }
+    // Capture the final duration BEFORE resetting so onstop saves the right length.
+    pendingClipDurationSeconds = Math.round(elapsedSeconds());
     isRecording = false;
     isPaused = false;
     clearTimeout(maxClipTimer);
     maxClipTimer = null;
     stopResourceWatch();
-    stopLevelMeter();
     stopElapsedTimer();
     releaseWakeLock();
     haptic(getPrefs().strongHapticOnRecord ? 'success' : 'light');
     try {
       if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     } catch {}
+    // Reset the on-screen state back to Ready / 00:00.
+    recordingStartedAt = 0;
+    pausedTotalMs = 0;
+    resetTimerDisplay();
     setStateLabel();
+  }
+
+  function resetTimerDisplay() {
+    const el = $('voiceTimer');
+    if (el) el.textContent = '00:00';
   }
 
   function togglePauseResume() {
@@ -1019,6 +1092,27 @@
 
   /* ---------------- session (open/close recorder screen) ---------------- */
 
+  /* ---------------- fullscreen (true immersive, hides system bars like the camera) ---------------- */
+
+  async function enterRecorderFullscreen() {
+    const target = $('voiceRecorder');
+    if (!target?.requestFullscreen) return false;
+    if (document.fullscreenElement === target) return true;
+    document.documentElement.style.backgroundColor = '#000';
+    document.body.style.backgroundColor = '#000';
+    try {
+      await target.requestFullscreen({ navigationUI: 'hide' });
+      return true;
+    } catch {}
+    return false;
+  }
+
+  function exitRecorderFullscreen() {
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
+    document.documentElement.style.backgroundColor = '';
+    document.body.style.backgroundColor = '';
+  }
+
   function setStealth(on) {
     stealthOn = !!on;
     const black = $('voiceBlack');
@@ -1028,8 +1122,13 @@
     const tap = $('voiceTapZone');
     if (tap) tap.setAttribute('aria-hidden', stealthOn ? 'false' : 'true');
     const stealthBtn = $('voiceStealthBtn');
-    if (stealthBtn) stealthBtn.textContent = stealthOn ? 'Show screen' : 'Hide screen (stealth)';
-    if (stealthOn) showBriefHud(isRecording ? 'Recording' : 'Triple-tap to record', HUD_RECORDING_MS);
+    if (stealthBtn) stealthBtn.textContent = stealthOn ? 'Show controls' : 'Hide screen (Covert Mode)';
+    if (stealthOn) {
+      void enterRecorderFullscreen();
+      showBriefHud(isRecording ? 'Recording' : 'Triple-tap to record', HUD_RECORDING_MS);
+    } else {
+      exitRecorderFullscreen();
+    }
   }
 
   function openRecorderSession() {
@@ -1041,6 +1140,7 @@
       overlay.setAttribute('aria-hidden', 'false');
     }
     document.body.classList.add('voice-rec-active');
+    resetTimerDisplay();
     setStealth(getPrefs().stealthByDefault === true);
     setStateLabel();
     void initBattery();
@@ -1052,6 +1152,7 @@
     userClosedSession = true;
     sessionActive = false;
     stealthOn = false;
+    exitRecorderFullscreen();
     stopMicStream();
     releaseWakeLock();
     stopLevelMeter();

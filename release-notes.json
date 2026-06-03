@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v234",
-  "appVersion": "4.0.0",
+  "latest": "v235",
+  "appVersion": "4.0.1",
   "highlights": [
-    "Toolbox 4.0 — version footer now appears in the Settings menu, with cleaner spacing in the Recorder tab."
+    "Fixed the white/grey line at the top of the screen in the Recorder's Covert Mode."
   ],
   "builds": {
+    "v235": {
+      "intro": "Build v235 — Covert Mode status-bar fix.",
+      "sections": [
+        {
+          "heading": "Voice Recorder",
+          "items": [
+            "Fixed the thin white (light theme) / dark-grey (dark theme) line at the top of the screen in Covert Mode. The PWA status-bar colour now goes black with the rest of the screen, matching the covert camera.",
+            "Leaving the Recorder tab while a background recording continues no longer leaves a black status bar on other tabs.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json (v235)."
+          ]
+        }
+      ]
+    },
     "v234": {
       "intro": "Build v234 — Toolbox 4.0.",
       "sections": [

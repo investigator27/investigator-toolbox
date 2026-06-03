@@ -1893,6 +1893,7 @@
             </div>
           </div>
         </section>
+
         <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
       </div>
 
@@ -3235,10 +3236,14 @@
   #voiceRecorder:fullscreen,#voiceRecorder:-webkit-full-screen{
     position:fixed!important;inset:0!important;width:100%!important;height:100%!important;
     max-width:none!important;margin:0!important;background:#000!important;z-index:9999!important;
+    outline:none!important;border:none!important;
+  }
+  #voiceRecorder:fullscreen::backdrop,#voiceRecorder:-webkit-full-screen::-webkit-backdrop{
+    background:#000!important;background-color:#000!important;
   }
 </style>
-<script src="assets/covert-camera.js?v=234" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=234" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=235" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=235" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3260,8 +3265,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '4.0.0';
-  const BUNDLED_PWA_CACHE_VERSION = 'v234';
+  const BUNDLED_APP_VERSION = '4.0.1';
+  const BUNDLED_PWA_CACHE_VERSION = 'v235';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

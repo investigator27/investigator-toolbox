@@ -1859,8 +1859,8 @@
                 <ol class="steps-list">
                   <li>Tap <strong>Open Recorder</strong>, then <strong>Record</strong> to start.</li>
                   <li>Use <strong>Pause</strong> to hold and resume the same clip.</li>
-                  <li>Tap <strong>Hide screen (stealth)</strong> to go black — then <strong>triple-tap</strong> to start/stop and <strong>single-tap</strong> to confirm it's still recording.</li>
-                  <li>While stealth: swipe up to bring the controls back.</li>
+                  <li>Tap <strong>Hide screen (Covert Mode)</strong> to go black — then <strong>triple-tap</strong> to start/stop and <strong>single-tap</strong> to confirm it's still recording.</li>
+                  <li>While in Covert Mode: swipe up to bring the controls back.</li>
                   <li>Recording keeps running if you switch tabs; come back to stop and save.</li>
                 </ol>
               </div>
@@ -1923,12 +1923,12 @@
             <span class="voice-rec__state" id="voiceStateLabel">Ready</span>
           </div>
           <div class="voice-rec__timer" id="voiceTimer">00:00</div>
-          <div class="voice-rec__meter" aria-hidden="true"><div class="voice-rec__meter-bar" id="voiceLevelBar"></div></div>
+          <canvas class="voice-rec__wave" id="voiceWave" aria-hidden="true"></canvas>
           <div class="voice-rec__controls">
             <button type="button" class="btn voice-rec__record-btn" id="voiceRecordBtn">Record</button>
             <div class="voice-rec__row">
               <button type="button" class="btn btn-secondary" id="voicePauseBtn" disabled>Pause</button>
-              <button type="button" class="btn btn-secondary" id="voiceStealthBtn">Hide screen (stealth)</button>
+              <button type="button" class="btn btn-secondary" id="voiceStealthBtn">Hide screen (Covert Mode)</button>
             </div>
             <button type="button" class="btn btn-secondary voice-rec__close" id="voiceCloseBtn">Close recorder</button>
           </div>
@@ -2811,6 +2811,8 @@
                 <span class="settings-row__label">Voice clarity (noise reduction)</span>
                 <label class="settings-switch"><input type="checkbox" id="recorderClaritySwitch" data-rec-pref="voiceClarity" checked aria-label="Voice clarity with noise reduction and echo cancellation" /><span class="settings-switch__track"></span></label>
               </div>
+            </div>
+            <div class="settings-group settings-group--menu">
               <div class="field" style="padding:var(--space-3) var(--space-4)">
                 <label for="recorderQualityBtn">Quality</label>
                 <div class="menu-wrap city-wrap">
@@ -2828,7 +2830,7 @@
                 </div>
               </div>
             </div>
-            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">Voice clarity tunes the mic for speech. Turn it off for raw, unprocessed room audio.</p>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">Voice clarity tunes the mic for close-up speech. For a speaker, music, or across-the-room audio, turn it OFF and use High quality for the clearest capture.</p>
             <h2 class="settings-section-title">Recording</h2>
             <div class="settings-group" role="group" aria-label="Recording">
               <div class="settings-row settings-row--toggle">
@@ -2840,11 +2842,11 @@
                 <label class="settings-switch"><input type="checkbox" id="recorderStrongHapticSwitch" data-rec-pref="strongHapticOnRecord" checked aria-label="Stronger haptic on record start and stop" /><span class="settings-switch__track"></span></label>
               </div>
               <div class="settings-row settings-row--toggle">
-                <span class="settings-row__label">Start in stealth (black screen)</span>
-                <label class="settings-switch"><input type="checkbox" id="recorderStealthSwitch" data-rec-pref="stealthByDefault" aria-label="Open the recorder straight into the black stealth screen" /><span class="settings-switch__track"></span></label>
+                <span class="settings-row__label">Start in Covert Mode (black screen)</span>
+                <label class="settings-switch"><input type="checkbox" id="recorderStealthSwitch" data-rec-pref="stealthByDefault" aria-label="Open the recorder straight into the black Covert Mode screen" /><span class="settings-switch__track"></span></label>
               </div>
             </div>
-            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">In stealth: triple-tap to start/stop, single-tap to confirm, swipe up to show controls.</p>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">In Covert Mode: triple-tap to start/stop, single-tap to confirm, swipe up to show controls.</p>
             <h2 class="settings-section-title">Max clip length</h2>
             <div class="settings-group settings-group--menu">
               <div class="field" style="padding:var(--space-3) var(--space-4)">
@@ -2895,7 +2897,7 @@
               <ol class="steps-list">
                 <li>Open the <strong>Recorder</strong> tab — allow microphone when prompted.</li>
                 <li>Tap <strong>Record</strong> · <strong>Pause</strong> to hold · <strong>Stop</strong> to save.</li>
-                <li>Use <strong>Hide screen (stealth)</strong> for a black screen — triple-tap to start/stop.</li>
+                <li>Use <strong>Hide screen (Covert Mode)</strong> for a black screen — triple-tap to start/stop.</li>
                 <li><strong>Download to device</strong> when done for the day.</li>
               </ol>
             </div>
@@ -3128,6 +3130,9 @@
 </div>
 
 <style id="voice-recorder-styles">
+  /* Keep all recorder tab content inside the viewport (no horizontal overflow). */
+  #recorderTabView{min-width:0;max-width:100%}
+  #recorderTabView .card,#recorderTabView .camera-hub-card{min-width:0;max-width:100%;box-sizing:border-box;overflow:hidden}
   /* Recorder hub spacing — mirror the covert camera hub rhythm. */
   #recorderHub{display:grid;gap:0;align-content:start}
   #recorderHub > div:first-child{margin-bottom:var(--space-4)}
@@ -3139,14 +3144,14 @@
   #recorderHub .camera-hub-block .settings-section-title{margin-top:0;margin-bottom:var(--space-2)}
 
   /* Clip library list */
-  .voice-clip-list{display:grid;gap:var(--space-2)}
+  .voice-clip-list{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-2);min-width:0}
   .voice-clip-day{
     font-size:0.8rem;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;
     color:var(--color-text-faint);margin:var(--space-3) 0 var(--space-1);
   }
   .voice-clip-day:first-child{margin-top:0}
   .voice-clip-card{
-    display:flex;align-items:center;gap:var(--space-3);
+    display:flex;align-items:center;gap:var(--space-3);min-width:0;max-width:100%;box-sizing:border-box;
     padding:var(--space-3);border:1px solid var(--color-border);border-radius:var(--radius-lg);
     background:var(--color-surface-2);
   }
@@ -3157,9 +3162,9 @@
     background:var(--color-primary);color:var(--color-text-inverse);
   }
   .voice-clip-card__play svg{width:20px;height:20px;margin-left:2px}
-  .voice-clip-card__meta{display:flex;flex-direction:column;min-width:0;gap:2px}
-  .voice-clip-card__title{font-weight:600;color:var(--color-text)}
-  .voice-clip-card__sub{font-size:0.82rem;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .voice-clip-card__meta{display:flex;flex-direction:column;flex:1 1 auto;min-width:0;gap:2px;overflow:hidden}
+  .voice-clip-card__title{font-weight:600;color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .voice-clip-card__sub{font-size:0.82rem;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 
   /* Clip player + consent (centered sheets over the app) */
   .voice-clip-viewer,.voice-consent{
@@ -3188,11 +3193,14 @@
   .voice-rec__black{position:absolute;inset:0;background:#000;z-index:2}
   .voice-rec__black.hidden{display:none}
   .voice-rec__tap{position:absolute;inset:0;z-index:3}
+  /* Match the covert camera HUD exactly (same 11px white status text). */
   .voice-rec__hud{
-    position:absolute;top:env(safe-area-inset-top,12px);left:0;right:0;z-index:4;text-align:center;
-    color:#fff;font-weight:600;letter-spacing:0.03em;min-height:1.4em;text-shadow:0 1px 4px rgba(0,0,0,0.6);
-    pointer-events:none;padding:var(--space-3);
+    position:absolute;left:0;right:0;top:max(env(safe-area-inset-top,0px),var(--space-2));bottom:auto;
+    z-index:4;margin:0;padding:0 var(--space-2);border:0;background:transparent;box-shadow:none;
+    font-size:11px;font-weight:600;line-height:1.3;color:#fff;text-align:center;
+    pointer-events:none;text-shadow:none;
   }
+  .voice-rec__hud:empty{display:none}
   .voice-rec__panel{
     position:relative;z-index:5;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:var(--space-5);padding:var(--space-6);
@@ -3206,8 +3214,7 @@
   @keyframes voiceRecPulse{0%,100%{opacity:1}50%{opacity:0.3}}
   .voice-rec__state{font-weight:600;letter-spacing:0.04em;text-transform:uppercase;font-size:0.82rem}
   .voice-rec__timer{font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--color-text)}
-  .voice-rec__meter{width:min(80%,320px);height:8px;border-radius:var(--radius-full);background:var(--color-surface-2);overflow:hidden}
-  .voice-rec__meter-bar{height:100%;width:0%;background:#dc2626;border-radius:var(--radius-full);transition:width 0.08s linear}
+  .voice-rec__wave{width:min(92%,360px);height:88px;display:block}
   .voice-rec__controls{display:grid;gap:var(--space-3);width:min(100%,360px)}
   .voice-rec__record-btn{
     width:100%;min-height:64px;font-size:1.1rem;font-weight:700;
@@ -3219,9 +3226,14 @@
   .voice-rec__close{width:100%;min-height:48px}
   .voice-rec .covert-permission-gate{position:absolute;inset:0;z-index:6}
   body.voice-rec-active{overflow:hidden}
+  /* Covert Mode true fullscreen — hides the phone status + nav bars, like the covert camera. */
+  #voiceRecorder:fullscreen,#voiceRecorder:-webkit-full-screen{
+    position:fixed!important;inset:0!important;width:100%!important;height:100%!important;
+    max-width:none!important;margin:0!important;background:#000!important;z-index:9999!important;
+  }
 </style>
-<script src="assets/covert-camera.js?v=230" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=230" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=231" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=231" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3243,8 +3255,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.99';
-  const BUNDLED_PWA_CACHE_VERSION = 'v230';
+  const BUNDLED_APP_VERSION = '3.5.100';
+  const BUNDLED_PWA_CACHE_VERSION = 'v231';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'

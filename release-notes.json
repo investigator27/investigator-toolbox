@@ -1,11 +1,28 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v230",
-  "appVersion": "3.5.99",
+  "latest": "v231",
+  "appVersion": "3.5.100",
   "highlights": [
-    "New Voice Recorder tab — clear audio capture with pause/resume, a stealth black screen, and private in-app storage."
+    "Voice Recorder polish — higher audio quality, a live waveform, true-fullscreen Covert Mode, and clip-library layout fixes."
   ],
   "builds": {
+    "v231": {
+      "intro": "Build v231 — Voice Recorder fixes + Covert Mode.",
+      "sections": [
+        {
+          "heading": "Voice Recorder",
+          "items": [
+            "Higher audio quality: raised the bitrates and request 48 kHz. For a speaker, music, or across-the-room audio, turn Voice clarity OFF and pick High quality — clarity is for close-up speech and can thin out distant sound.",
+            "The Ready timer now resets to 00:00 after each recording instead of holding the last time.",
+            "Replaced the level bar with a live animated waveform on the record screen.",
+            "Renamed 'Stealth' to 'Covert Mode' everywhere, and the black Covert Mode screen now goes true-fullscreen so the phone status bar and nav bar are hidden, matching the covert camera.",
+            "Matched the Covert Mode status text size to the camera, and fixed the Quality dropdown so it opens cleanly instead of inside the card border.",
+            "Fixed the Clip Library layout so cards and text no longer run off the right edge. Default max clip length is No limit.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json, tab-policy.json (v231)."
+          ]
+        }
+      ]
+    },
     "v230": {
       "intro": "Build v230 — new Voice Recorder tab.",
       "sections": [

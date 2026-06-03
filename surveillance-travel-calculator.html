@@ -1774,11 +1774,171 @@
       </section>
     </div>
 
-    <div class="tab-panel hidden" id="tab-requests" data-tab="requests" role="tabpanel" aria-labelledby="tab-btn-requests">
-      <section class="card coming-soon-card" aria-labelledby="requests-soon-title">
-        <h2 id="requests-soon-title" class="card-title">Requests</h2>
-        <p class="card-sub">This tab is not available yet. It will be added in a future Toolbox update.</p>
-      </section>
+    <div class="tab-panel hidden" id="tab-recorder" data-tab="recorder" role="tabpanel" aria-labelledby="tab-btn-recorder">
+      <div id="recorderTabView">
+        <section class="card hidden" id="recorderHub" aria-labelledby="recorder-hub-title">
+          <div>
+            <h2 id="recorder-hub-title" class="card-title card-title--section">Voice Recorder</h2>
+            <p class="card-sub">Record clear audio in the field, then manage clips and settings below.</p>
+          </div>
+          <div class="camera-airplane-note" role="note">
+            <span class="camera-airplane-note__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5S18 3 16.5 4.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+            </span>
+            <span class="camera-airplane-note__text">Before recording, turn on <strong>Airplane mode</strong> (swipe down → tap ✈) so no calls, texts or notifications interrupt. Turn it off afterwards when you're done.</span>
+          </div>
+          <button type="button" class="btn btn-primary" id="voiceOpenRecorderBtn">Open Recorder</button>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Clip Library</h2>
+            <div class="settings-group">
+              <button type="button" class="settings-row settings-row--nav" data-recorder-push="clip-library">
+                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16v12H4z"/><path d="M9 12h6"/><path d="M12 8V4"/><path d="M8 4h8"/></svg></span>
+                <span class="settings-row__label">Clip Library</span>
+                <span class="settings-row__meta" id="recorderClipsNavMeta">0 clips</span>
+                <span class="settings-row__chevron" aria-hidden="true">›</span>
+              </button>
+            </div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Recorder Settings</h2>
+            <div class="settings-group">
+              <button type="button" class="settings-row settings-row--nav" data-recorder-push="recorder-settings">
+                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4M8 22h8"/></svg></span>
+                <span class="settings-row__label">Recorder Settings</span>
+                <span class="settings-row__chevron" aria-hidden="true">›</span>
+              </button>
+            </div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">How To Use</h2>
+            <div class="settings-group">
+              <button type="button" class="settings-row settings-row--nav" data-recorder-push="how-to-use">
+                <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
+                <span class="settings-row__label">How To Use</span>
+                <span class="settings-row__chevron" aria-hidden="true">›</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card camera-hub-card hidden" id="recorderPanelClipLibrary" data-recorder-panel="clip-library" aria-labelledby="recorder-clip-library-title" hidden>
+          <button type="button" class="settings-back camera-hub-card__back" id="recorderClipsBackBtn" data-recorder-pop aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+          </button>
+          <div class="camera-hub-card__intro">
+            <h2 id="recorder-clip-library-title" class="card-title card-title--section">Clip Library</h2>
+            <p class="card-sub" id="voiceClipsSummary" aria-live="polite">0 clips · 0 B</p>
+            <p class="card-sub">Tap a recording to play it. Select clips to download or delete.</p>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Recordings</h2>
+            <div class="voice-clip-list" id="voiceClipsList" role="list"></div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Actions</h2>
+            <div class="camera-hub-block__actions">
+              <button type="button" class="btn btn-secondary" id="voiceClipsSelectAllBtn">Select all</button>
+              <button type="button" class="btn btn-primary" id="voiceClipsSendBtn" disabled>Download to device</button>
+              <button type="button" class="btn btn-secondary" id="voiceClipsDeleteBtn" disabled>Delete selected</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card camera-hub-card hidden" id="recorderPanelHowToUse" data-recorder-panel="how-to-use" aria-labelledby="recorder-how-to-use-title" hidden>
+          <button type="button" class="settings-back camera-hub-card__back" id="recorderHowToUseBackBtn" data-recorder-pop aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+          </button>
+          <div class="camera-hub-card__intro">
+            <h2 id="recorder-how-to-use-title" class="card-title card-title--section">How To Use</h2>
+            <p class="card-sub">A quick guide to recording audio and managing your clips.</p>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Controls</h2>
+            <div class="settings-group">
+              <div class="settings-body-text">
+                <ol class="steps-list">
+                  <li>Tap <strong>Open Recorder</strong>, then <strong>Record</strong> to start.</li>
+                  <li>Use <strong>Pause</strong> to hold and resume the same clip.</li>
+                  <li>Tap <strong>Hide screen (stealth)</strong> to go black — then <strong>triple-tap</strong> to start/stop and <strong>single-tap</strong> to confirm it's still recording.</li>
+                  <li>While stealth: swipe up to bring the controls back.</li>
+                  <li>Recording keeps running if you switch tabs; come back to stop and save.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Notes</h2>
+            <div class="settings-group">
+              <div class="settings-body-text">
+                <ul class="steps-list">
+                  <li>Turn on Airplane mode before recording so nothing interrupts. Turn it off afterwards.</li>
+                  <li>Android shows a microphone indicator while recording — this cannot be hidden.</li>
+                  <li>Clips stay private inside Toolbox. Use <strong>Download to device</strong> to copy them out (each clip includes a .txt with time and GPS).</li>
+                  <li>Voice clarity (noise reduction) is on by default — turn it off in Recorder Settings for raw room audio.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="camera-hub-block">
+            <h2 class="settings-section-title">Microphone permission</h2>
+            <div class="settings-group">
+              <div class="settings-body-text">
+                <p>If the recorder won't start, re-enable its permission:</p>
+                <ul class="steps-list">
+                  <li><strong>Android:</strong> Settings → Apps → Toolbox (or Chrome) → Permissions → Microphone → Allow.</li>
+                  <li><strong>Chrome:</strong> ⋮ menu → Settings → Site settings → Microphone → Allow for this site.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="voice-clip-viewer hidden" id="voiceClipViewer" aria-hidden="true">
+        <div class="voice-clip-viewer__stage">
+          <p class="voice-clip-viewer__title" id="voiceClipViewerTitle">Recording</p>
+          <audio id="voiceClipViewerAudio" controls preload="metadata"></audio>
+        </div>
+        <button type="button" class="btn btn-secondary voice-clip-viewer__close" id="voiceClipViewerClose">Close</button>
+      </div>
+
+      <div class="voice-consent hidden" id="voiceConsent" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="voiceConsentTitle">
+        <div class="voice-consent__sheet">
+          <h2 class="voice-consent__title" id="voiceConsentTitle">Before you record</h2>
+          <p class="voice-consent__body">Recording people may be regulated where you work. You are responsible for following the consent and privacy laws that apply to you. Recordings are stored privately inside Toolbox on this device.</p>
+          <div class="voice-consent__actions">
+            <button type="button" class="btn btn-primary" id="voiceConsentAcceptBtn">I understand — continue</button>
+            <button type="button" class="btn btn-secondary" id="voiceConsentDeclineBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="voice-rec hidden" id="voiceRecorder" aria-label="Voice recorder" aria-hidden="true">
+        <div class="voice-rec__black hidden" id="voiceBlack"></div>
+        <div class="voice-rec__tap" id="voiceTapZone" aria-hidden="true"></div>
+        <div class="voice-rec__hud" id="voiceStatus" aria-live="polite"></div>
+        <div class="voice-rec__panel" id="voiceRecorderPanel">
+          <div class="voice-rec__head">
+            <span class="voice-rec__dot" id="voiceRecDot" aria-hidden="true"></span>
+            <span class="voice-rec__state" id="voiceStateLabel">Ready</span>
+          </div>
+          <div class="voice-rec__timer" id="voiceTimer">00:00</div>
+          <div class="voice-rec__meter" aria-hidden="true"><div class="voice-rec__meter-bar" id="voiceLevelBar"></div></div>
+          <div class="voice-rec__controls">
+            <button type="button" class="btn voice-rec__record-btn" id="voiceRecordBtn">Record</button>
+            <div class="voice-rec__row">
+              <button type="button" class="btn btn-secondary" id="voicePauseBtn" disabled>Pause</button>
+              <button type="button" class="btn btn-secondary" id="voiceStealthBtn">Hide screen (stealth)</button>
+            </div>
+            <button type="button" class="btn btn-secondary voice-rec__close" id="voiceCloseBtn">Close recorder</button>
+          </div>
+          <div class="covert-permission-gate hidden" id="voicePermissionGate">
+            <p class="covert-permission-gate__error" id="voicePermissionError" role="alert" aria-live="polite"></p>
+            <button type="button" class="btn covert-gate-btn" id="voiceAllowMicBtn">Allow microphone access</button>
+            <button type="button" class="btn covert-gate-btn covert-gate-btn--close" id="voiceCloseGateBtn">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="tab-panel hidden" id="tab-camera" data-tab="camera" role="tabpanel" aria-labelledby="tab-btn-camera">
@@ -1939,9 +2099,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>
       <span>Hotels</span>
     </button>
-    <button type="button" class="tab-bar-item" id="tab-btn-requests" data-tab="requests" role="tab" aria-selected="false" aria-controls="tab-requests">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/></svg>
-      <span>Requests</span>
+    <button type="button" class="tab-bar-item" id="tab-btn-recorder" data-tab="recorder" role="tab" aria-selected="false" aria-controls="tab-recorder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4M8 22h8"/></svg>
+      <span>Recorder</span>
     </button>
     <button type="button" class="tab-bar-item" id="tab-btn-calculator" data-tab="calculator" role="tab" aria-selected="false" aria-controls="tab-calculator">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h4"/></svg>
@@ -1952,7 +2112,7 @@
 <script id="toolbox-tabs-core">
 (function () {
   'use strict';
-  var TAB_POLICY = { hotels: false, requests: false, camera: true };
+  var TAB_POLICY = { hotels: false, recorder: true, camera: true };
 
   function isEnabled(tabId) {
     if (tabId === 'calculator') return true;
@@ -2004,6 +2164,9 @@
     if (prev === 'camera' && window.ToolboxCovertCamera && window.ToolboxCovertCamera.onTabLeave) {
       window.ToolboxCovertCamera.onTabLeave();
     }
+    if (prev === 'recorder' && window.ToolboxVoiceRecorder && window.ToolboxVoiceRecorder.onTabLeave) {
+      window.ToolboxVoiceRecorder.onTabLeave();
+    }
     if (tabId !== 'camera') {
       document.querySelector('.app-shell')?.classList.remove('app-shell--covert-camera');
       var cam = document.getElementById('tab-camera');
@@ -2019,6 +2182,9 @@
     if (content) content.scrollTop = 0;
     if (tabId === 'camera' && window.ToolboxCovertCamera && window.ToolboxCovertCamera.onTabEnter) {
       window.ToolboxCovertCamera.onTabEnter();
+    }
+    if (tabId === 'recorder' && window.ToolboxVoiceRecorder && window.ToolboxVoiceRecorder.onTabEnter) {
+      window.ToolboxVoiceRecorder.onTabEnter();
     }
   }
 
@@ -2044,7 +2210,7 @@
     policy: TAB_POLICY,
     setPolicy: function (map) {
       TAB_POLICY.hotels = map.hotels === true;
-      TAB_POLICY.requests = map.requests === true;
+      TAB_POLICY.recorder = map.recorder === true;
       TAB_POLICY.camera = map.camera === true;
       applyBarState();
       if (!isEnabled(activeTabId())) switchTab('calculator');
@@ -2090,6 +2256,11 @@
             <button type="button" class="settings-row settings-row--nav" data-settings-push="camera-settings">
               <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
               <span class="settings-row__label">Camera</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="recorder-settings">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4M8 22h8"/></svg></span>
+              <span class="settings-row__label">Recorder</span>
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
             <button type="button" class="settings-row settings-row--nav" data-settings-push="app-lock">
@@ -2190,8 +2361,8 @@
               <label class="settings-switch"><input type="checkbox" data-default-tab-switch="hotels" aria-label="Open on Hotels tab" /><span class="settings-switch__track"></span></label>
             </div>
             <div class="settings-row settings-row--toggle">
-              <span class="settings-row__label">Requests</span>
-              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="requests" aria-label="Open on Requests tab" /><span class="settings-switch__track"></span></label>
+              <span class="settings-row__label">Recorder</span>
+              <label class="settings-switch"><input type="checkbox" data-default-tab-switch="recorder" aria-label="Open on Recorder tab" /><span class="settings-switch__track"></span></label>
             </div>
             <div class="settings-row settings-row--toggle">
               <span class="settings-row__label">Camera</span>
@@ -2393,6 +2564,11 @@
             <button type="button" class="settings-row settings-row--nav" data-settings-push="how-camera">
               <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
               <span class="settings-row__label">Camera</span>
+              <span class="settings-row__chevron" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="settings-row settings-row--nav" data-settings-push="how-recorder">
+              <span class="settings-row__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4M8 22h8"/></svg></span>
+              <span class="settings-row__label">Recorder</span>
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
           </div>
@@ -2608,6 +2784,119 @@
                 <li>Install Toolbox as an app (Chrome → Install).</li>
                 <li>Open <strong>Camera</strong> tab — allow camera when prompted.</li>
                 <li>3 taps to record · 3 taps to stop · Download to device when done for the day.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="recorder-settings" aria-hidden="true">
+        <div class="settings-scroll settings-scroll--subpage">
+          <div class="camera-settings-body">
+            <section class="settings-page-intro" aria-labelledby="settings-recorder-intro-title">
+              <div class="settings-page-intro__inner">
+                <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4M8 22h8"/></svg></span>
+                <div class="settings-page-intro__text">
+                  <h1 class="settings-page-intro__title" id="settings-recorder-intro-title">Recorder Settings</h1>
+                  <p class="settings-page-intro__blurb">Clear voice capture. Clips stay in Toolbox until you download them.</p>
+                </div>
+              </div>
+            </section>
+            <p class="settings-permission-hint" id="recorderPermissionStatus" data-rec-permission-status aria-live="polite">Checking…</p>
+            <p class="settings-permission-hint" id="recorderStorageSummary" data-rec-storage-summary aria-live="polite"></p>
+            <p class="settings-permission-hint" id="recorderRecordingFormat" data-rec-recording-format aria-live="polite"></p>
+            <h2 class="settings-section-title">Audio</h2>
+            <div class="settings-group" role="group" aria-label="Audio">
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Voice clarity (noise reduction)</span>
+                <label class="settings-switch"><input type="checkbox" id="recorderClaritySwitch" data-rec-pref="voiceClarity" checked aria-label="Voice clarity with noise reduction and echo cancellation" /><span class="settings-switch__track"></span></label>
+              </div>
+              <div class="field" style="padding:var(--space-3) var(--space-4)">
+                <label for="recorderQualityBtn">Quality</label>
+                <div class="menu-wrap city-wrap">
+                  <button type="button" class="menu-btn city-btn" id="recorderQualityBtn" aria-haspopup="listbox" aria-expanded="false"><span id="recorderQualityLabel">Standard (clear)</span></button>
+                  <div class="menu-panel city-panel" id="recorderQualityDrop" hidden role="listbox">
+                    <button type="button" class="menu-item city-item" data-picker-value="high">High (best detail · larger files)</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="standard">Standard (clear)</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="small">Small (saves space)</button>
+                  </div>
+                  <select id="recorderQualitySelect" data-rec-select="audioQuality" style="display:none">
+                    <option value="high">High (best detail · larger files)</option>
+                    <option value="standard" selected>Standard (clear)</option>
+                    <option value="small">Small (saves space)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">Voice clarity tunes the mic for speech. Turn it off for raw, unprocessed room audio.</p>
+            <h2 class="settings-section-title">Recording</h2>
+            <div class="settings-group" role="group" aria-label="Recording">
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Keep screen on while recording</span>
+                <label class="settings-switch"><input type="checkbox" id="recorderWakeLockSwitch" data-rec-pref="wakeLock" checked aria-label="Keep screen on while recording" /><span class="settings-switch__track"></span></label>
+              </div>
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Strong haptic on start/stop</span>
+                <label class="settings-switch"><input type="checkbox" id="recorderStrongHapticSwitch" data-rec-pref="strongHapticOnRecord" checked aria-label="Stronger haptic on record start and stop" /><span class="settings-switch__track"></span></label>
+              </div>
+              <div class="settings-row settings-row--toggle">
+                <span class="settings-row__label">Start in stealth (black screen)</span>
+                <label class="settings-switch"><input type="checkbox" id="recorderStealthSwitch" data-rec-pref="stealthByDefault" aria-label="Open the recorder straight into the black stealth screen" /><span class="settings-switch__track"></span></label>
+              </div>
+            </div>
+            <p class="settings-permission-hint" style="margin:var(--space-2) 0 0;padding-left:var(--space-1)">In stealth: triple-tap to start/stop, single-tap to confirm, swipe up to show controls.</p>
+            <h2 class="settings-section-title">Max clip length</h2>
+            <div class="settings-group settings-group--menu">
+              <div class="field" style="padding:var(--space-3) var(--space-4)">
+                <label for="recorderMaxClipBtn">Max clip length</label>
+                <div class="menu-wrap city-wrap">
+                  <button type="button" class="menu-btn city-btn" id="recorderMaxClipBtn" aria-haspopup="listbox" aria-expanded="false"><span id="recorderMaxClipLabel">No limit</span></button>
+                  <div class="menu-panel city-panel" id="recorderMaxClipDrop" hidden role="listbox">
+                    <button type="button" class="menu-item city-item" data-picker-value="5">5 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="10">10 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="20">20 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="30">30 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="60">60 minutes</button>
+                    <button type="button" class="menu-item city-item" data-picker-value="0">No limit</button>
+                  </div>
+                  <select id="recorderMaxClipSelect" data-rec-max-minutes style="display:none">
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="20">20 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">60 minutes</option>
+                    <option value="0" selected>No limit</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <h2 class="settings-section-title">Storage</h2>
+            <div class="settings-actions">
+              <button type="button" class="btn btn-primary" id="recorderDownloadAllBtn" data-rec-action="download-all">Download to device</button>
+              <button type="button" class="btn btn-secondary" id="recorderClearClipsBtn" data-rec-action="clear-all">Delete all recordings on this device</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-screen" data-screen="how-recorder" aria-hidden="true">
+        <div class="settings-scroll settings-scroll--subpage">
+          <section class="settings-page-intro" aria-labelledby="how-recorder-intro-title">
+            <div class="settings-page-intro__inner">
+              <span class="settings-page-intro__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4M8 22h8"/></svg></span>
+              <div class="settings-page-intro__text">
+                <h1 class="settings-page-intro__title" id="how-recorder-intro-title">Recorder</h1>
+                <p class="settings-page-intro__blurb">Clear voice recording for field work.</p>
+              </div>
+            </div>
+          </section>
+          <div class="settings-group">
+            <div class="settings-body-text">
+              <ol class="steps-list">
+                <li>Open the <strong>Recorder</strong> tab — allow microphone when prompted.</li>
+                <li>Tap <strong>Record</strong> · <strong>Pause</strong> to hold · <strong>Stop</strong> to save.</li>
+                <li>Use <strong>Hide screen (stealth)</strong> for a black screen — triple-tap to start/stop.</li>
+                <li><strong>Download to device</strong> when done for the day.</li>
               </ol>
             </div>
           </div>
@@ -2838,7 +3127,101 @@
   </div>
 </div>
 
-<script src="assets/covert-camera.js?v=229" onerror="window.__covertCameraLoadFailed=true"></script>
+<style id="voice-recorder-styles">
+  /* Recorder hub spacing — mirror the covert camera hub rhythm. */
+  #recorderHub{display:grid;gap:0;align-content:start}
+  #recorderHub > div:first-child{margin-bottom:var(--space-4)}
+  #recorderHub > .camera-airplane-note{margin-bottom:var(--space-4)}
+  #recorderHub > #voiceOpenRecorderBtn{margin-bottom:0}
+  #recorderHub .camera-hub-block{display:grid;gap:0}
+  #recorderHub > #voiceOpenRecorderBtn + .camera-hub-block,
+  #recorderHub > .camera-hub-block + .camera-hub-block{margin-top:var(--space-5)}
+  #recorderHub .camera-hub-block .settings-section-title{margin-top:0;margin-bottom:var(--space-2)}
+
+  /* Clip library list */
+  .voice-clip-list{display:grid;gap:var(--space-2)}
+  .voice-clip-day{
+    font-size:0.8rem;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;
+    color:var(--color-text-faint);margin:var(--space-3) 0 var(--space-1);
+  }
+  .voice-clip-day:first-child{margin-top:0}
+  .voice-clip-card{
+    display:flex;align-items:center;gap:var(--space-3);
+    padding:var(--space-3);border:1px solid var(--color-border);border-radius:var(--radius-lg);
+    background:var(--color-surface-2);
+  }
+  .voice-clip-card__check{width:20px;height:20px;flex:0 0 auto;accent-color:var(--color-primary)}
+  .voice-clip-card__play{
+    flex:0 0 auto;width:42px;height:42px;border-radius:var(--radius-full);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--color-primary);color:var(--color-text-inverse);
+  }
+  .voice-clip-card__play svg{width:20px;height:20px;margin-left:2px}
+  .voice-clip-card__meta{display:flex;flex-direction:column;min-width:0;gap:2px}
+  .voice-clip-card__title{font-weight:600;color:var(--color-text)}
+  .voice-clip-card__sub{font-size:0.82rem;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* Clip player + consent (centered sheets over the app) */
+  .voice-clip-viewer,.voice-consent{
+    position:fixed;inset:0;z-index:1400;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:var(--space-4);padding:var(--space-5);background:rgba(0,0,0,0.7);
+  }
+  .voice-clip-viewer.hidden,.voice-consent.hidden{display:none}
+  .voice-clip-viewer__stage{
+    width:100%;max-width:420px;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-xl);padding:var(--space-5);display:grid;gap:var(--space-3);
+  }
+  .voice-clip-viewer__title{margin:0;font-weight:600;color:var(--color-text);text-align:center}
+  #voiceClipViewerAudio{width:100%}
+  .voice-consent__sheet{
+    width:100%;max-width:420px;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-xl);padding:var(--space-6);display:grid;gap:var(--space-4);
+  }
+  .voice-consent__title{margin:0;color:var(--color-text)}
+  .voice-consent__body{margin:0;color:var(--color-text-muted);line-height:1.5}
+  .voice-consent__actions{display:grid;gap:var(--space-2)}
+  .voice-consent__actions .btn{width:100%;min-height:48px}
+
+  /* Full-screen recorder session */
+  .voice-rec{position:fixed;inset:0;z-index:1500;background:var(--color-bg);display:flex;flex-direction:column}
+  .voice-rec.hidden{display:none}
+  .voice-rec__black{position:absolute;inset:0;background:#000;z-index:2}
+  .voice-rec__black.hidden{display:none}
+  .voice-rec__tap{position:absolute;inset:0;z-index:3}
+  .voice-rec__hud{
+    position:absolute;top:env(safe-area-inset-top,12px);left:0;right:0;z-index:4;text-align:center;
+    color:#fff;font-weight:600;letter-spacing:0.03em;min-height:1.4em;text-shadow:0 1px 4px rgba(0,0,0,0.6);
+    pointer-events:none;padding:var(--space-3);
+  }
+  .voice-rec__panel{
+    position:relative;z-index:5;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:var(--space-5);padding:var(--space-6);
+    padding-top:calc(env(safe-area-inset-top,0px) + var(--space-6));
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--space-6));
+  }
+  .voice-rec__panel--hidden{visibility:hidden}
+  .voice-rec__head{display:flex;align-items:center;gap:var(--space-2);color:var(--color-text-muted)}
+  .voice-rec__dot{width:12px;height:12px;border-radius:var(--radius-full);background:var(--color-border)}
+  .voice-rec__dot--live{background:#dc2626;animation:voiceRecPulse 1.2s ease-in-out infinite}
+  @keyframes voiceRecPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .voice-rec__state{font-weight:600;letter-spacing:0.04em;text-transform:uppercase;font-size:0.82rem}
+  .voice-rec__timer{font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--color-text)}
+  .voice-rec__meter{width:min(80%,320px);height:8px;border-radius:var(--radius-full);background:var(--color-surface-2);overflow:hidden}
+  .voice-rec__meter-bar{height:100%;width:0%;background:#dc2626;border-radius:var(--radius-full);transition:width 0.08s linear}
+  .voice-rec__controls{display:grid;gap:var(--space-3);width:min(100%,360px)}
+  .voice-rec__record-btn{
+    width:100%;min-height:64px;font-size:1.1rem;font-weight:700;
+    background:#dc2626;color:#fff;border:none;
+  }
+  .voice-rec__record-btn--active{background:#7f1d1d}
+  .voice-rec__row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
+  .voice-rec__row .btn{width:100%;min-height:50px}
+  .voice-rec__close{width:100%;min-height:48px}
+  .voice-rec .covert-permission-gate{position:absolute;inset:0;z-index:6}
+  body.voice-rec-active{overflow:hidden}
+</style>
+<script src="assets/covert-camera.js?v=230" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=230" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -2860,8 +3243,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '3.5.98';
-  const BUNDLED_PWA_CACHE_VERSION = 'v229';
+  const BUNDLED_APP_VERSION = '3.5.99';
+  const BUNDLED_PWA_CACHE_VERSION = 'v230';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -2873,7 +3256,7 @@
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
   const POST_UPDATE_LAUNCH_KEY = 'toolboxJustUpdated';
   /** Keep in sync with tab-policy.json — used when fetch fails or before policy loads. */
-  const BUNDLED_TAB_POLICY = { hotels: false, requests: false, camera: true };
+  const BUNDLED_TAB_POLICY = { hotels: false, recorder: true, camera: true };
   const DEFAULT_TAB_PREF_KEY = 'toolboxDefaultTab';
   const LAST_TAB_PREF_KEY = 'toolboxLastTab';
   const HAPTIC_PREF_KEY = 'toolboxHaptic';
@@ -4865,7 +5248,7 @@
     });
   }
 
-  const VALID_DEFAULT_TABS = new Set(['calculator', 'last', 'hotels', 'requests', 'camera']);
+  const VALID_DEFAULT_TABS = new Set(['calculator', 'last', 'hotels', 'recorder', 'camera']);
 
   function getDefaultTabPreference() {
     try {
@@ -4878,7 +5261,7 @@
   function getLastTabPreference() {
     try {
       const saved = localStorage.getItem(LAST_TAB_PREF_KEY);
-      if (saved && saved !== 'last' && ['calculator', 'hotels', 'requests', 'camera'].includes(saved)) {
+      if (saved && saved !== 'last' && ['calculator', 'hotels', 'recorder', 'camera'].includes(saved)) {
         return saved;
       }
     } catch {}
@@ -5121,6 +5504,9 @@
     if (screenId === 'camera-settings') {
       window.ToolboxCovertCamera?.refreshCameraSettingsUi?.();
     }
+    if (screenId === 'recorder-settings') {
+      window.ToolboxVoiceRecorder?.refreshRecorderSettingsUi?.();
+    }
     if (screenId === 'app-lock') {
       window.ToolboxAppLock?.renderSettings?.();
     }
@@ -5243,7 +5629,7 @@
     if (!map || typeof map !== 'object') return { ...BUNDLED_TAB_POLICY };
     return {
       hotels: map.hotels === true,
-      requests: map.requests === true,
+      recorder: map.recorder === true,
       camera: map.camera === true,
     };
   }
@@ -5343,6 +5729,7 @@
       'index.html',
       'surveillance-travel-calculator.html',
       'assets/covert-camera.js',
+      'assets/voice-recorder.js',
       'service-worker.js',
       'release-notes.json',
       'tab-policy.json',
@@ -5397,8 +5784,10 @@
       '## Upload to GitHub (investigator-toolbox)',
       '1. surveillance-travel-calculator.html',
       '2. assets/covert-camera.js',
-      '3. service-worker.js',
-      '4. release-notes.json',
+      '3. assets/voice-recorder.js',
+      '4. service-worker.js',
+      '5. release-notes.json',
+      '6. tab-policy.json',
       '',
       `Version ${BUNDLED_APP_VERSION} · build ${BUNDLED_PWA_CACHE_VERSION}`,
       '',
@@ -9429,6 +9818,7 @@ out body;`;
   document.addEventListener('click', (event) => {
     if (event.target.closest('#tab-hotels .city-wrap')) return;
     if (event.target.closest('[data-screen="camera-settings"] .city-wrap')) return;
+    if (event.target.closest('[data-screen="recorder-settings"] .city-wrap')) return;
     closeAllPickers();
   });
 
@@ -9507,6 +9897,10 @@ out body;`;
     ['cameraTimestampPositionBtn', 'cameraTimestampPositionDrop', 'cameraTimestampPosition', 'cameraTimestampPositionLabel'],
     ['cameraTimestampSizeBtn', 'cameraTimestampSizeDrop', 'cameraTimestampSize', 'cameraTimestampSizeLabel'],
     ['cameraMaxClipBtn', 'cameraMaxClipDrop', 'cameraMaxClipSelect', 'cameraMaxClipLabel'],
+    // Recorder settings dropdowns — same picker component; the voice recorder module
+    // listens to the hidden <select> change (data-rec-select / data-rec-max-minutes).
+    ['recorderQualityBtn', 'recorderQualityDrop', 'recorderQualitySelect', 'recorderQualityLabel'],
+    ['recorderMaxClipBtn', 'recorderMaxClipDrop', 'recorderMaxClipSelect', 'recorderMaxClipLabel'],
   ].forEach(([btnId, dropId, selId, labelId]) => {
     initPicker({ button: $(btnId), panel: $(dropId), hidden: $(selId), label: $(labelId) });
   });
@@ -10236,8 +10630,11 @@ out body;`;
   }
 
   function covertRecording() {
-    try { return !!(window.ToolboxCovertCamera && window.ToolboxCovertCamera.isRecording && window.ToolboxCovertCamera.isRecording()); }
-    catch (e) { return false; }
+    try {
+      var cam = !!(window.ToolboxCovertCamera && window.ToolboxCovertCamera.isRecording && window.ToolboxCovertCamera.isRecording());
+      var voice = !!(window.ToolboxVoiceRecorder && window.ToolboxVoiceRecorder.isRecording && window.ToolboxVoiceRecorder.isRecording());
+      return cam || voice;
+    } catch (e) { return false; }
   }
 
   /* ---------- bind + boot ---------- */

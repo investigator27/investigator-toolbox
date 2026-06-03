@@ -1,6 +1,6 @@
 /* sw-revision: 30 — bump this comment when testing updates locally */
 const BASE = new URL('./', self.location).pathname;
-let activeCacheName = 'surveillance-travel-pwa-v229';
+let activeCacheName = 'surveillance-travel-pwa-v230';
 
 // Mirrors the in-app "Notifications" toggle. The page pushes the current value
 // via SET_NOTIF_PREF so the worker never shows an update notification the user
@@ -18,6 +18,7 @@ const CORE_ASSETS = [
 
 const OPTIONAL_ASSETS = [
   BASE + 'assets/covert-camera.js',
+  BASE + 'assets/voice-recorder.js',
   BASE + 'assets/icon-192.png',
   BASE + 'assets/icon-512.png',
   BASE + 'assets/maskable_icon_x192.png',

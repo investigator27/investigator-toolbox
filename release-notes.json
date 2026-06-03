@@ -1,11 +1,27 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v229",
-  "appVersion": "3.5.98",
+  "latest": "v230",
+  "appVersion": "3.5.99",
   "highlights": [
-    "Revamped Developer Tools with a live version-sync check and one-tap deploy block."
+    "New Voice Recorder tab — clear audio capture with pause/resume, a stealth black screen, and private in-app storage."
   ],
   "builds": {
+    "v230": {
+      "intro": "Build v230 — new Voice Recorder tab.",
+      "sections": [
+        {
+          "heading": "Voice Recorder",
+          "items": [
+            "Added a Voice Recorder tab (replacing the placeholder Requests tab): record clear audio in the field, then play, download, or delete clips from the Clip Library.",
+            "Voice clarity (noise reduction, echo cancellation, auto gain) is on by default for speech; turn it off in Recorder Settings for raw room audio. Quality and max-clip length are adjustable.",
+            "Pause/resume one clip, and a stealth black-screen mode: triple-tap to start/stop, single-tap to confirm it is still recording, swipe up to bring the controls back.",
+            "Built to the covert camera's standard: clips are flushed to storage while recording (low memory), survive a crash, auto-stop on critically low battery/storage, and each download includes a .txt with time and GPS. App Lock never interrupts an active recording.",
+            "Recorder Settings live in the same tab and under Settings → Recorder, with a How to Use guide — the same layout as the camera.",
+            "Deploy surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json, tab-policy.json (v230)."
+          ]
+        }
+      ]
+    },
     "v229": {
       "intro": "Build v229 — Developer Tools revamp.",
       "sections": [

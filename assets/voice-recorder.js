@@ -36,7 +36,9 @@
   const defaultPrefs = {
     wakeLock: true,
     maxClipMinutes: 0,
-    strongHapticOnRecord: true,
+    // Per-tab haptic master for the Recorder. OFF by default (the covert camera is ON by
+    // default). When OFF, the Recorder stays silent even if the global haptic setting is ON.
+    strongHapticOnRecord: false,
     voiceClarity: true,
     audioQuality: 'standard',
     stealthByDefault: false,
@@ -94,13 +96,16 @@
   }
 
   function haptic(style) {
+    // Per-tab master: the Recorder's own haptic toggle wins over the global setting. When it's
+    // off the tab is fully silent; when on we force a buzz even if the global setting is off.
+    if (!getPrefs().strongHapticOnRecord) return;
     const toolboxStyle = style === 'tap' ? 'medium' : style;
     if (typeof window.toolboxHaptic === 'function') {
-      window.toolboxHaptic(toolboxStyle);
+      window.toolboxHaptic(toolboxStyle, true);
       return;
     }
     if (typeof navigator.vibrate !== 'function') return;
-    const patterns = { light: 22, medium: [24, 58, 24], success: [18, 72, 18], tap: [16, 36, 16] };
+    const patterns = { light: 40, medium: [50, 50, 50], success: [60, 60, 120], tap: [50, 50, 50] };
     try { navigator.vibrate(patterns[style] || patterns.tap); } catch {}
   }
 
@@ -716,7 +721,9 @@
       let sum = 0;
       for (let j = 0; j < binStep; j++) sum += analyserData[i * binStep + j] || 0;
       const avg = sum / binStep / 255;
-      const target = isPaused ? 0.02 : avg;
+      // Only react to live input while actually recording. On the Ready screen (or while
+      // paused) the wave sits as a flat idle line so it never implies it's capturing.
+      const target = (isRecording && !isPaused) ? avg : 0.02;
       // Smooth toward the target so bars glide.
       waveSmooth[i] += (target - waveSmooth[i]) * 0.35;
       const amp = Math.max(0.03, waveSmooth[i]);
@@ -831,13 +838,15 @@
 
   function getAudioConstraints() {
     const clarity = getPrefs().voiceClarity !== false;
-    // With clarity OFF we capture raw, full-band audio (best for distant/ambient sound and
-    // music). With it ON we enable the speech DSP (noise suppression etc.) for close voice.
+    // autoGainControl stays ON in BOTH modes: it lifts quiet/distant sources (e.g. someone
+    // talking 5-7 ft away) so they're actually audible. Clarity only toggles the speech DSP —
+    // echo + noise suppression — which is good for close voice but gates away faint/distant
+    // sound, so turn clarity OFF for across-the-room capture.
     return {
       audio: {
         echoCancellation: clarity,
         noiseSuppression: clarity,
-        autoGainControl: clarity,
+        autoGainControl: true,
         channelCount: 1,
         sampleRate: TARGET_SAMPLE_RATE,
         sampleSize: 16,
@@ -1014,7 +1023,7 @@
     }
 
     isRecording = true;
-    haptic(prefs.strongHapticOnRecord ? 'success' : 'light');
+    haptic('success');
     await acquireWakeLock();
     startResourceWatch();
     startLevelMeter(stream);
@@ -1052,7 +1061,7 @@
     stopResourceWatch();
     stopElapsedTimer();
     releaseWakeLock();
-    haptic(getPrefs().strongHapticOnRecord ? 'success' : 'light');
+    haptic('success');
     try {
       if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     } catch {}

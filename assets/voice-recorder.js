@@ -1103,12 +1103,28 @@
 
   /* ---------------- fullscreen (true immersive, hides system bars like the camera) ---------------- */
 
+  // Black out the whole page chrome for Covert Mode — including the PWA theme-color band, which
+  // otherwise shows as a white (light) / dark-grey (dark) line in the phone's status-bar area.
+  function setCovertChrome(black) {
+    const bg = black ? '#000' : '';
+    document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
+    const themeMeta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (themeMeta) {
+      if (black) {
+        themeMeta.content = '#000000';
+      } else {
+        const theme = document.documentElement.getAttribute('data-theme');
+        themeMeta.content = theme === 'dark' ? '#171614' : '#ffffff';
+      }
+    }
+  }
+
   async function enterRecorderFullscreen() {
+    setCovertChrome(true);
     const target = $('voiceRecorder');
     if (!target?.requestFullscreen) return false;
     if (document.fullscreenElement === target) return true;
-    document.documentElement.style.backgroundColor = '#000';
-    document.body.style.backgroundColor = '#000';
     try {
       await target.requestFullscreen({ navigationUI: 'hide' });
       return true;
@@ -1118,8 +1134,7 @@
 
   function exitRecorderFullscreen() {
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
-    document.documentElement.style.backgroundColor = '';
-    document.body.style.backgroundColor = '';
+    setCovertChrome(false);
   }
 
   function setStealth(on) {
@@ -1652,6 +1667,8 @@
     if (sessionActive) {
       // Returning to an in-progress session (e.g. background recording) — re-lock scroll.
       document.body.classList.add('voice-rec-active');
+      // If we left while in Covert Mode, restore the black page chrome on return.
+      if (stealthOn) setCovertChrome(true);
     } else {
       showRecorderHubRoot();
     }
@@ -1661,6 +1678,9 @@
     // Release the body scroll-lock so other tabs scroll normally, even if a recording
     // continues in the background. The fixed overlay is hidden with its tab panel anyway.
     document.body.classList.remove('voice-rec-active');
+    // Restore the page chrome (theme-color + background) so a Covert Mode blackout doesn't
+    // bleed into other tabs. Fullscreen has already exited on the tab switch.
+    if (stealthOn) setCovertChrome(false);
     if (isRecording) {
       // Keep recording in the background — the clip keeps flushing to disk.
       // (Spec: recording survives tab switches.)

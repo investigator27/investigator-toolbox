@@ -1,11 +1,24 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v235",
-  "appVersion": "4.0.1",
+  "latest": "v236",
+  "appVersion": "4.0.2",
   "highlights": [
-    "Fixed the white/grey line at the top of the screen in the Recorder's Covert Mode."
+    "Calculator tab is now included in the tab policy — it can be enabled or disabled from tab-policy.json like any other tab."
   ],
   "builds": {
+    "v236": {
+      "intro": "Build v236 — Calculator tab now part of tab policy.",
+      "sections": [
+        {
+          "heading": "Tab Policy",
+          "items": [
+            "Added 'calculator' to tab-policy.json (and all matching BUNDLED_TAB_POLICY / coerceTabPolicyMap / setPolicy locations) so it can be toggled on or off remotely like the other tabs.",
+            "Calculator defaults to true and is treated as a fallback tab when a disabled tab is active, so it cannot be accidentally locked out.",
+            "Deploy tab-policy.json, surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json (v236)."
+          ]
+        }
+      ]
+    },
     "v235": {
       "intro": "Build v235 — Covert Mode status-bar fix.",
       "sections": [

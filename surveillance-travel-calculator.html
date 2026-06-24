@@ -2116,10 +2116,9 @@
 <script id="toolbox-tabs-core">
 (function () {
   'use strict';
-  var TAB_POLICY = { hotels: false, recorder: true, camera: true };
+  var TAB_POLICY = { calculator: true, hotels: false, recorder: true, camera: true };
 
   function isEnabled(tabId) {
-    if (tabId === 'calculator') return true;
     return TAB_POLICY[tabId] === true;
   }
 
@@ -2138,15 +2137,11 @@
     });
     document.querySelectorAll('nav.tab-bar .tab-bar-item').forEach(function (btn) {
       var id = btn.dataset.tab;
-      if (!id || id === 'calculator') {
-        btn.classList.remove('tab-bar-item--disabled');
-        btn.removeAttribute('aria-disabled');
-        btn.removeAttribute('tabindex');
-        return;
-      }
+      if (!id) return;
       var on = isEnabled(id);
       btn.classList.toggle('tab-bar-item--disabled', !on);
       if (on) {
+        btn.classList.remove('tab-bar-item--disabled');
         btn.removeAttribute('aria-disabled');
         btn.removeAttribute('tabindex');
       } else {
@@ -2213,6 +2208,7 @@
   window.__toolboxTabsCore = {
     policy: TAB_POLICY,
     setPolicy: function (map) {
+      TAB_POLICY.calculator = map.calculator !== false;
       TAB_POLICY.hotels = map.hotels === true;
       TAB_POLICY.recorder = map.recorder === true;
       TAB_POLICY.camera = map.camera === true;
@@ -3242,8 +3238,8 @@
     background:#000!important;background-color:#000!important;
   }
 </style>
-<script src="assets/covert-camera.js?v=235" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=235" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=236" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=236" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3265,8 +3261,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '4.0.1';
-  const BUNDLED_PWA_CACHE_VERSION = 'v235';
+  const BUNDLED_APP_VERSION = '4.0.2';
+  const BUNDLED_PWA_CACHE_VERSION = 'v236';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -3278,7 +3274,7 @@
   const TAB_VISIBILITY_KEY = 'toolboxTabEnabled';
   const POST_UPDATE_LAUNCH_KEY = 'toolboxJustUpdated';
   /** Keep in sync with tab-policy.json — used when fetch fails or before policy loads. */
-  const BUNDLED_TAB_POLICY = { hotels: false, recorder: true, camera: true };
+  const BUNDLED_TAB_POLICY = { calculator: true, hotels: false, recorder: true, camera: true };
   const DEFAULT_TAB_PREF_KEY = 'toolboxDefaultTab';
   const LAST_TAB_PREF_KEY = 'toolboxLastTab';
   const HAPTIC_PREF_KEY = 'toolboxHaptic';
@@ -5651,6 +5647,7 @@
   function coerceTabPolicyMap(map) {
     if (!map || typeof map !== 'object') return { ...BUNDLED_TAB_POLICY };
     return {
+      calculator: map.calculator !== false,
       hotels: map.hotels === true,
       recorder: map.recorder === true,
       camera: map.camera === true,

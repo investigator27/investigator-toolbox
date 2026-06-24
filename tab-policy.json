@@ -1,4 +1,5 @@
 {
+  "calculator": false,
   "hotels": false,
   "recorder": true,
   "camera": true

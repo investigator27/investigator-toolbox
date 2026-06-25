@@ -1,11 +1,23 @@
 {
   "_deploy": "Bump latest + appVersion here, BUNDLED_* in surveillance-travel-calculator.html, activeCacheName in service-worker.js — every deploy.",
-  "latest": "v236",
-  "appVersion": "4.0.2",
+  "latest": "v237",
+  "appVersion": "4.0.3",
   "highlights": [
-    "Calculator tab is now included in the tab policy — it can be enabled or disabled from tab-policy.json like any other tab."
+    "Copyright updated to Intrepid Investigations Canada across all footers."
   ],
   "builds": {
+    "v237": {
+      "intro": "Build v237 — branding update.",
+      "sections": [
+        {
+          "heading": "App",
+          "items": [
+            "Updated copyright in all footers (tabs, settings, install page) from Mitchell (CIM) to Intrepid Investigations Canada.",
+            "Deploy index.html, surveillance-travel-calculator.html, assets/covert-camera.js, assets/voice-recorder.js, service-worker.js, release-notes.json (v237)."
+          ]
+        }
+      ]
+    },
     "v236": {
       "intro": "Build v236 — Calculator tab now part of tab policy.",
       "sections": [

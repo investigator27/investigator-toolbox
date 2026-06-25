@@ -1625,7 +1625,7 @@
         <div class="status hidden" id="statusBox" aria-live="polite" role="status"></div>
       </section>
       <section class="card hidden" id="resultsSection" aria-labelledby="results-title"><div><h2 id="results-title" class="card-title">Billable Results</h2><p class="card-sub" id="resultTripLine"></p></div><div class="metric-grid top-grid"><div class="metric"><small>Billable Travel Hours</small><strong id="billableHours">—</strong></div><div class="metric"><small>Billable Travel Minutes</small><strong id="billableMinutes">—</strong></div><div class="metric"><small>Billable Travel Distance</small><strong id="billableKm">—</strong></div></div><div class="metric-grid bottom-grid"><div class="metric"><small>Non-Billable Travel Time Removed</small><strong id="removedTime">—</strong></div><div class="metric"><small>Non-Billable Travel Distance Removed</small><strong id="removedKm">—</strong></div></div><div class="summary-block"><b id="summaryLine"></b><span id="summaryNote"></span></div></section>
-      <p class="footer" id="appFooter" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
+      <p class="footer" id="appFooter" data-app-version-footer>Beta · Toolbox · © 2026 Intrepid Investigations Canada</p>
     </div>
 
     <div class="tab-panel hidden" id="tab-hotels" data-tab="hotels" role="tabpanel" aria-labelledby="tab-btn-hotels">
@@ -1772,7 +1772,7 @@
           <button class="btn btn-primary" id="hotelSendEmailBtn" type="button" disabled>Send Email</button>
         </div>
       </section>
-      <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
+      <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Intrepid Investigations Canada</p>
     </div>
 
     <div class="tab-panel hidden" id="tab-recorder" data-tab="recorder" role="tabpanel" aria-labelledby="tab-btn-recorder">
@@ -1894,7 +1894,7 @@
           </div>
         </section>
 
-        <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
+        <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Intrepid Investigations Canada</p>
       </div>
 
       <div class="voice-clip-viewer hidden" id="voiceClipViewer" aria-hidden="true">
@@ -2072,7 +2072,7 @@
           </div>
         </section>
 
-        <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
+        <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Intrepid Investigations Canada</p>
       </div>
       <div class="camera-clip-viewer hidden" id="covertClipViewer" aria-hidden="true">
         <div class="camera-clip-viewer__stage">
@@ -2291,7 +2291,7 @@
               <span class="settings-row__chevron" aria-hidden="true">›</span>
             </button>
           </div>
-          <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Mitchell (CIM)</p>
+          <p class="footer" data-app-version-footer>Beta · Toolbox · © 2026 Intrepid Investigations Canada</p>
         </div>
       </div>
 
@@ -3238,8 +3238,8 @@
     background:#000!important;background-color:#000!important;
   }
 </style>
-<script src="assets/covert-camera.js?v=236" onerror="window.__covertCameraLoadFailed=true"></script>
-<script src="assets/voice-recorder.js?v=236" onerror="window.__voiceRecorderLoadFailed=true"></script>
+<script src="assets/covert-camera.js?v=237" onerror="window.__covertCameraLoadFailed=true"></script>
+<script src="assets/voice-recorder.js?v=237" onerror="window.__voiceRecorderLoadFailed=true"></script>
 <script>
 (() => {
   const doc = document;
@@ -3261,8 +3261,8 @@
   const statusBox = $('statusBox');
   const resultsSection = $('resultsSection');
   /** Keep in sync each deploy: release-notes.json appVersion + latest, and service-worker.js activeCacheName. */
-  const BUNDLED_APP_VERSION = '4.0.2';
-  const BUNDLED_PWA_CACHE_VERSION = 'v236';
+  const BUNDLED_APP_VERSION = '4.0.3';
+  const BUNDLED_PWA_CACHE_VERSION = 'v237';
   let APP_VERSION = BUNDLED_APP_VERSION;
   const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
   const PWA_TEST_MODE = localStorage.getItem('toolboxPwaTest') === '1'
@@ -4261,7 +4261,7 @@
   }
 
   function getFooterVersionLine() {
-    return `Beta · Toolbox ${getShortVersionLabel()} · © 2026 Mitchell (CIM)`;
+    return `Beta · Toolbox ${getShortVersionLabel()} · © 2026 Intrepid Investigations Canada`;
   }
 
   function refreshAllVersionDisplays() {
